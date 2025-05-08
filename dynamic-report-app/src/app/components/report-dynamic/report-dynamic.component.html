@@ -16,19 +16,38 @@
   <div *ngIf="selectedTable" class="bg-white shadow-sm border border-gray-200 rounded-lg p-6 space-y-6">
     <div>
       <h3 class="text-xl font-semibold text-gray-800 mb-3">🧩 Choose Columns</h3>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-60 overflow-y-auto pr-2">
+      
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-60 overflow-y-auto pr-2">
         <label *ngFor="let col of columns" class="flex items-center gap-2 text-gray-700 hover:bg-gray-50 px-2 py-1 rounded-md transition">
           <input
             type="checkbox"
+            (change)="onCheckboxChange(col, $event)"
             class="form-checkbox text-blue-600 h-4 w-4"
-            (change)="onCheckboxChange(col, $event)" />
+          />
           <span class="text-sm">{{ col }}</span>
         </label>
       </div>
     </div>
-
-    <!-- Preview Table -->
-    <div *ngIf="selectedColumns.size > 0">
+     
+ 
+    <!-- Save Report Button -->
+    <div class="pt-4 space-y-6">
+      <button
+        (click)="generateDummyData()"
+        class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md transition-colors shadow-sm">
+        💾 Preview Report
+      </button>
+    
+      <button
+        (click)="onSaveReport()"
+        [disabled]="selectedColumns.size >= 2"
+        class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md transition-colors shadow-sm">
+        💾 Save Report
+      </button>
+    </div>
+    
+     <!-- Preview Table selectedColumns.size > 0-->
+     <div *ngIf="showPreview">
       <h4 class="text-lg font-semibold text-gray-700 mb-3">📋 Preview (Dummy Data)</h4>
       <div class="overflow-x-auto border border-gray-200 rounded-md">
         <table class="min-w-full table-auto text-sm text-left">
@@ -48,13 +67,5 @@
       </div>
     </div>
 
-    <!-- Save Report Button -->
-    <div class="pt-4">
-      <button
-        (click)="onSaveReport()"
-        class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md transition-colors shadow-sm">
-        💾 Save Report
-      </button>
-    </div>
   </div>
 </div>

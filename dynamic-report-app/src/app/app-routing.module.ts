@@ -1,7 +1,8 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { ReportDynamicComponent } from './report-dynamic/report-dynamic.component';
+import { ReportDynamicComponent } from './components/report-dynamic/report-dynamic.component';
 import { LayoutComponent } from './Layout/layout.component';
+import { ReportBuilderComponent } from './components/report-builder/report-builder.component';
 
 const routes: Routes = [
   // { path: '', redirectTo: 'table-selector', pathMatch: 'full' },
@@ -11,6 +12,7 @@ const routes: Routes = [
     component: LayoutComponent, 
     children: [
       { path: 'configure-report', component: ReportDynamicComponent },
+      { path: 'view-Report', component: ReportBuilderComponent },
     ]
   },
 ];

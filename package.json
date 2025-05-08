@@ -2,8 +2,8 @@
   "name": "dynamic-report-tool",
   "version": "1.0.0",
   "scripts": {
-    "client": "ng serve --prefix dynamic-report-app",
-    "server": "node index.js --prefix server",
+    "client": "cd dynamic-report-app ng serve ",
+    "server": "node index.js ",
     "dev": "concurrently \"npm run server\" \"npm run client\""
   },
   "dependencies": {

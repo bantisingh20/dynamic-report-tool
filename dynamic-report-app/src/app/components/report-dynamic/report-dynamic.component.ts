@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { MetadataService } from '../service/metadata.service';
+import { MetadataService } from '../../service/metadata.service';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 
 @Component({
@@ -9,7 +9,7 @@ import { FormGroup, FormControl, Validators } from '@angular/forms';
   styleUrl: './report-dynamic.component.css'
 })
 export class ReportDynamicComponent implements OnInit {
-   
+  showPreview : boolean =false;
   tablesAndViews: any[] = [];
   selectedTable: string | null = null;
   columns: string[] = [];
@@ -33,6 +33,8 @@ export class ReportDynamicComponent implements OnInit {
       this.columns = cols;
     });
   }
+
+
   onCheckboxChange(column: string, event: Event) {
     const checked = (event.target as HTMLInputElement).checked;
     if (checked) {
@@ -40,21 +42,24 @@ export class ReportDynamicComponent implements OnInit {
     } else {
       this.selectedColumns.delete(column);
     }
-
-    this.generateDummyData();
+    this.showPreview=false; 
   }
 
   generateDummyData() {
-    const dummyRows = 5; // you can change to 2 or 10
+    this.showPreview=true;
+    const dummyRows = 5; 
     this.previewData = [];
-  
-    for (let i = 0; i < dummyRows; i++) {
-      const row: any = {};
-      for (const col of this.selectedColumns) {
-        row[col] = `${col}_${i + 1}`;
+       
+    this.metadataService.getDataforPreview(this.selectedTable,this.selectedColumns).subscribe({
+      next: (res) => {
+        console.log('View Data for preview:', res);
+        this.previewData.push(res)
+      },
+      error: (err) => {
+        console.error('Error saving report:', err);
       }
-      this.previewData.push(row);
-    }
+    });
+ 
   }
 
   onSaveReport() {
@@ -75,8 +80,7 @@ export class ReportDynamicComponent implements OnInit {
         console.error('Error saving report:', err);
       }
     });
-
-    //console.log('📝 Report Saved:', data);
+ 
     alert(`Report "${reportName}" saved! (See console for data)`);
   }
   
