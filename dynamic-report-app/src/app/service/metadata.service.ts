@@ -18,6 +18,17 @@ export class MetadataService {
     return this.http.get<string[]>(`${this.apiUrl}/columns/${tableName}`);
   }
 
+  getDataforPreview(tableName :any , selectedColumns :any){
+    const requestPayload = {
+      tableName,
+      selectedColumns :Array.from(selectedColumns),
+    };
+
+    console.log('Request Payload:', requestPayload);
+
+    return this.http.post<string[]>(`${this.apiUrl}/preview`, requestPayload);
+  }
+
   SaveReportForamt(report :any){
     return this.http.post(this.apiUrl, report);
   }

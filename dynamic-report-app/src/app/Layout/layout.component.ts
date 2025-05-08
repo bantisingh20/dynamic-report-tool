@@ -15,7 +15,7 @@ export class LayoutComponent {
   isSidebarOpen = false;
   menuItems = [
     { label: 'Configure Report', link: '/configure-report', icon: 'dashboard' },
-    { label: 'View Report', link: '/dashboard', icon: 'dashboard' },
+    { label: 'View Report', link: '/view-Report', icon: 'dashboard' },
     // {
     //   label: 'Master',
     //   link: '',

@@ -31,7 +31,21 @@ async function getColumnMetadata(tableName) {
   return result.rows.map(row => row.column_name);
 }
 
+async function getData(tableName, selectedColumns) {
+
+  console.log(selectedColumns);
+  // const columns = selectedColumns.map(col => col.columns).flat().join(', ');
+
+   const query = `SELECT ${selectedColumns} FROM ${tableName}`
+   console.log(query);
+   const res = await pool.query(query);
+ 
+   return res.rows;
+   
+}
+
 module.exports = {
   getTablesAndViews,
-  getColumnMetadata
+  getColumnMetadata,
+  getData
 };
