@@ -30,6 +30,6 @@ export class MetadataService {
   }
 
   SaveReportForamt(report :any){
-    return this.http.post(this.apiUrl, report);
+    return this.http.post(`${this.apiUrl}/save`, report);
   }
 }

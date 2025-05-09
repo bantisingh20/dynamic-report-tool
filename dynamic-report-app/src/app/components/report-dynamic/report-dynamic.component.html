@@ -28,26 +28,29 @@
         </label>
       </div>
     </div>
-     
- 
-    <!-- Save Report Button -->
-    <div class="pt-4 space-y-6">
-      <button
-        (click)="generateDummyData()"
-        class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md transition-colors shadow-sm">
-        💾 Preview Report
-      </button>
-    
-      <button
-        (click)="onSaveReport()"
-        [disabled]="selectedColumns.size >= 2"
-        class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md transition-colors shadow-sm">
+      
+     <div class="pt-4 flex flex-col sm:flex-row justify-evenly gap-4">
+      <button (click)="onSaveReport()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md transition-colors shadow-sm">
         💾 Save Report
       </button>
+
+      <button (click)="generateDummyData1()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md transition-colors shadow-sm">
+        💾 Preview Report
+      </button>
+
     </div>
+
     
-     <!-- Preview Table selectedColumns.size > 0-->
-     <div *ngIf="showPreview">
+    
+
+  </div>
+</div>
+
+
+
+
+ <!-- Preview Table selectedColumns.size > 0-->
+     <!-- <div *ngIf="showPreview">
       <h4 class="text-lg font-semibold text-gray-700 mb-3">📋 Preview (Dummy Data)</h4>
       <div class="overflow-x-auto border border-gray-200 rounded-md">
         <table class="min-w-full table-auto text-sm text-left">
@@ -65,7 +68,4 @@
           </tbody>
         </table>
       </div>
-    </div>
-
-  </div>
-</div>
+    </div> -->

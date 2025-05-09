@@ -1,0 +1,109 @@
+<div class="report-config-container p-4 max-w-4xl mx-auto">
+  <h2 class="text-2xl font-semibold mb-4">Report Configuration</h2>
+  
+  <form [formGroup]="reportForm" (ngSubmit)="saveConfiguration()" class="space-y-8">
+    
+    <!-- Filters Section -->
+    <div class="section">
+      <h3 class="text-xl font-medium mb-4">Filters</h3>
+      <div formArrayName="filters" class="space-y-4">
+        <div *ngFor="let filter of filters.controls; let i = index" [formGroupName]="i" class="filter-row flex flex-wrap gap-4">
+          
+          <div class="form-group flex-1">
+            <select formControlName="field" class="form-control w-full p-2 border rounded-lg">
+              <option value="">Select Field</option>
+              <option *ngFor="let field of availableFields" [value]="field">{{field}}</option>
+            </select>
+          </div>
+          
+          <div class="form-group flex-1">
+            <select formControlName="operator" class="form-control w-full p-2 border rounded-lg">
+              <option *ngFor="let op of operators" [value]="op">{{op}}</option>
+            </select>
+          </div>
+          
+          <div class="form-group flex-1">
+            <input type="text" formControlName="value" class="form-control w-full p-2 border rounded-lg" placeholder="Value">
+          </div>
+          
+          <button type="button" class="btn btn-danger p-2 bg-red-500 text-white rounded-lg" (click)="removeFilter(i)">Remove</button>
+        </div>
+        
+        <button type="button" class="btn btn-primary p-2 bg-blue-500 text-white rounded-lg mt-4" (click)="addFilter()">Add Filter</button>
+      </div>
+    </div>
+    
+    <!-- Group By Section -->
+    <div class="section">
+      <h3 class="text-xl font-medium mb-4">Group By</h3>
+      <div formArrayName="groupBy" class="space-y-4">
+        <div *ngFor="let group of groupBy.controls; let i = index" [formGroupName]="i" class="group-row flex flex-wrap gap-4">
+          
+          <div class="form-group flex-1">
+            <select formControlName="field" class="form-control w-full p-2 border rounded-lg">
+              <option value="">Select Field</option>
+              <option *ngFor="let field of availableFields" [value]="field">{{field}}</option>
+            </select>
+          </div>
+          
+          <button type="button" class="btn btn-danger p-2 bg-red-500 text-white rounded-lg" (click)="removeGrouping(i)">Remove</button>
+        </div>
+        
+        <button type="button" class="btn btn-primary p-2 bg-blue-500 text-white rounded-lg mt-4" (click)="addGrouping()">Add Grouping</button>
+      </div>
+    </div>
+    
+    <!-- Sort By Section -->
+    <div class="section">
+      <h3 class="text-xl font-medium mb-4">Sort By</h3>
+      <div formArrayName="sortBy" class="space-y-4">
+        <div *ngFor="let sort of sortBy.controls; let i = index" [formGroupName]="i" class="sort-row flex flex-wrap gap-4">
+          
+          <div class="form-group flex-1">
+            <select formControlName="field" class="form-control w-full p-2 border rounded-lg">
+              <option value="">Select Field</option>
+              <option *ngFor="let field of availableFields" [value]="field">{{field}}</option>
+            </select>
+          </div>
+          
+          <div class="form-group flex-1">
+            <select formControlName="direction" class="form-control w-full p-2 border rounded-lg">
+              <option value="asc">Ascending</option>
+              <option value="desc">Descending</option>
+            </select>
+          </div>
+          
+          <button type="button" class="btn btn-danger p-2 bg-red-500 text-white rounded-lg" (click)="removeSorting(i)">Remove</button>
+        </div>
+        
+        <button type="button" class="btn btn-primary p-2 bg-blue-500 text-white rounded-lg mt-4" (click)="addSorting()">Add Sorting</button>
+      </div>
+    </div>
+    
+    <!-- Axis Configuration -->
+    <div class="section">
+      <h3 class="text-xl font-medium mb-4">Chart Axes</h3>
+      
+      <div class="form-group">
+        <label for="xAxis" class="block mb-2 text-sm font-medium">X-Axis</label>
+        <select formControlName="xAxis" id="xAxis" class="form-control w-full p-2 border rounded-lg">
+          <option value="">Select Field</option>
+          <option *ngFor="let field of availableFields" [value]="field">{{field}}</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="yAxis" class="block mb-2 text-sm font-medium">Y-Axis</label>
+        <select formControlName="yAxis" id="yAxis" class="form-control w-full p-2 border rounded-lg">
+          <option value="">Select Field</option>
+          <option *ngFor="let field of availableFields" [value]="field">{{field}}</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="actions mt-8">
+      <button type="submit" class="btn btn-success p-3 bg-green-500 text-white rounded-lg w-full md:w-auto">Save Configuration</button>
+    </div>
+    
+  </form>
+</div>

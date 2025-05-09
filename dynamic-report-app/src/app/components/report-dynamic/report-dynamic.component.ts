@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { MetadataService } from '../../service/metadata.service';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
+
 
 @Component({
   selector: 'app-report-dynamic',
@@ -16,7 +18,7 @@ export class ReportDynamicComponent implements OnInit {
   selectedColumns: Set<string> = new Set();
  
   previewData: any[] = [];
-  constructor(private metadataService: MetadataService) {}
+  constructor(private metadataService: MetadataService,private router:Router) {}
   
   ngOnInit() {
     this.metadataService.getTablesAndViews().subscribe(data => {
@@ -32,6 +34,8 @@ export class ReportDynamicComponent implements OnInit {
     this.metadataService.getColumns(table).subscribe(cols => {
       this.columns = cols;
     });
+
+     this.selectedColumns.clear();
   }
 
 
@@ -45,21 +49,39 @@ export class ReportDynamicComponent implements OnInit {
     this.showPreview=false; 
   }
 
-  generateDummyData() {
+  // generateDummyData() {
+   
+  //   this.showPreview=true;
+  //   const dummyRows = 5; 
+  //   this.previewData = [];
+  
+  //   for (let i = 0; i < dummyRows; i++) {
+  //     const row: any = {};
+  //     for (const col of this.selectedColumns) {
+  //       row[col] = `${col}_${i + 1}`;
+       
+  //     }
+  //         this.previewData.push(row);
+  //   }
+ 
+  // }
+
+  generateDummyData1() {
     this.showPreview=true;
     const dummyRows = 5; 
     this.previewData = [];
-       
+      
     this.metadataService.getDataforPreview(this.selectedTable,this.selectedColumns).subscribe({
       next: (res) => {
         console.log('View Data for preview:', res);
         this.previewData.push(res)
+        console.log(this.previewData);
       },
       error: (err) => {
         console.error('Error saving report:', err);
       }
     });
- 
+     console.log(this.previewData);
   }
 
   onSaveReport() {
@@ -75,6 +97,7 @@ export class ReportDynamicComponent implements OnInit {
     this.metadataService.SaveReportForamt(data).subscribe({
       next: (res) => {
         console.log('Report saved:', res);
+         this.router.navigate(['/view-Report']);
       },
       error: (err) => {
         console.error('Error saving report:', err);

@@ -1,0 +1,80 @@
+<!-- report-preview.component.html -->
+<div class="report-preview-container">
+  <h2>Report Preview</h2>
+  
+  <div *ngIf="!currentConfig" class="no-config">
+    <p>No report configuration available. Please configure your report settings.</p>
+  </div>
+  
+  <div *ngIf="currentConfig">
+    <div class="config-summary">
+      <h3>Current Configuration</h3>
+      
+      <div *ngIf="currentConfig.filters.length > 0">
+        <h4>Filters</h4>
+        <ul>
+          <li *ngFor="let filter of currentConfig.filters">
+            <span *ngIf="filter.field">{{filter.field}} {{filter.operator}} "{{filter.value}}"</span>
+          </li>
+        </ul>
+      </div>
+      
+      <div *ngIf="currentConfig.groupBy.length > 0">
+        <h4>Grouped By</h4>
+        <ul>
+          <li *ngFor="let group of currentConfig.groupBy">
+            <span *ngIf="group.field">{{group.field}}</span>
+          </li>
+        </ul>
+      </div>
+      
+      <div *ngIf="currentConfig.sortBy.length > 0">
+        <h4>Sorted By</h4>
+        <ul>
+          <li *ngFor="let sort of currentConfig.sortBy">
+            <span *ngIf="sort.field">{{sort.field}} ({{sort.direction}})</span>
+          </li>
+        </ul>
+      </div>
+      
+      <div *ngIf="currentConfig.xAxis || currentConfig.yAxis">
+        <h4>Chart Axes</h4>
+        <p *ngIf="currentConfig.xAxis">X-Axis: {{currentConfig.xAxis}}</p>
+        <p *ngIf="currentConfig.yAxis">Y-Axis: {{currentConfig.yAxis}}</p>
+      </div>
+    </div>
+    
+    <!-- Simple Bar Chart Preview -->
+    <div *ngIf="currentConfig.xAxis && currentConfig.yAxis && chartData.length > 0" class="chart-preview">
+      <h3>Chart Preview</h3>
+      <div class="chart-container">
+        <div class="y-axis-label">{{currentConfig.yAxis}}</div>
+        <div class="chart">
+          <div *ngFor="let item of chartData" class="chart-bar">
+            <div class="bar-value" [style.height.%]="item.value / maxChartValue() * 100"></div>
+            <div class="bar-label">{{item.label}}</div>
+          </div>
+        </div>
+        <div class="x-axis-label">{{currentConfig.xAxis}}</div>
+      </div>
+    </div>
+    
+    <!-- Data Table Preview -->
+    <div *ngFor="let groupName of getGroupNames()" class="data-preview">
+      <h3 *ngIf="getGroupNames().length > 1">Group: {{groupName}}</h3>
+      
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th *ngFor="let col of displayedColumns">{{col}}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of groupedData[groupName]">
+            <td *ngFor="let col of displayedColumns">{{item[col]}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
