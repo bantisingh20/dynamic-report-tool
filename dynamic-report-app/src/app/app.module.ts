@@ -9,13 +9,18 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
 import { ReportBuilderComponent } from './components/report-builder/report-builder.component';
 import { FiltersComponent } from './components/filters/filters.component';
- 
+import { TableViewComponent } from './components/table-view/table-view.component';
+import { ReportConfigComponent } from './components/report-config/report-config.component'; 
+import { ReportPreviewComponent } from './components/report-preview/report-preview.component';
 @NgModule({
   declarations: [
     AppComponent,
     ReportDynamicComponent,
     ReportBuilderComponent,
-    FiltersComponent 
+    FiltersComponent ,
+    TableViewComponent,
+    ReportConfigComponent,
+    ReportPreviewComponent
    
   ],
   imports: [

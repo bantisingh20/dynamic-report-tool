@@ -1,32 +1,40 @@
 <div class="flex justify-between">
-    <button class="px-4 py-2 bg-blue-500 text-white rounded">Save Report Config</button>
+    <button class="px-4 py-2 bg-blue-500 text-white rounded" (click)="openLeftModal()">Save Report Config</button>
     <button class="px-4 py-2 bg-green-500 text-white rounded" (click)="openRightModal()">Apply Filter</button>
 </div>
 
-<app-table-view></app-table-view>
+<!-- Left Modal -->
+<div class="fixed inset-0 flex justify-start items-center z-50" *ngIf="islEFTOpen">
+  <div class="absolute inset-0 bg-black opacity-50 pointer-events-none" (click)="closeModal()"></div>
+ 
+  <div class="bg-white w-96 h-full p-6 shadow-xl rounded-r-lg overflow-y-auto z-60">  
+ <app-report-dynamic></app-report-dynamic>
 
+    <div class="flex justify-between">
+      <button (click)="closeModal()" class="mt-6 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+        Apply Filter
+      </button>
+      <button (click)="closeModal()" class="mt-6 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+        Close
+      </button>
+    </div> 
+  </div>
+</div>
 
 <!-- Right Modal -->
 <div class="fixed inset-0 flex justify-end items-center z-50" *ngIf="isOpen">
-    <!-- Modal Background Overlay -->
-    <div class="absolute inset-0 bg-black opacity-50 pointer-events-none" (click)="closeModal()"></div>
-  
-    <!-- Modal Content (scrollable) -->
-    <div class="bg-white w-96 h-full p-6 shadow-xl rounded-l-lg overflow-y-auto z-60">
-      <h2 class="text-2xl font-semibold">Apply Filter</h2>
-      <p class="mt-4">
-        Apply Filter
-      </p>
-  
-       <app-filters></app-filters>
-      
-      <!-- Close Button -->
-      <button 
-        (click)="closeModal()" 
-        class="mt-6 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+  <div class="absolute inset-0 bg-black opacity-50 pointer-events-none" (click)="closeModal()"></div>
+  <div class="bg-white w-96 h-full p-6 shadow-xl rounded-l-lg overflow-y-auto z-60">  
+    
+      <app-report-config></app-report-config>
+
+    <div class="flex justify-between">
+      <button (click)="closeModal()" class="mt-6 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
         Apply Filter
       </button>
-    </div>
+      <button (click)="closeModal()" class="mt-6 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+        Close
+      </button>
+    </div> 
   </div>
-  
-  
+</div>

@@ -9,11 +9,15 @@ import { Component } from '@angular/core';
 export class ReportBuilderComponent {
 
   isOpen :boolean =false;
+  islEFTOpen :boolean =false;
   openRightModal() {
     this.isOpen = true;
   }
 
+  openLeftModal(){
+  this.islEFTOpen = true;
+  }
   closeModal() {
-    this.isOpen = false;
+    this.isOpen = false;    this.islEFTOpen = false;
   }
 }

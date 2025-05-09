@@ -1,19 +1,11 @@
 const pool = require('../config/db.js');
 
 async function getTablesAndViews() {
-  // const result = await pool.query(`
-  //   SELECT table_name, table_type
-  //   FROM information_schema.tables
-  //   WHERE table_schema = 'public'
-     
-  //     AND (table_type = 'BASE TABLE' OR table_type = 'VIEW')
-  //   ORDER BY table_name;
-  // `);
-  const result = await pool.query('SELECT * FROM spGetAllTables_And_Views();');
-
+  const result = await pool.query('SELECT * FROM list_tables_and_views();');
+ 
   return result.rows.map(row => ({
-    name: row.table_name,
-    type: row.type// === 'BASE TABLE' ? 'table' : 'view'
+    name: row.name,
+    type: row.type
   }));
 }
 
@@ -32,20 +24,55 @@ async function getColumnMetadata(tableName) {
 }
 
 async function getData(tableName, selectedColumns) {
+  //console.log(selectedColumns);  // const columns = selectedColumns.map(col => col.columns).flat().join(', ');
 
-  console.log(selectedColumns);
-  // const columns = selectedColumns.map(col => col.columns).flat().join(', ');
-
-   const query = `SELECT ${selectedColumns} FROM ${tableName}`
-   console.log(query);
+   const query = `SELECT ${selectedColumns} FROM ${tableName}` 
    const res = await pool.query(query);
- 
+
    return res.rows;
    
 }
 
+
+async function SaveUpdate(table, reportName, columns, userId, filterCriteria, groupBy, sortOrder, axisConfig) {
+
+  const query = `
+      INSERT INTO report_configuration (
+        user_id,
+        report_name,
+        table_name,
+        selected_columns,
+        filter_criteria,
+        group_by,
+        sort_order,
+        axis_config
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      RETURNING report_id;
+    `;
+
+    const result = await pool.query(query, [
+      0,
+      reportName,
+      table,
+      columns,        
+      JSON.stringify(filterCriteria),  
+      groupBy,            
+      sortOrder,          
+      JSON.stringify(axisConfig),   
+    ]);
+
+    const reportId = result.rows[0].report_id;
+
+  //  const query = `SELECT ${selectedColumns} FROM ${tableName}` 
+  //  const res = await pool.query(query);
+
+   return reportId;
+   
+}
 module.exports = {
   getTablesAndViews,
   getColumnMetadata,
-  getData
+  getData,
+  SaveUpdate
 };
