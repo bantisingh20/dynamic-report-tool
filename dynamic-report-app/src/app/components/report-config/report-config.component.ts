@@ -1,123 +1,216 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormArray } from '@angular/forms';
+import { FormBuilder, FormGroup, FormArray, Validators, FormControl } from '@angular/forms';
 import { ReportConfigService } from '../../service/report-config.service';
-
+import { MetadataService } from '../../service/metadata.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-report-config',
-  standalone: false,
+  standalone: false, 
   templateUrl: './report-config.component.html',
   styleUrl: './report-config.component.css'
 })
 export class ReportConfigComponent implements OnInit {
-  reportForm: FormGroup;
-  
-  private dummyData = [
-    { id: 1, date: '2025-01-15', category: 'Electronics', region: 'North', product: 'Laptop', revenue: 1200, quantity: 2, customer: 'TechCorp' },
-    { id: 2, date: '2025-01-20', category: 'Electronics', region: 'South', product: 'Smartphone', revenue: 800, quantity: 4, customer: 'MobileTech' },
-    { id: 3, date: '2025-01-25', category: 'Furniture', region: 'East', product: 'Desk', revenue: 350, quantity: 1, customer: 'HomeOffice' },
-    { id: 4, date: '2025-02-01', category: 'Electronics', region: 'West', product: 'Tablet', revenue: 600, quantity: 3, customer: 'TechCorp' },
-    { id: 5, date: '2025-02-05', category: 'Furniture', region: 'North', product: 'Chair', revenue: 250, quantity: 2, customer: 'HomeOffice' },
-    { id: 6, date: '2025-02-10', category: 'Office', region: 'South', product: 'Stationery', revenue: 150, quantity: 10, customer: 'PaperWorks' },
-    { id: 7, date: '2025-02-15', category: 'Electronics', region: 'East', product: 'Laptop', revenue: 1200, quantity: 2, customer: 'MobileTech' },
-    { id: 8, date: '2025-02-20', category: 'Office', region: 'West', product: 'Printer', revenue: 400, quantity: 1, customer: 'PaperWorks' },
-    { id: 9, date: '2025-03-01', category: 'Furniture', region: 'North', product: 'Bookshelf', revenue: 300, quantity: 1, customer: 'HomeOffice' },
-    { id: 10, date: '2025-03-05', category: 'Electronics', region: 'South', product: 'Smartphone', revenue: 900, quantity: 3, customer: 'TechCorp' },
-    { id: 11, date: '2025-03-10', category: 'Office', region: 'East', product: 'Stationery', revenue: 200, quantity: 15, customer: 'PaperWorks' },
-    { id: 12, date: '2025-03-15', category: 'Furniture', region: 'West', product: 'Desk', revenue: 400, quantity: 1, customer: 'HomeOffice' }
-  ];
 
-  // Sample data fields that can be used for filtering, grouping, etc.
-  availableFields: string[] = [
-    'id','date', 'category', 'region', 'product', 'revenue', 'quantity', 'customer','revenue','quantity','customer'
-  ];
+  operators: string[] = ['between','equals', 'not equals', 'greater than', 'less than', 'contains'];
   
-  // Sample operators for filters
-  operators: string[] = ['equals', 'not equals', 'greater than', 'less than', 'contains', 'starts with', 'ends with'];
-  
-  constructor(private fb: FormBuilder, private reprotconfig:ReportConfigService) {
-    this.reportForm = this.fb.group({
-      filters: this.fb.array([]),
-      groupBy: this.fb.array([]),
-      sortBy: this.fb.array([]),
-      xAxis: [''],
-      yAxis: ['']
+    tablesAndViews: any[] = [];  // api table
+    //selectedColumns = []; 
+    availableFields: any[] = [];   // api col and type
+    
+    reportForm = new FormGroup({
+      dataSource: new FormControl('', Validators.required),
+      selectedColumns: new FormControl([]),
+      filters: new FormArray([]),
+      groupBy: new FormArray([]),
+      sortBy: new FormArray([]),
+    }); // reactive form for preview and save 
+
+    constructor(private snackBar: MatSnackBar,private metadataService: MetadataService,private fb: FormBuilder, private reprotconfig:ReportConfigService) {}
+
+    showSuccess() {
+      // this.toastService.success('Hello, this is a success message!');
+      this.snackBar.open('✅ Success message', 'Close', {
+          duration: 3000,
+          panelClass: ['success-snackbar'],
+          horizontalPosition: 'right',
+          verticalPosition: 'top'
+        });
+    }
+
+ 
+    ngOnInit() {
+      this.metadataService.getTablesAndViews().subscribe(data => {
+        this.tablesAndViews = data;
+        console.log(this.tablesAndViews)
+      });
+      this.addFilter();
+    }
+ 
+    createFilter(): FormGroup {
+      return this.fb.group({
+        field: [null, Validators.required],
+        operator: ['', Validators.required], 
+        value: [''],
+        valueFrom: [''],
+        valueTo: ['']
+      });
+    }
+    
+  onFieldChange(index: number): void {
+    const filterGroup = this.filters.at(index) as FormGroup;
+    // Reset operator and values when the field changes
+    filterGroup.patchValue({
+      operator: '',
+      value: '',
+      valueFrom: '',
+      valueTo: ''
     });
-   }
-
-  ngOnInit(): void {
-    this.initForm();
   }
 
-  private initForm(): void {
-    this.reportForm = this.fb.group({
-      filters: this.fb.array([]),
-      groupBy: this.fb.array([]),
-      sortBy: this.fb.array([]),
-      xAxis: [''],
-      yAxis: ['']
+  // When the operator is changed, check if "between" is allowed on the selected field.
+  onOperatorChange(index: number): void {   
+    const filterGroup = this.filters.at(index) as FormGroup;
+    const selectedOperator = filterGroup.get('operator')?.value;
+    const selectedField = filterGroup.get('field')?.value;
+    const allowedTypes = ['date', 'datetime', 'numeric', 'decimal', 'float', 'integer'];
+
+    ////If operator "between" is selected, validate the selected field's type.
+    if (selectedOperator === 'between') {
+      if (!selectedField || allowedTypes.indexOf(selectedField.data_type.toLowerCase()) === -1) {
+         console.log('cannot use between ')
+        // filterGroup.get('operator').setValue('');
+      }
+    }
+  }
+
+  // Return the list of valid operators based on the selected field's type.
+  getOperators(selectedField: any): string[] {
+    const numericTypes = ['date', 'datetime', 'numeric', 'decimal', 'float', 'integer'];
+
+    if (!selectedField) {
+      // No field selected: show a default set.
+      return this.operators;
+    }
+
+    if (numericTypes.indexOf(selectedField.data_type.toLowerCase()) !== -1) {
+      // For numeric/date types, include the "between" operator.
+      return ['=', '!=', '>', '<', '>=', '<=', 'between'];
+    }
+
+    // For non-numeric/string fields, use a limited set.
+    return ['=', '!=', 'contains'];
+  }
+  
+  onTableSelect(event: Event) {
+    const table = (event.target as HTMLSelectElement).value;
+    this.metadataService.getColumns(table).subscribe(cols => {
+      this.availableFields = cols;
+      console.log(this.availableFields);
+      this.reportForm.get('selectedColumns')?.setValue([]); // Clear selected columns
     });
   }
+// Called when the 'Preview' button is clicked
+    previewReport(): void {
+      // Implement your preview logic here,
+      // e.g., display a modal or a preview pane with the generated report
+      console.log('Previewing report...');
+    }
 
-  // Getters for form arrays
-  get filters(): FormArray {
-    return this.reportForm.get('filters') as FormArray;
-  }
+    // Clears the form inputs
+    clearReport(): void {
+      this.reportForm.reset();
+      // Additional logic if required to clear dynamic fields (filters, groupBy, sortBy)
+      console.log('Form cleared');
+    }
 
-  get groupBy(): FormArray {
-    return this.reportForm.get('groupBy') as FormArray;
-  }
+    // Creates a new report configuration
+    addNewReport(): void {
+      // Implementation could redirect to a new form or reset the current form for a new configuration
+      this.reportForm.reset();
+      console.log('New report initiated');
+    }
 
-  get sortBy(): FormArray {
-    return this.reportForm.get('sortBy') as FormArray;
-  }
+  
+    get filters() {
+      return this.reportForm.get('filters') as FormArray;
+    }
 
-  // Methods to add items to form arrays
-  addFilter(): void {
-    this.filters.push(
-      this.fb.group({
-        field: [''],
-        operator: ['equals'],
-        value: ['']
-      })
-    );
-  }
+    get groupBy() {
+      return this.reportForm.get('groupBy') as FormArray;
+    }
 
-  addGrouping(): void {
-    this.groupBy.push(
-      this.fb.group({
-        field: ['']
-      })
-    );
-  }
+    get sortBy() {
+      return this.reportForm.get('sortBy') as FormArray;
+    }
 
-  addSorting(): void {
-    this.sortBy.push(
-      this.fb.group({
-        field: [''],
-        direction: ['asc']
-      })
-    );
-  }
+    addFilter() {
+      this.filters.push(this.createFilter());
+    }
 
-  // Methods to remove items from form arrays
-  removeFilter(index: number): void {
-    this.filters.removeAt(index);
-  }
+    removeFilter(index: number) {
+      this.filters.removeAt(index);
+    }
 
-  removeGrouping(index: number): void {
-    this.groupBy.removeAt(index);
-  }
+    addGrouping() {
+      this.groupBy.push(
+        new FormGroup({
+          field: new FormControl('', Validators.required),
+        })
+      );
+    }
 
-  removeSorting(index: number): void {
-    this.sortBy.removeAt(index);
-  }
+    removeGrouping(index: number) {
+      this.groupBy.removeAt(index);
+    }
 
-  // Method to save the configuration
+    addSorting() {
+      this.sortBy.push(
+        new FormGroup({
+          field: new FormControl('', Validators.required),
+          direction: new FormControl('asc'),
+        })
+      );
+    }
+
+    removeSorting(index: number) {
+      this.sortBy.removeAt(index);
+    } 
+
+    // saveConfiguration(): void {
+    //   const config = this.reportForm.value;
+    //   this.reprotconfig.saveConfiguration(config);
+    //   console.log('Report configuration:', config); 
+    // }
+
+     // Save the configuration after validation.
   saveConfiguration(): void {
     const config = this.reportForm.value;
+
+    // Check if overall form is valid.
+    if (this.reportForm.invalid) {
+      //this.toastService.error('Please fill out all required fields', 'Validation Error', { positionClass: 'toast-top-right' });
+      return;
+    }
+    
+    // Validate each filter for the "between" operator.
+    for (const filterGroup of this.filters.controls) {
+      const operator = filterGroup.get('operator')?.value;
+      if (operator === 'between') {
+        if (!filterGroup.get('valueFrom')?.value || !filterGroup.get('valueTo')?.value) {
+          // this.toastService.error(
+          //   `Please provide both "From" and "To" values for the "between" filter.`,
+          //   'Validation Error',
+          //   { positionClass: 'toast-top-right' }
+          // );
+          return; // Stop saving if validation fails.
+        }
+      }
+    }
+
+    // Call the service to save the configuration.
     this.reprotconfig.saveConfiguration(config);
     console.log('Report configuration:', config);
-    // Here you would store this in your app state
+    //this.toastService.success('Report configuration saved successfully!', 'Success', { positionClass: 'toast-top-right' });
   }
 }

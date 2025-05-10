@@ -7,18 +7,20 @@ import { ReportDynamicComponent } from './components/report-dynamic/report-dynam
 import { HttpClientModule } from '@angular/common/http';
 import { ReactiveFormsModule } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ReportBuilderComponent } from './components/report-builder/report-builder.component';
-import { FiltersComponent } from './components/filters/filters.component';
-import { TableViewComponent } from './components/table-view/table-view.component';
+// import { FiltersComponent } from './components/filters/filters.component';
+// import { TableViewComponent } from './components/table-view/table-view.component';
 import { ReportConfigComponent } from './components/report-config/report-config.component'; 
 import { ReportPreviewComponent } from './components/report-preview/report-preview.component';
+import { MatSnackBarModule } from '@angular/material/snack-bar'; 
+
 @NgModule({
   declarations: [
     AppComponent,
     ReportDynamicComponent,
     ReportBuilderComponent,
-    FiltersComponent ,
-    TableViewComponent,
+   
     ReportConfigComponent,
     ReportPreviewComponent
    
@@ -26,10 +28,12 @@ import { ReportPreviewComponent } from './components/report-preview/report-previ
   imports: [
     BrowserModule,
     AppRoutingModule,
+    BrowserAnimationsModule,
     HttpClientModule ,
     ReactiveFormsModule ,
     MaterialModule ,
-    FormsModule
+    FormsModule ,
+    MatSnackBarModule
   ],
   providers: [],
   bootstrap: [AppComponent]

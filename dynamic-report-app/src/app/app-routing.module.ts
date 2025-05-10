@@ -7,14 +7,14 @@ import { ReportBuilderComponent } from './components/report-builder/report-build
 const routes: Routes = [
   // { path: '', redirectTo: 'table-selector', pathMatch: 'full' },
   // {path :'table-selector', component:ReportDynamicComponent}
-  {
-    path: '',
-    component: LayoutComponent, 
-    children: [
-      { path: 'configure-report', component: ReportDynamicComponent },
-      { path: 'view-Report', component: ReportBuilderComponent },
-    ]
-  },
+  // {
+  //   path: '',
+  //   component: LayoutComponent, 
+  //   children: [
+  //     { path: 'configure-report', component: ReportDynamicComponent },
+  //     { path: 'view-Report', component: ReportBuilderComponent },
+  //   ]
+  // },
 ];
 
 @NgModule({

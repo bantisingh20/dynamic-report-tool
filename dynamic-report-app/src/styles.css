@@ -2,3 +2,12 @@
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+::ng-deep .ng-select {
+  font-size: 0.875rem;
+}
+
+::ng-deep .ng-select .ng-select-container {
+  border-radius: 0.5rem;
+  padding: 0.375rem 0.5rem;
+  border: 1px solid #cbd5e1;
+}

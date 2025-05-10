@@ -1,40 +1,32 @@
-<div class="flex justify-between">
-    <button class="px-4 py-2 bg-blue-500 text-white rounded" (click)="openLeftModal()">Save Report Config</button>
-    <button class="px-4 py-2 bg-green-500 text-white rounded" (click)="openRightModal()">Apply Filter</button>
+<!-- <div class="d-flex justify-content-between mb-3">
+  <button class="btn btn-primary" (click)="openLeftModal()">Save Report Config</button>
+  <button class="btn btn-success" (click)="openRightModal()">Apply Filter</button>
 </div>
-
-<!-- Left Modal -->
-<div class="fixed inset-0 flex justify-start items-center z-50" *ngIf="islEFTOpen">
-  <div class="absolute inset-0 bg-black opacity-50 pointer-events-none" (click)="closeModal()"></div>
  
-  <div class="bg-white w-96 h-full p-6 shadow-xl rounded-r-lg overflow-y-auto z-60">  
- <app-report-dynamic></app-report-dynamic>
-
-    <div class="flex justify-between">
-      <button (click)="closeModal()" class="mt-6 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
-        Apply Filter
-      </button>
-      <button (click)="closeModal()" class="mt-6 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
-        Close
-      </button>
-    </div> 
+<div class="modal show d-block" tabindex="-1" *ngIf="islEFTOpen" style="background-color: rgba(0,0,0,0.5);">
+  <div class="modal-dialog modal-dialog-scrollable modal-fullscreen-sm-down">
+    <div class="modal-content rounded-end shadow-lg" style="width: 400px; margin-left: 0;">
+      <div class="modal-body p-4">
+        <app-report-dynamic></app-report-dynamic>
+      </div>
+      <div class="modal-footer d-flex justify-content-between">
+        <button type="button" class="btn btn-success" (click)="closeModal()">Apply Filter</button>
+        <button type="button" class="btn btn-danger" (click)="closeModal()">Close</button>
+      </div>
+    </div>
   </div>
 </div>
-
-<!-- Right Modal -->
-<div class="fixed inset-0 flex justify-end items-center z-50" *ngIf="isOpen">
-  <div class="absolute inset-0 bg-black opacity-50 pointer-events-none" (click)="closeModal()"></div>
-  <div class="bg-white w-96 h-full p-6 shadow-xl rounded-l-lg overflow-y-auto z-60">  
-    
-      <app-report-config></app-report-config>
-
-    <div class="flex justify-between">
-      <button (click)="closeModal()" class="mt-6 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
-        Apply Filter
-      </button>
-      <button (click)="closeModal()" class="mt-6 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
-        Close
-      </button>
-    </div> 
+ 
+<div class="modal show d-block" tabindex="-1" *ngIf="isOpen" style="background-color: rgba(0,0,0,0.5);">
+  <div class="modal-dialog modal-dialog-scrollable modal-fullscreen-sm-down" style="margin-left: auto;">
+    <div class="modal-content rounded-start shadow-lg" style="width: 400px; margin-right: 0;">
+      <div class="modal-body p-4">
+        <app-report-config></app-report-config>
+      </div>
+      <div class="modal-footer d-flex justify-content-between">
+        <button type="button" class="btn btn-success" (click)="closeModal()">Apply Filter</button>
+        <button type="button" class="btn btn-danger" (click)="closeModal()">Close</button>
+      </div>
+    </div>
   </div>
-</div>
+</div> -->

@@ -72,7 +72,7 @@ export class ReportConfigService {
     return this.configSubject.asObservable();
   }
   
-  saveConfiguration(config: ReportConfiguration): void {
+  saveConfiguration(config:any): void {
     this.configSubject.next(config);
     localStorage.setItem('reportConfig', JSON.stringify(config));
   }

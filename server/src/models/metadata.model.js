@@ -12,7 +12,7 @@ async function getTablesAndViews() {
 async function getColumnMetadata(tableName) {
   const result = await pool.query(
     `
-    SELECT column_name
+    SELECT column_name,data_type
     FROM information_schema.columns
     WHERE table_name = $1
     ORDER BY ordinal_position;
@@ -20,7 +20,8 @@ async function getColumnMetadata(tableName) {
     [tableName]
   );
 
-  return result.rows.map(row => row.column_name);
+  return result.rows.map(row => ({  column_name: row.column_name,  data_type: row.data_type}));
+
 }
 
 async function getData(tableName, selectedColumns) {

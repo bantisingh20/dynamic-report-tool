@@ -5,10 +5,5 @@ const ErrorHandling = (err, req, res, next) =>{
         status :500,message :"Something went Wrong",error:err.message,
     })
 }
-// PGHOST=localhost
-// PGPORT=5432
-// PGUSER=postgres
-// PGPASSWORD=mysecretpassword
-// PGDATABASE=banti
 
-export default ErrorHandling;
+module.exports ={ErrorHandling};

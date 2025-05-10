@@ -1,8 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const pool = require('./config/db.js');
-const { default: ErrorHandling } = require('./middlewares/ErrorHandler.js');
 const metadataRoutes = require('./routes/metadata.routes'); 
+const { ErrorHandling } = require('./middlewares/ErrorHandler.js');
 require('dotenv').config(); 
 const app = express();
 const PORT = 3000;
@@ -32,7 +32,9 @@ app.use('/api/metadata', metadataRoutes);
 
 //server running 
 
-app.listen(PORT,() =>{
+app.listen(PORT,async () =>{
    // console.log(process.env.PGHOST);
+//    const result = await pool.query("select current_database()");
+//     console.log(`The database name is : ${result.rows[0].current_database}`);
     console.log(`Server is running on localhost :${PORT}`);
 })
