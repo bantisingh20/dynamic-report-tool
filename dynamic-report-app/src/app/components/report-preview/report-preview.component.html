@@ -1,80 +1,109 @@
-<!-- report-preview.component.html -->
-<div class="report-preview-container">
-  <h2>Report Preview</h2>
-  
-  <div *ngIf="!currentConfig" class="no-config">
-    <p>No report configuration available. Please configure your report settings.</p>
+ 
+ <div class="container py-5">
+  <h2 class="mb-4 text-primary fw-bold"><i class="bi bi-bar-chart-line-fill"></i> Corporate Report Preview</h2>
+ 
+  <div class="d-flex flex-wrap gap-2 mb-4">
+    <button class="btn btn-outline-success d-flex align-items-center gap-2" >
+      <i class="bi bi-printer-fill"></i> Print Report
+    </button>
+    <button class="btn btn-outline-success d-flex align-items-center gap-2" >
+      <i class="bi bi-file-earmark-excel-fill"></i> Export to Excel
+    </button>
   </div>
-  
-  <div *ngIf="currentConfig">
-    <div class="config-summary">
-      <h3>Current Configuration</h3>
+ 
+  <div *ngIf="!currentConfig" class="alert alert-warning border-start border-4 border-warning-subtle">
+    <strong>⚠️ No configuration found:</strong> Please set up your report.
+  </div>
+ 
+  <div *ngIf="currentConfig" class="card shadow-sm border-0 mb-5">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0"><i class="bi bi-gear-fill"></i> Report Configuration Summary</h5>
+    </div>
+    <div class="card-body">
       
-      <div *ngIf="currentConfig.filters.length > 0">
-        <h4>Filters</h4>
-        <ul>
-          <li *ngFor="let filter of currentConfig.filters">
-            <span *ngIf="filter.field">{{filter.field}} {{filter.operator}} "{{filter.value}}"</span>
+      <div *ngIf="currentConfig.filters.length > 0" class="mb-4">
+        <h6 class="text-secondary fw-semibold">Applied Filters</h6>
+        <ul class="list-group list-group-flush">
+          <li *ngFor="let filter of currentConfig.filters" class="list-group-item">
+            <strong>{{ filter.field | formatName }}</strong> {{ filter.operator }} "<em>{{ filter.value }}</em>"
           </li>
         </ul>
       </div>
-      
-      <div *ngIf="currentConfig.groupBy.length > 0">
-        <h4>Grouped By</h4>
-        <ul>
-          <li *ngFor="let group of currentConfig.groupBy">
-            <span *ngIf="group.field">{{group.field}}</span>
+
+      <div *ngIf="currentConfig.groupBy.length > 0" class="mb-4">
+        <h6 class="text-secondary fw-semibold">Grouped By</h6>
+        <ul class="list-group list-group-flush">
+          <li *ngFor="let group of currentConfig.groupBy" class="list-group-item ps-0">
+            {{ group.field | formatName }}
           </li>
         </ul>
       </div>
-      
-      <div *ngIf="currentConfig.sortBy.length > 0">
-        <h4>Sorted By</h4>
-        <ul>
-          <li *ngFor="let sort of currentConfig.sortBy">
-            <span *ngIf="sort.field">{{sort.field}} ({{sort.direction}})</span>
+
+      <div *ngIf="currentConfig.sortBy.length > 0" class="mb-4">
+        <h6 class="text-secondary fw-semibold">Sorted By</h6>
+        <ul class="list-group list-group-flush">
+          <li *ngFor="let sort of currentConfig.sortBy" class="list-group-item ps-0">
+            {{ sort.field | formatName }} <span class="text-muted">({{ sort.direction }})</span>
           </li>
         </ul>
       </div>
-      
+
       <div *ngIf="currentConfig.xAxis || currentConfig.yAxis">
-        <h4>Chart Axes</h4>
-        <p *ngIf="currentConfig.xAxis">X-Axis: {{currentConfig.xAxis}}</p>
-        <p *ngIf="currentConfig.yAxis">Y-Axis: {{currentConfig.yAxis}}</p>
+        <h6 class="text-secondary fw-semibold">Chart Axes</h6>
+        <p *ngIf="currentConfig.xAxis">X-Axis: <strong>{{ currentConfig.xAxis | formatName }}</strong></p>
+        <p *ngIf="currentConfig.yAxis">Y-Axis: <strong>{{ currentConfig.yAxis | formatName }}</strong></p>
       </div>
     </div>
-    
-    <!-- Simple Bar Chart Preview -->
-    <div *ngIf="currentConfig.xAxis && currentConfig.yAxis && chartData.length > 0" class="chart-preview">
-      <h3>Chart Preview</h3>
-      <div class="chart-container">
-        <div class="y-axis-label">{{currentConfig.yAxis}}</div>
-        <div class="chart">
-          <div *ngFor="let item of chartData" class="chart-bar">
-            <div class="bar-value" [style.height.%]="item.value / maxChartValue() * 100"></div>
-            <div class="bar-label">{{item.label}}</div>
-          </div>
-        </div>
-        <div class="x-axis-label">{{currentConfig.xAxis}}</div>
-      </div>
-    </div>
-    
-    <!-- Data Table Preview -->
-    <div *ngFor="let groupName of getGroupNames()" class="data-preview">
-      <h3 *ngIf="getGroupNames().length > 1">Group: {{groupName}}</h3>
-      
-      <table class="data-table">
-        <thead>
+  </div>
+ 
+  <div *ngFor="let groupName of getGroupNames()" class="mb-5">
+    <h5 *ngIf="getGroupNames().length > 1" class="text-primary mb-3">Group: {{ groupName | formatName }}</h5>
+
+    <div class="table-responsive shadow-sm border rounded">
+      <table class="table table-striped table-hover align-middle mb-0">
+        <thead class="table-light">
           <tr>
-            <th *ngFor="let col of displayedColumns">{{col}}</th>
+            <th *ngFor="let col of displayedColumns" class="text-uppercase fw-semibold">{{ col | formatName }}</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let item of groupedData[groupName]">
-            <td *ngFor="let col of displayedColumns">{{item[col]}}</td>
+          <tr *ngFor="let item of groupedData[groupName]; let i = index">
+            <td *ngFor="let col of displayedColumns">{{ item[col] }}</td>
           </tr>
         </tbody>
       </table>
     </div>
   </div>
-</div>
+</div>  
+
+ 
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th scope="col">#</th>
+      <th scope="col">First</th>
+      <th scope="col">Last</th>
+      <th scope="col">Handle</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th scope="row">1</th>
+      <td>Mark</td>
+      <td>Otto</td>
+      <td>mdo</td>
+    </tr>
+    <tr>
+      <th scope="row">2</th>
+      <td>Jacob</td>
+      <td>Thornton</td>
+      <td>fat</td>
+    </tr>
+    <tr>
+      <th scope="row">3</th>
+      <td>Larry</td>
+      <td>the Bird</td>
+      <td>twitter</td>
+    </tr>
+  </tbody>
+</table>

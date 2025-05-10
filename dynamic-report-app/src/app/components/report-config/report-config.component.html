@@ -369,21 +369,36 @@
             <p class="small text-muted">Step 1: Choose the table or view below.</p>
             <div class="mb-3">
               <label class="form-label">Table or View</label>
-              <select
+              <!-- <select
                 class="form-select"
                 formControlName="dataSource"
                 (change)="onTableSelect($event)">
                 <option value="">Select Table or View</option>
                 <option *ngFor="let table of tablesAndViews" [value]="table.name">
-                  {{ table.name }} || {{ table.type }}
+                  {{  capitalize(table.name) }} || {{ capitalize(table.type) }}
+
                 </option>
-              </select>
+              </select> -->
+
+              <ng-select
+                [items]="tablesAndViews"
+                bindLabel="label"
+                bindValue="name"
+                (change)="onTableSelect($event)"
+                [multiple]="false"
+                formControlName="dataSource"
+                placeholder="Select filter"
+                [closeOnSelect]="true"
+                class="w-100"> <!-- makes it full width -->
+              </ng-select>
+
+
             </div>
             <div class="mb-3">
               <label class="form-label">Columns</label>
               <ng-select
                 [items]="availableFields"
-                bindLabel="column_name" 
+                bindLabel="label" 
                 bindValue="column_name" 
                 [multiple]="true" 
                 formControlName="selectedColumns"
@@ -466,10 +481,10 @@
     <!-- Field Selection -->
     <div class="col">
       <ng-select [items]="availableFields"
-                bindLabel="column_name"   (change)="onFieldChange(i)"
+                bindLabel="label"   (change)="onFieldChange(i)"
                 bindValue="availableFields" [multiple]="false" 
                 formControlName="field" placeholder="Select filter"
-                [closeOnSelect]="false" class="form-control">
+                [closeOnSelect]="true" class="">
       </ng-select>
     </div>
     <!-- Operator Selection -->
@@ -542,7 +557,7 @@
                 <select class="form-select" formControlName="field">
                   <option value="">Select Field</option>
                   <option *ngFor="let field of availableFields" [value]="field.column_name">
-                    {{ field.column_name }}
+                    {{ field.label }}
                   </option>
                 </select>
                 <button
@@ -575,7 +590,7 @@
                   <select class="form-select" formControlName="field">
                     <option value="">Select Field</option>
                     <option *ngFor="let field of availableFields" [value]="field.column_name">
-                      {{ field.column_name }}
+                      {{ field.label }}
                     </option>
                   </select>
                 </div>
@@ -605,7 +620,7 @@
             </div>
 
             <!-- Action Buttons: Preview, Clear, and Save -->
-            <div class="d-flex justify-content-end gap-2">
+            <div class="d-flex justify-content-center gap-2">
               <button
                 type="button"
                 class="btn btn-primary"
