@@ -14,6 +14,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatListModule } from '@angular/material/list';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialogModule } from '@angular/material/dialog';
@@ -37,7 +38,8 @@ import { NgSelectModule } from '@ng-select/ng-select';
     MatTooltipModule,
     MatSnackBarModule,
     MatDialogModule,
-    NgSelectModule
+    NgSelectModule,
+    MatTabsModule
   ]
 })
 export class MaterialModule { }

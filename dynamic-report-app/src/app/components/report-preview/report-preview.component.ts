@@ -11,19 +11,15 @@ export class ReportPreviewComponent implements OnInit {
   originalData: ReportDataItem[] = [];
   filteredData: ReportDataItem[] = [];
   groupedData: Record<string, ReportDataItem[]> = {};
-  chartData: {label: string; value: number}[] = [];
-  
+  chartData: {label: string; value: number}[] = []; 
   currentConfig: ReportConfiguration | null = null;
-  
-  
-  // For table display, ensure it's a valid key of ReportDataItem
-displayedColumns: (keyof ReportDataItem)[] = ['date', 'category', 'region', 'product', 'revenue', 'quantity', 'customer'];
+   
+  displayedColumns: (keyof ReportDataItem)[] = ['date', 'name', 'region', 'product', 'revenue', 'quantity', 'customer'];
 
   constructor(private reportConfigService: ReportConfigService) { }
 
   ngOnInit(): void {
     this.originalData = this.reportConfigService.getDummyData();
-    
     
     this.reportConfigService.getConfiguration().subscribe(config => {
       this.currentConfig = config;

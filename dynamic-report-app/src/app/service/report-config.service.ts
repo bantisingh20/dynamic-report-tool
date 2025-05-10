@@ -29,7 +29,7 @@ export interface ReportConfiguration {
 export interface ReportDataItem {
   id: number;
   date: string;
-  category: string;
+  name: string;
   region: string;
   product: string;
   revenue: number;
@@ -54,18 +54,18 @@ export class ReportConfigService {
   private configSubject = new BehaviorSubject<ReportConfiguration | null>(null);
 
   private dummyData: ReportDataItem[] = [
-    { id: 1, date: '2025-01-15', category: 'Electronics', region: 'North', product: 'Laptop', revenue: 1200, quantity: 2, customer: 'TechCorp' },
-    { id: 2, date: '2025-01-20', category: 'Electronics', region: 'South', product: 'Smartphone', revenue: 800, quantity: 4, customer: 'MobileTech' },
-    { id: 3, date: '2025-01-25', category: 'Furniture', region: 'East', product: 'Desk', revenue: 350, quantity: 1, customer: 'HomeOffice' },
-    { id: 4, date: '2025-02-01', category: 'Electronics', region: 'West', product: 'Tablet', revenue: 600, quantity: 3, customer: 'TechCorp' },
-    { id: 5, date: '2025-02-05', category: 'Furniture', region: 'North', product: 'Chair', revenue: 250, quantity: 2, customer: 'HomeOffice' },
-    { id: 6, date: '2025-02-10', category: 'Office', region: 'South', product: 'Stationery', revenue: 150, quantity: 10, customer: 'PaperWorks' },
-    { id: 7, date: '2025-02-15', category: 'Electronics', region: 'East', product: 'Laptop', revenue: 1200, quantity: 2, customer: 'MobileTech' },
-    { id: 8, date: '2025-02-20', category: 'Office', region: 'West', product: 'Printer', revenue: 400, quantity: 1, customer: 'PaperWorks' },
-    { id: 9, date: '2025-03-01', category: 'Furniture', region: 'North', product: 'Bookshelf', revenue: 300, quantity: 1, customer: 'HomeOffice' },
-    { id: 10, date: '2025-03-05', category: 'Electronics', region: 'South', product: 'Smartphone', revenue: 900, quantity: 3, customer: 'TechCorp' },
-    { id: 11, date: '2025-03-10', category: 'Office', region: 'East', product: 'Stationery', revenue: 200, quantity: 15, customer: 'PaperWorks' },
-    { id: 12, date: '2025-03-15', category: 'Furniture', region: 'West', product: 'Desk', revenue: 400, quantity: 1, customer: 'HomeOffice' }
+    { id: 1, date: '2025-01-15', name: 'Electronics', region: 'North', product: 'Laptop', revenue: 1200, quantity: 2, customer: 'TechCorp' },
+    { id: 2, date: '2025-01-20', name: 'Electronics', region: 'South', product: 'Smartphone', revenue: 800, quantity: 4, customer: 'MobileTech' },
+    { id: 3, date: '2025-01-25', name: 'Furniture', region: 'East', product: 'Desk', revenue: 350, quantity: 1, customer: 'HomeOffice' },
+    { id: 4, date: '2025-02-01', name: 'Electronics', region: 'West', product: 'Tablet', revenue: 600, quantity: 3, customer: 'TechCorp' },
+    { id: 5, date: '2025-02-05', name: 'Furniture', region: 'North', product: 'Chair', revenue: 250, quantity: 2, customer: 'HomeOffice' },
+    { id: 6, date: '2025-02-10', name: 'Office', region: 'South', product: 'Stationery', revenue: 150, quantity: 10, customer: 'PaperWorks' },
+    { id: 7, date: '2025-02-15', name: 'Electronics', region: 'East', product: 'Laptop', revenue: 1200, quantity: 2, customer: 'MobileTech' },
+    { id: 8, date: '2025-02-20', name: 'Office', region: 'West', product: 'Printer', revenue: 400, quantity: 1, customer: 'PaperWorks' },
+    { id: 9, date: '2025-03-01', name: 'Furniture', region: 'North', product: 'Bookshelf', revenue: 300, quantity: 1, customer: 'HomeOffice' },
+    { id: 10, date: '2025-03-05', name: 'Electronics', region: 'South', product: 'Smartphone', revenue: 900, quantity: 3, customer: 'TechCorp' },
+    { id: 11, date: '2025-03-10', name: 'Office', region: 'East', product: 'Stationery', revenue: 200, quantity: 15, customer: 'PaperWorks' },
+    { id: 12, date: '2025-03-15', name: 'Furniture', region: 'West', product: 'Desk', revenue: 400, quantity: 1, customer: 'HomeOffice' }
   ];
 
    getConfiguration(): Observable<ReportConfiguration | null> {

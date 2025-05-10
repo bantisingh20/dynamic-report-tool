@@ -41,8 +41,13 @@ export class ReportConfigComponent implements OnInit {
  
     ngOnInit() {
       this.metadataService.getTablesAndViews().subscribe(data => {
+        console.log(data)
         this.tablesAndViews = data;
-        console.log(this.tablesAndViews)
+        this.tablesAndViews = this.tablesAndViews.map(field => ({
+        ...field,
+        label: `${this.capitalize(field.name)} || ${this.capitalize(field.type)}`
+      }));
+
       });
       this.addFilter();
     }
@@ -102,10 +107,29 @@ export class ReportConfigComponent implements OnInit {
     return ['=', '!=', 'contains'];
   }
   
-  onTableSelect(event: Event) {
-    const table = (event.target as HTMLSelectElement).value;
+
+ capitalize(str: string): string {
+  if (!str) return '';
+  const cleanStr = str.replace(/_/g, ' '); // Replace underscores with spaces
+  return cleanStr
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+  onTableSelect(selectedItem: any) {
+    console.log(selectedItem.name);
+    //const table = (event.target as HTMLSelectElement).name;
+    const table = selectedItem.name;
     this.metadataService.getColumns(table).subscribe(cols => {
       this.availableFields = cols;
+
+      this.availableFields = this.availableFields.map(field => ({
+        ...field,
+        label: this.capitalize(field.column_name)
+      }));
+
       console.log(this.availableFields);
       this.reportForm.get('selectedColumns')?.setValue([]); // Clear selected columns
     });
@@ -177,14 +201,14 @@ export class ReportConfigComponent implements OnInit {
       this.sortBy.removeAt(index);
     } 
 
-    // saveConfiguration(): void {
-    //   const config = this.reportForm.value;
-    //   this.reprotconfig.saveConfiguration(config);
-    //   console.log('Report configuration:', config); 
-    // }
+    saveConfiguration(): void {
+      const config = this.reportForm.value;
+      this.reprotconfig.saveConfiguration(config);
+      console.log('Report configuration:', config); 
+    }
 
      // Save the configuration after validation.
-  saveConfiguration(): void {
+  saveConfiguration1(): void {
     const config = this.reportForm.value;
 
     // Check if overall form is valid.

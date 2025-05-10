@@ -1,29 +1,26 @@
 import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-import { MaterialModule } from './material.module';
-import { AppRoutingModule } from './app-routing.module';
-import { AppComponent } from './app.component';
-import { ReportDynamicComponent } from './components/report-dynamic/report-dynamic.component';
-import { HttpClientModule } from '@angular/common/http';
-import { ReactiveFormsModule } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { MaterialModule } from './material.module';
+import { ReactiveFormsModule } from '@angular/forms';
+import { HttpClientModule } from '@angular/common/http';
+import { AppRoutingModule } from './app-routing.module';
+import { BrowserModule } from '@angular/platform-browser';
+import { MatSnackBarModule } from '@angular/material/snack-bar'; 
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { ReportBuilderComponent } from './components/report-builder/report-builder.component';
-// import { FiltersComponent } from './components/filters/filters.component';
-// import { TableViewComponent } from './components/table-view/table-view.component';
+import { AppComponent } from './app.component';
 import { ReportConfigComponent } from './components/report-config/report-config.component'; 
 import { ReportPreviewComponent } from './components/report-preview/report-preview.component';
-import { MatSnackBarModule } from '@angular/material/snack-bar'; 
+import { FormatNamePipe } from './Pipes/format-name.pipe';
+//import { ReportCreatorComponent } from './components/report-creator/report-creator.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    ReportDynamicComponent,
-    ReportBuilderComponent,
-   
+    // ReportCreatorComponent,   
     ReportConfigComponent,
-    ReportPreviewComponent
-   
+    ReportPreviewComponent,
+    FormatNamePipe   
   ],
   imports: [
     BrowserModule,
@@ -33,6 +30,7 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
     ReactiveFormsModule ,
     MaterialModule ,
     FormsModule ,
+    CommonModule,
     MatSnackBarModule
   ],
   providers: [],
