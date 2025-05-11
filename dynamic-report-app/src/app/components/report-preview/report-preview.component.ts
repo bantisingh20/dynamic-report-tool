@@ -1,5 +1,6 @@
 import { Component,OnInit  } from '@angular/core';
 import { ReportConfigService, ReportConfiguration, ReportDataItem } from '../../service/report-config.service';
+import { MetadataService } from '../../service/metadata.service';
 
 @Component({
   selector: 'app-report-preview',
@@ -8,18 +9,25 @@ import { ReportConfigService, ReportConfiguration, ReportDataItem } from '../../
   styleUrl: './report-preview.component.css'
 })
 export class ReportPreviewComponent implements OnInit {
-  originalData: ReportDataItem[] = [];
+  originalData: any[] = [];
   filteredData: ReportDataItem[] = [];
   groupedData: Record<string, ReportDataItem[]> = {};
   chartData: {label: string; value: number}[] = []; 
   currentConfig: ReportConfiguration | null = null;
    
-  displayedColumns: (keyof ReportDataItem)[] = ['date', 'name', 'region', 'product', 'revenue', 'quantity', 'customer'];
-
-  constructor(private reportConfigService: ReportConfigService) { }
+  //displayedColumns: (keyof ReportDataItem)[] = ['date', 'name', 'region', 'product', 'revenue', 'quantity', 'customer'];
+  displayedColumns :any[] =[];
+  
+  constructor(private reportConfigService: ReportConfigService,private metadataService:MetadataService) { }
 
   ngOnInit(): void {
-    this.originalData = this.reportConfigService.getDummyData();
+    //this.originalData = this.reportConfigService.getDummyData();
+    const config = this.reportConfigService.getConfiguration();
+    
+    this.metadataService.getDataforPreview(config).subscribe(data =>{
+        console.log(data);
+        this.originalData = data;
+    }); 
     
     this.reportConfigService.getConfiguration().subscribe(config => {
       this.currentConfig = config;
@@ -38,10 +46,10 @@ export class ReportPreviewComponent implements OnInit {
     }
     
     // Apply filters
-    this.filteredData = this.reportConfigService.applyFilters(
-      this.originalData, 
-      this.currentConfig.filters
-    );
+    // this.filteredData = this.reportConfigService.applyFilters(
+    //   this.originalData, 
+    //   this.currentConfig.filters
+    // );
     
     // Apply sorting
     this.filteredData = this.reportConfigService.applySorting(

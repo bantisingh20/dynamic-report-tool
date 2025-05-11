@@ -369,29 +369,22 @@
             <p class="small text-muted">Step 1: Choose the table or view below.</p>
             <div class="mb-3">
               <label class="form-label">Table or View</label>
-              <!-- <select
-                class="form-select"
-                formControlName="dataSource"
-                (change)="onTableSelect($event)">
-                <option value="">Select Table or View</option>
-                <option *ngFor="let table of tablesAndViews" [value]="table.name">
-                  {{  capitalize(table.name) }} || {{ capitalize(table.type) }}
-
-                </option>
-              </select> -->
-
+              
               <ng-select
                 [items]="tablesAndViews"
                 bindLabel="label"
                 bindValue="name"
                 (change)="onTableSelect($event)"
                 [multiple]="false"
-                formControlName="dataSource"
-                placeholder="Select filter"
+                formControlName="tableandView"
+                placeholder="Select Table"
                 [closeOnSelect]="true"
                 class="w-100"> <!-- makes it full width -->
               </ng-select>
 
+              <div *ngIf="reportForm.get('tableandView')?.touched && reportForm.get('tableandView')?.invalid" class="text-danger small">
+                Please select a table or view to proceed.
+              </div>
 
             </div>
             <div class="mb-3">
@@ -406,6 +399,17 @@
                 [closeOnSelect]="false"
                 class="w-100">
               </ng-select>
+
+              <!-- <mat-form-field class="w-100">
+  <mat-label>Select columns</mat-label>
+  <mat-select [formControl]="selectedColumnsControl" multiple>
+    <mat-option *ngFor="let field of availableFields" [value]="field.column_name">
+      {{ field.label }}
+    </mat-option>
+  </mat-select>
+</mat-form-field> -->
+
+
               <small class="text-muted">Choose the columns you want in your report.</small>
             </div>
           </div>
@@ -468,7 +472,7 @@
             </div> -->
 
 
-            
+             
 
             <div formArrayName="filters" class= "mb-4">
   <h5 class="card-title text-secondary mb-3">
@@ -569,6 +573,7 @@
                 </button>
               </div>
               <button
+              *ngIf="groupBy.length === 0"
                 type="button"
                 class="btn btn-outline-primary btn-sm"
                 (click)="addGrouping()"
@@ -650,6 +655,17 @@
     </div>
   </div>
 </form>
+
+<app-custom-table  *ngIf="showPreview && previewData?.length"
+ [data]="previewData" [columns]="displayedColumns"
+ [groupBy]="groupByFields"
+ ></app-custom-table>
+
+<!-- Optional: show a message if no preview data -->
+<div *ngIf="showPreview && previewData?.length === 0" class="text-muted text-center mt-3">
+  No data returned for the selected configuration.
+</div>
+
 
 <!-- Help Modal -->
 <div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">

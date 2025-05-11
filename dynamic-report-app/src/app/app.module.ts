@@ -12,6 +12,7 @@ import { AppComponent } from './app.component';
 import { ReportConfigComponent } from './components/report-config/report-config.component'; 
 import { ReportPreviewComponent } from './components/report-preview/report-preview.component';
 import { FormatNamePipe } from './Pipes/format-name.pipe';
+import { CustomTableComponent } from './components/custom-table/custom-table.component';
 //import { ReportCreatorComponent } from './components/report-creator/report-creator.component';
 
 @NgModule({
@@ -20,7 +21,8 @@ import { FormatNamePipe } from './Pipes/format-name.pipe';
     // ReportCreatorComponent,   
     ReportConfigComponent,
     ReportPreviewComponent,
-    FormatNamePipe   
+    FormatNamePipe   ,
+    CustomTableComponent
   ],
   imports: [
     BrowserModule,

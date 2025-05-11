@@ -1,0 +1,80 @@
+<!-- <div class="table-wrapper p-3 m-3">
+  <div *ngFor="let groupKey of groupKeys">
+     
+    <h5 class="text-primary mb-2 mt-4">
+      <i class="bi bi-diagram-3"></i> {{ groupKey }}
+    </h5>
+ 
+    <table class="custom-table table-bordered table-sm">
+      <thead>
+        <tr>
+          <th *ngFor="let col of columns" class="py-2">{{ col | formatName }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of groupedData[groupKey]; let i = index" [ngClass]="i % 2 === 0 ? 'custom-row-even' : 'custom-row-odd'">
+          <td *ngFor="let col of columns" class="py-2">
+            <div class="scroll-cell">
+              {{ item[col] }}
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div> -->
+
+
+<div class="table-wrapper p-3 m-3">
+  <div *ngFor="let groupKey of groupKeys">
+    <!-- Group Header -->
+    <h5 class="text-primary mb-2 mt-4">
+      <i class="bi bi-diagram-3"></i> {{ groupKey }}
+    </h5>
+
+    <!-- Group Table -->
+    <table class="custom-table table-bordered table-sm">
+      <thead>
+        <tr>
+          <th *ngFor="let col of columns" class="py-2">{{ col | formatName }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of paginatedData[groupKey]; let i = index" [ngClass]="i % 2 === 0 ? 'custom-row-even' : 'custom-row-odd'">
+          <td *ngFor="let col of columns" class="py-2">
+            <div class="scroll-cell">
+              {{ item[col] }}
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Pagination Controls -->
+    <div class="pagination-controls mt-3">
+     
+
+      <!-- Bootstrap Pagination Component -->
+      <nav aria-label="Page navigation">
+
+         <label for="pageSize" class="mr-2">Items per page:</label>
+      <select id="pageSize" class="  form-select-sm" [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+        <option class="form-control" *ngFor="let size of pageSizes" [value]="size">{{ size }}</option>
+      </select>
+
+        <ul class="pagination pagination-sm justify-content-center">
+          <li class="page-item" [class.disabled]="currentPage === 1">
+            <button class="page-link" (click)="changePage('previous')" [disabled]="currentPage === 1">Previous</button>
+          </li>
+          <li class="page-item disabled">
+            <span class="page-link">Page {{ currentPage }} of {{ totalPages }}</span>
+          </li>
+          <li class="page-item" [class.disabled]="currentPage === totalPages">
+            <button class="page-link" (click)="changePage('next')" [disabled]="currentPage === totalPages">Next</button>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+</div>
+

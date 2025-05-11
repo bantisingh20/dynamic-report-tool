@@ -27,6 +27,11 @@ async function getColumnMetadata(tableName) {
 async function getData(tableName, selectedColumns) {
   //console.log(selectedColumns);  // const columns = selectedColumns.map(col => col.columns).flat().join(', ');
 
+  console.log(selectedColumns);
+
+  if(selectedColumns == null){
+    selectedColumns = "*";
+  }
    const query = `SELECT ${selectedColumns} FROM ${tableName}` 
    const res = await pool.query(query);
 

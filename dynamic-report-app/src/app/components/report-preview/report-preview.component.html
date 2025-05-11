@@ -60,7 +60,7 @@
     <h5 *ngIf="getGroupNames().length > 1" class="text-primary mb-3">Group: {{ groupName | formatName }}</h5>
 
     <div class="table-responsive shadow-sm border rounded">
-      <table class="table table-striped table-hover align-middle mb-0">
+      <!-- <table class="table table-striped table-hover align-middle mb-0">
         <thead class="table-light">
           <tr>
             <th *ngFor="let col of displayedColumns" class="text-uppercase fw-semibold">{{ col | formatName }}</th>
@@ -71,39 +71,31 @@
             <td *ngFor="let col of displayedColumns">{{ item[col] }}</td>
           </tr>
         </tbody>
-      </table>
+      </table> -->
+ 
+
+<div class="table-wrapper">
+  <table class="custom-table">
+    <thead>
+      <tr>
+        <th *ngFor="let col of displayedColumns">
+          {{ col | formatName }}
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let item of groupedData[groupName]; let i = index"
+          [ngClass]="i % 2 === 0 ? 'custom-row-even' : 'custom-row-odd'">
+        <!-- <td *ngFor="let col of displayedColumns" [title]="item[col]">
+          {{ item[col] }}
+        </td> -->
+      </tr>
+    </tbody>
+</table>
+
+
+
     </div>
   </div>
 </div>  
-
  
-<table class="table table-striped">
-  <thead>
-    <tr>
-      <th scope="col">#</th>
-      <th scope="col">First</th>
-      <th scope="col">Last</th>
-      <th scope="col">Handle</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th scope="row">1</th>
-      <td>Mark</td>
-      <td>Otto</td>
-      <td>mdo</td>
-    </tr>
-    <tr>
-      <th scope="row">2</th>
-      <td>Jacob</td>
-      <td>Thornton</td>
-      <td>fat</td>
-    </tr>
-    <tr>
-      <th scope="row">3</th>
-      <td>Larry</td>
-      <td>the Bird</td>
-      <td>twitter</td>
-    </tr>
-  </tbody>
-</table>

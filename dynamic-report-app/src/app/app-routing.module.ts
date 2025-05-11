@@ -1,9 +1,10 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
+import { ReportConfigComponent } from './components/report-config/report-config.component';
 
 const routes: Routes = [
-  // { path: '', redirectTo: 'table-selector', pathMatch: 'full' },
-  // {path :'table-selector', component:ReportDynamicComponent}
+   { path: '', redirectTo: 'Create-Custom-Report', pathMatch: 'full' },
+   {path :'Create-Custom-Report', component:ReportConfigComponent}
   // {
   //   path: '',
   //   component: LayoutComponent, 

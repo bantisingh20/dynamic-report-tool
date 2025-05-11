@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ReportCreatorComponent } from './report-creator.component';
+import { CustomTableComponent } from './custom-table.component';
 
-describe('ReportCreatorComponent', () => {
-  let component: ReportCreatorComponent;
-  let fixture: ComponentFixture<ReportCreatorComponent>;
+describe('CustomTableComponent', () => {
+  let component: CustomTableComponent;
+  let fixture: ComponentFixture<CustomTableComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ReportCreatorComponent]
+      declarations: [CustomTableComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(ReportCreatorComponent);
+    fixture = TestBed.createComponent(CustomTableComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
