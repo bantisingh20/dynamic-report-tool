@@ -1,14 +1,19 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
 })
 export class MetadataService {
+
+  currentPath: string;
   private apiUrl = 'http://localhost:3000/api/metadata';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient,private router: Router) {
+    this.currentPath = this.router.url;
+  }
 
   getTablesAndViews(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/tables`);
@@ -19,17 +24,15 @@ export class MetadataService {
   }
 
   getDataforPreview(config :any){
-    // const requestPayload = {
-    //   tableName,
-    //   selectedColumns :Array.from(selectedColumns),
-    // };
-
     console.log('Request Payload:', config);
-
     return this.http.post<string[]>(`${this.apiUrl}/report/preview`, config);
   }
 
   SaveReportForamt(report :any){
-    return this.http.post(`${this.apiUrl}/save`, report);
+    return this.http.post(`${this.apiUrl}/report/save`, report);
+  }
+
+  getListOfReportConfigure(){
+     return this.http.get<string[]>(`${this.apiUrl}${this.currentPath}`);
   }
 }

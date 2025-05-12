@@ -16,11 +16,13 @@ export class CustomTableComponent implements OnInit, OnChanges {
 
   // Pagination properties
   pageSizes = [5, 10, 15, 20]; // Array of available page sizes
-  pageSize = 5; // Default page size
-  currentPage = 1; // Current page
-  totalPages = 1; // Total number of pages
+  pageSize = 10; // Default page size
   paginatedData: { [key: string]: any[] } = {}; // Paginated data for each group
+  groupPageSizes: { [groupKey: string]: number } = {};
 
+  currentPages: { [key: string]: number } = {};
+  totalPages: { [key: string]: number } = {};
+shouldUpdatePreview: boolean = false;
   constructor() {}
 
   ngOnInit(): void {
@@ -32,6 +34,7 @@ export class CustomTableComponent implements OnInit, OnChanges {
     if (changes['data'] || changes['groupBy']) {
       this.processGrouping();
       this.updatePagination();
+      this.shouldUpdatePreview = false;
     }
   }
 
@@ -58,36 +61,70 @@ export class CustomTableComponent implements OnInit, OnChanges {
     this.groupKeys = Object.keys(grouped);
   }
 
-  updatePagination() {
-    // Dynamically calculate total pages for each group based on the page size
-    this.totalPages = Math.ceil(this.data.length / this.pageSize);
-    this.paginateData();
-  }
+   updatePagination() {
+  this.paginatedData = {};
+  // Instead of resetting currentPages completely, we update each group.
+  for (const groupKey of this.groupKeys) {
+    const groupData = this.groupedData[groupKey];
+    const total = Math.ceil(groupData.length / this.pageSize);
+    this.totalPages[groupKey] = total;
 
-  paginateData() {
-    // Create paginated data dynamically for each group
-    this.paginatedData = {};
-    for (const groupKey of this.groupKeys) {
-      const groupData = this.groupedData[groupKey];
-      const startIndex = (this.currentPage - 1) * this.pageSize;
-      const endIndex = startIndex + this.pageSize;
-      this.paginatedData[groupKey] = groupData.slice(startIndex, endIndex);
+    // Only set to page 1 if there's no value already or if the saved page is out of range.
+    if (!this.currentPages[groupKey] || this.currentPages[groupKey] > total) {
+      this.currentPages[groupKey] = 1;
     }
-  }
 
-  changePage(direction: string) {
-    // Change page number based on navigation direction
-    if (direction === 'previous' && this.currentPage > 1) {
-      this.currentPage--;
-    } else if (direction === 'next' && this.currentPage < this.totalPages) {
-      this.currentPage++;
-    }
-    this.paginateData();
+    const startIndex = (this.currentPages[groupKey] - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    this.paginatedData[groupKey] = groupData.slice(startIndex, endIndex);
   }
+}
 
-  onPageSizeChange() {
-    // Reset to first page when page size changes
-    this.currentPage = 1;
-    this.updatePagination();
+
+
+paginateData() {
+  for (const groupKey of this.groupKeys) {
+    const groupData = this.groupedData[groupKey];
+    const pageSize = this.groupPageSizes[groupKey] || this.pageSize;
+    const currentPage = this.currentPages[groupKey] || 1;
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    this.paginatedData[groupKey] = groupData.slice(startIndex, endIndex);
   }
+}
+
+
+changePage(groupKey: string, direction: string) {
+  const current = this.currentPages[groupKey] || 1;
+  const total = this.totalPages[groupKey] || 1;
+  console.log(`Before change - Group: ${groupKey}, Current Page: ${current}, Total: ${total}`);
+  
+  if (direction === 'previous' && current > 1) {
+    this.currentPages[groupKey] = current - 1;
+  } else if (direction === 'next' && current < total) {
+    this.currentPages[groupKey] = current + 1;
+  }
+  
+  console.log(`After change - Group: ${groupKey}, New Current Page: ${this.currentPages[groupKey]}`);
+  this.paginateData();
+}
+
+
+onGroupPageSizeChange(groupKey: string) {
+  // Reset to first page when the page size changes for this group.
+  this.currentPages[groupKey] = 1;
+  const pageSize = this.groupPageSizes[groupKey];
+  const groupData = this.groupedData[groupKey];
+  this.totalPages[groupKey] = Math.ceil(groupData.length / pageSize);
+  this.paginatedData[groupKey] = groupData.slice(0, pageSize);
+}
+
+ onPageSizeChange() {
+  // Reset current page for all groups to 1
+  for (const groupKey of this.groupKeys) {
+    this.currentPages[groupKey] = 1;
+  }
+  this.updatePagination();
+}
+
 }

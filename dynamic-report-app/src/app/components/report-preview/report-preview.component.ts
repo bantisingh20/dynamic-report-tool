@@ -21,7 +21,7 @@ export class ReportPreviewComponent implements OnInit {
   constructor(private reportConfigService: ReportConfigService,private metadataService:MetadataService) { }
 
   ngOnInit(): void {
-    //this.originalData = this.reportConfigService.getDummyData();
+ 
     const config = this.reportConfigService.getConfiguration();
     
     this.metadataService.getDataforPreview(config).subscribe(data =>{
@@ -61,14 +61,7 @@ export class ReportPreviewComponent implements OnInit {
     this.groupedData = this.reportConfigService.applyGrouping(
       this.filteredData,
       this.currentConfig.groupBy
-    );
-    
-    // Prepare chart data
-    this.chartData = this.reportConfigService.prepareChartData(
-      this.filteredData,
-      this.currentConfig.xAxis,
-      this.currentConfig.yAxis
-    );
+    ); 
   }
   
   // Helper method for template

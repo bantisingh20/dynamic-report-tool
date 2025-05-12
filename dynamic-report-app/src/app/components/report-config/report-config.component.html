@@ -1,341 +1,10 @@
-<!-- <form [formGroup]="reportForm" (ngSubmit)="saveConfiguration()" class="container py-4">
 
-  <div class="container-fluid py-4 bg-light text-dark">
-  <h2 class="mb-4 text-primary"><i class="bi bi-gear-fill"></i> Report Builder</h2>
-
-  <div class="row"> 
-    <div class="col-md-3 bg-white border rounded shadow-sm p-3">
-      <h5 class="text-secondary"><i class="bi bi-table"></i> Data Source</h5>
-      <div class="mb-3">
-        <label class="form-label">Table/View</label>
-        <select class="form-select" formControlName="dataSource" (change)="onTableSelect($event)">
-          <option value="">Select Table/View</option>
-          <option *ngFor="let table of tablesAndViews" [value]="table.name">{{ table.name }} || {{table.type}}</option>
-        </select>
-      </div>
-
-      <div class="mb-3">
-        <label class="form-label">Columns</label>
-        <ng-select
-        [items]="availableFields"
-        [multiple]="true"
-        bindLabel="label"  
-        formControlName="selectedColumns"
-        placeholder="Select columns"
-        [closeOnSelect]="false"
-        class="w-100">
-      </ng-select>
-      
-      </div>
-    </div>
- 
-    <div class="col-md-9 bg-white border rounded shadow-sm p-3" [formGroup]="reportForm">
- 
-      <div formArrayName="filters" class="mb-4">
-        <h5 class="text-secondary"><i class="bi bi-funnel"></i> Filters</h5>
-        <div *ngFor="let filter of filters.controls; let i = index" [formGroupName]="i" class="row g-2 mb-2">
-          <div class="col">
-            <select class="form-select" formControlName="field">
-              <option *ngFor="let field of availableFields" [value]="field">{{ field }}</option>
-            </select>
-          </div>
-          <div class="col">
-            <select class="form-select" formControlName="operator">
-              <option *ngFor="let op of operators" [value]="op">{{ op }}</option>
-            </select>
-          </div>
-          <div class="col">
-            <input type="text" class="form-control" formControlName="value" placeholder="Value" />
-          </div>
-          <div class="col-auto">
-            <button class="btn btn-outline-danger btn-sm" (click)="removeFilter(i)">
-              <i class="bi bi-trash"></i>
-            </button>
-          </div>
-        </div>
-        <button class="btn btn-outline-primary btn-sm" (click)="addFilter()">
-          <i class="bi bi-plus-circle"></i> Add Filter
-        </button>
-      </div>
- 
-      <div formArrayName="groupBy" class="mb-4">
-        <h5 class="text-secondary"><i class="bi bi-collection"></i> Group By</h5>
-        <div *ngFor="let group of groupBy.controls; let i = index" [formGroupName]="i" class="d-flex gap-2 mb-2">
-          <select class="form-select" formControlName="field">
-            <option *ngFor="let field of availableFields" [value]="field">{{ field }}</option>
-          </select>
-          <button class="btn btn-outline-danger btn-sm" (click)="removeGrouping(i)">
-            <i class="bi bi-trash"></i>
-          </button>
-        </div>
-        <button class="btn btn-outline-primary btn-sm" (click)="addGrouping()">
-          <i class="bi bi-plus-circle"></i> Add Grouping
-        </button>
-      </div>
- 
-      <div formArrayName="sortBy" class="mb-4">
-        <h5 class="text-secondary"><i class="bi bi-sort-alpha-down"></i> Sort By</h5>
-        <div *ngFor="let sort of sortBy.controls; let i = index" [formGroupName]="i" class="row g-2 mb-2">
-          <div class="col">
-            <select class="form-select" formControlName="field">
-              <option *ngFor="let field of availableFields" [value]="field">{{ field }}</option>
-            </select>
-          </div>
-          <div class="col">
-            <select class="form-select" formControlName="direction">
-              <option value="asc">Ascending</option>
-              <option value="desc">Descending</option>
-            </select>
-          </div>
-          <div class="col-auto">
-            <button class="btn btn-outline-danger btn-sm" (click)="removeSorting(i)">
-              <i class="bi bi-trash"></i>
-            </button>
-          </div>
-        </div>
-        <button class="btn btn-outline-primary btn-sm" (click)="addSorting()">
-          <i class="bi bi-plus-circle"></i> Add Sorting
-        </button>
-      </div>
- 
-      <div class="text-end">
-        <button class="btn btn-success" type="submit">
-          <i class="bi bi-save"></i> Save Report
-        </button>
-      </div>
-
-    </div>
-  </div>
-</div>
-
-
-
-
-  
-</form> -->
-
-
-
-
-<!-- 
-<form [formGroup]="reportForm" (ngSubmit)="saveConfiguration()" class="container py-4">
-  <div class="container-fluid py-4 bg-light text-dark">
-     
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h2 class="text-primary">
-        <i class="bi bi-gear-fill text-warning"></i> Report Builder
-      </h2>
-      <button
-        type="button"
-        class="btn btn-info"
-        (click)="addNewReport()"
-        data-bs-toggle="tooltip"
-        data-bs-title="Add New Report">
-        <i class="bi bi-plus-circle"></i> New Report
-      </button>
-    </div>
-    
-    <div class="row"> 
-      <div class="col-md-3">
-        <div class="card shadow-sm mb-3">
-          <div class="card-body">
-            <h5 class="card-title text-secondary">
-              <i class="bi bi-table text-success"></i> Data Source
-            </h5>
-            <div class="mb-3">
-              <label class="form-label">Table/View</label>
-              <select
-                class="form-select"
-                formControlName="dataSource"
-                (change)="onTableSelect($event)">
-                <option value="">Select Table/View</option>
-                <option *ngFor="let table of tablesAndViews" [value]="table.name">
-                  {{ table.name }} || {{ table.type }}
-                </option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Columns</label>
-              <ng-select
-                [items]="availableFields"
-                [multiple]="true"
-                bindLabel="label"
-                formControlName="selectedColumns"
-                placeholder="Select columns"
-                [closeOnSelect]="false"
-                class="w-100">
-              </ng-select>
-            </div>
-          </div>
-        </div>
-      </div>
-       
-      <div class="col-md-9">
-        <div class="card shadow-sm">
-          <div class="card-body">
-             
-            <div formArrayName="filters" class="mb-4">
-              <h5 class="card-title text-secondary mb-3">
-                <i class="bi bi-funnel text-danger"></i> Filters
-              </h5>
-              <div
-                *ngFor="let filter of filters.controls; let i = index"
-                [formGroupName]="i"
-                class="row g-2 mb-2">
-                <div class="col">
-                  <select class="form-select" formControlName="field">
-                    <option *ngFor="let field of availableFields" [value]="field">
-                      {{ field }}
-                    </option>
-                  </select>
-                </div>
-                <div class="col">
-                  <select class="form-select" formControlName="operator">
-                    <option *ngFor="let op of operators" [value]="op">
-                      {{ op }}
-                    </option>
-                  </select>
-                </div>
-                <div class="col">
-                  <input type="text" class="form-control" formControlName="value" placeholder="Value" />
-                </div>
-                <div class="col-auto">
-                  <button
-                    type="button"
-                    class="btn btn-outline-danger btn-sm"
-                    (click)="removeFilter(i)"
-                    data-bs-toggle="tooltip"
-                    data-bs-title="Remove Filter">
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </div>
-              </div>
-              <button
-                type="button"
-                class="btn btn-outline-primary btn-sm"
-                (click)="addFilter()"
-                data-bs-toggle="tooltip"
-                data-bs-title="Add Filter">
-                <i class="bi bi-plus-circle"></i> Add Filter
-              </button>
-            </div>
-             
-            <div formArrayName="groupBy" class="mb-4">
-              <h5 class="card-title text-secondary mb-3">
-                <i class="bi bi-collection text-info"></i> Group By
-              </h5>
-              <div
-                *ngFor="let group of groupBy.controls; let i = index"
-                [formGroupName]="i"
-                class="d-flex gap-2 mb-2">
-                <select class="form-select" formControlName="field">
-                  <option *ngFor="let field of availableFields" [value]="field">
-                    {{ field }}
-                  </option>
-                </select>
-                <button
-                  type="button"
-                  class="btn btn-outline-danger btn-sm"
-                  (click)="removeGrouping(i)"
-                  data-bs-toggle="tooltip"
-                  data-bs-title="Remove Grouping">
-                  <i class="bi bi-trash"></i>
-                </button>
-              </div>
-              <button
-                type="button"
-                class="btn btn-outline-primary btn-sm"
-                (click)="addGrouping()"
-                data-bs-toggle="tooltip"
-                data-bs-title="Add Grouping">
-                <i class="bi bi-plus-circle"></i> Add Grouping
-              </button>
-            </div>
-             
-            <div formArrayName="sortBy" class="mb-4">
-              <h5 class="card-title text-secondary mb-3">
-                <i class="bi bi-sort-alpha-down text-secondary"></i> Sort By
-              </h5>
-              <div
-                *ngFor="let sort of sortBy.controls; let i = index"
-                [formGroupName]="i"
-                class="row g-2 mb-2">
-                <div class="col">
-                  <select class="form-select" formControlName="field">
-                    <option *ngFor="let field of availableFields" [value]="field">
-                      {{ field }}
-                    </option>
-                  </select>
-                </div>
-                <div class="col">
-                  <select class="form-select" formControlName="direction">
-                    <option value="asc">Ascending</option>
-                    <option value="desc">Descending</option>
-                  </select>
-                </div>
-                <div class="col-auto">
-                  <button
-                    type="button"
-                    class="btn btn-outline-danger btn-sm"
-                    (click)="removeSorting(i)"
-                    data-bs-toggle="tooltip"
-                    data-bs-title="Remove Sorting">
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </div>
-              </div>
-              <button
-                type="button"
-                class="btn btn-outline-primary btn-sm"
-                (click)="addSorting()"
-                data-bs-toggle="tooltip"
-                data-bs-title="Add Sorting">
-                <i class="bi bi-plus-circle"></i> Add Sorting
-              </button>
-            </div>
-             
-            <div class="d-flex justify-content-end gap-2">
-              <button
-                type="button"
-                class="btn btn-primary"
-                (click)="previewReport()"
-                data-bs-toggle="tooltip"
-                data-bs-title="Preview Report">
-                <i class="bi bi-eye"></i> Preview
-              </button>
-              <button
-                type="button"
-                class="btn btn-secondary"
-                (click)="clearReport()"
-                data-bs-toggle="tooltip"
-                data-bs-title="Clear Form">
-                <i class="bi bi-eraser"></i> Clear
-              </button>
-              <button
-                type="submit"
-                class="btn btn-success"
-                data-bs-toggle="tooltip"
-                data-bs-title="Save Report">
-                <i class="bi bi-save"></i> Save
-              </button>
-            </div>
-            
-          </div>
-        </div>
-      </div>
-      
-    </div>
-  </div>
-</form> -->
-
-
-<!-- Report Builder Form -->
 <form [formGroup]="reportForm" (ngSubmit)="saveConfiguration()" class="container py-4">
   <div class="container-fluid py-4 bg-light text-dark">
     <!-- Header: Title, Help & New Report -->
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h2 class="text-primary">
-        <i class="bi bi-gear-fill text-warning"></i> Report Builder
+        <i class="bi bi-gear-fill text-warning"></i> Report Builder [Manually]
       </h2>
       <div>
         <!-- Help Button opens a modal with easy-to-follow instructions -->
@@ -379,7 +48,7 @@
                 formControlName="tableandView"
                 placeholder="Select Table"
                 [closeOnSelect]="true"
-                class="w-100"> <!-- makes it full width -->
+                class="w-100">  
               </ng-select>
 
               <div *ngIf="reportForm.get('tableandView')?.touched && reportForm.get('tableandView')?.invalid" class="text-danger small">
@@ -401,16 +70,21 @@
               </ng-select>
 
               <!-- <mat-form-field class="w-100">
-  <mat-label>Select columns</mat-label>
-  <mat-select [formControl]="selectedColumnsControl" multiple>
-    <mat-option *ngFor="let field of availableFields" [value]="field.column_name">
-      {{ field.label }}
-    </mat-option>
-  </mat-select>
-</mat-form-field> -->
+                <mat-label>Select columns</mat-label>
+                <mat-select [formControl]="selectedColumnsControl" multiple>
+                  <mat-option *ngFor="let field of availableFields" [value]="field.column_name">
+                    {{ field.label }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field> -->
 
 
               <small class="text-muted">Choose the columns you want in your report.</small>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Report Name :</label>
+              <input type="text" formControlName="reportName" placeholder="Enter Report Name" class="form-control">
             </div>
           </div>
         </div>
@@ -420,134 +94,104 @@
       <div class="col-md-9">
         <div class="card shadow-sm">
           <div class="card-body">
-            <!-- Filters Section -->
-            <!-- <div formArrayName="filters" class="mb-4">
-              <h5 class="card-title text-secondary mb-3">
-                <i class="bi bi-funnel text-danger"></i> Filters
-              </h5>
-              <p class="small text-muted">
-                Step 2: Add filters to show only the data you need (for example: by date, department or status).
-              </p>
-              <div *ngFor="let filter of filters.controls; let i = index" [formGroupName]="i" class="row g-2 mb-2">
-                <div class="col">
-                  <select class="form-select" formControlName="field">
-                    <option value="">Select Field</option>
-                    <option *ngFor="let field of availableFields" [value]="field.column_name">
-                      {{ field.column_name }}
-                    </option>
-                  </select>
-                </div>
-                <div class="col">
-                  <select class="form-select" formControlName="operator">
-                    <option value="">Select Condition</option>
-                    <option *ngFor="let op of operators" [value]="op">
-                      {{ op }}
-                    </option>
-                  </select>
-                </div>
-                <div class="col">
-                  <input
-                    type="text"
-                    class="form-control"
-                    formControlName="value"
-                    placeholder="Enter value" />
-                </div>
-                <div class="col-auto">
-                  <button
-                    type="button"
-                    class="btn btn-outline-danger btn-sm"
-                    (click)="removeFilter(i)"
-                    title="Remove this filter">
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </div>
+        
+      <div formArrayName="filters" class="mb-4">
+        <h5 class="card-title text-secondary mb-3">
+          <i class="bi bi-funnel text-danger"></i> Filters
+        </h5>
+        <div *ngFor="let filter of filters.controls; let i = index" [formGroupName]="i" class="row g-2 mb-2">
+          <div class="col">
+            <ng-select [items]="availableFields"
+                      bindLabel="label"
+                      (change)="onFieldChange($event, i)"
+                      bindValue="column_name"
+                      [multiple]="false"
+                      formControlName="field"
+                      placeholder="Select filter"
+                      [closeOnSelect]="true" class="">
+            </ng-select>
+
+            <div *ngIf="filter.get('field')?.invalid && filter.get('field')?.touched" class="text-danger small">
+              Field is required.
+            </div>
+          </div>
+
+          <div class="col">
+            <select
+              class="form-select"
+              (change)="onOperatorChange(i)"
+              formControlName="operator" 
+              title="Select the filter operator">
+              <option value="">Select Operator</option>
+              <option *ngFor="let op of operators" [value]="op">
+                {{ op }}
+              </option>
+            </select>       
+            <div *ngIf="filter.get('operator')?.invalid && filter.get('operator')?.touched" class="text-danger small">
+              Operator is required.
+            </div>
+          </div>
+
+          <!-- Value Inputs: Conditionally show single input or two inputs for "between" -->
+    
+          <ng-container *ngIf="filter.get('operator')?.value === 'between'; else singleValue">
+            <div class="col">
+              <input
+                [type]="getInputType(filter.get('selectedField')?.value?.data_type)"
+                class="form-control mb-2"
+                formControlName="valueFrom"
+                placeholder="From" 
+                />
+              <div *ngIf="filter.get('valueFrom')?.invalid && filter.get('valueFrom')?.touched" class="text-danger small">
+                From value is required.
               </div>
-              <button
-                type="button"
-                class="btn btn-outline-primary btn-sm"
-                (click)="addFilter()"
-                title="Add a new filter">
-                <i class="bi bi-plus-circle"></i> Add Filter
-              </button>
-            </div> -->
+
+              <input
+                [type]="getInputType(filter.get('selectedField')?.value?.data_type)"
+                class="form-control"
+                formControlName="valueTo"
+                placeholder="To" />
+              <div *ngIf="filter.get('valueTo')?.invalid && filter.get('valueTo')?.touched" class="text-danger small">
+                To value is required.
+              </div>
+            </div>
+          </ng-container>
+
+          <!-- Other operators: show single input -->
+          <ng-template #singleValue>
+            <div class="col">
+              <input
+                [type]="getInputType(filter.get('selectedField')?.value?.data_type)"
+                class="form-control"
+                formControlName="value"
+                placeholder="Enter value" />
+              <div *ngIf="filter.get('value')?.invalid && filter.get('value')?.touched" class="text-danger small">
+                Value is required.
+              </div>
+            </div>
+          </ng-template>
 
 
-             
+          <!-- Remove Button -->
+          <div class="col-auto">
+            <button
+              type="button"
+              class="btn btn-outline-danger btn-sm"
+              (click)="removeFilter(i)"
+              title="Remove this filter">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        </div>
 
-            <div formArrayName="filters" class= "mb-4">
-  <h5 class="card-title text-secondary mb-3">
-    <i class="bi bi-funnel text-danger"></i> Filters
-  </h5>
-  <p class="small text-muted">
-    Step 2: Add filters to show only the data you need (for example, by date, department, or status).
-  </p>
-  <div *ngFor="let filter of filters.controls; let i = index" [formGroupName]="i" class="row g-2 mb-2">
-    <!-- Field Selection -->
-    <div class="col">
-      <ng-select [items]="availableFields"
-                bindLabel="label"   (change)="onFieldChange(i)"
-                bindValue="availableFields" [multiple]="false" 
-                formControlName="field" placeholder="Select filter"
-                [closeOnSelect]="true" class="">
-      </ng-select>
-    </div>
-    <!-- Operator Selection -->
-    <div class="col">
-      <select
-        class="form-select"
-        formControlName="operator"
-        (change)="onOperatorChange(i)"
-        title="Select the filter operator">
-        <option value="">Select Operator</option>
-        <option *ngFor="let op of getOperators(filter.get('field')?.value)" [value]="op">
-          {{ op }}
-        </option>
-      </select>
-    </div>
-    <!-- Value Inputs: Conditionally show single input or two inputs for "between" -->
-    <ng-container *ngIf="filter.get('operator')?.value === 'between'; else singleValue">
-      <div class="col">
-        <input
-          type="text"
-          class="form-control mb-2"
-          formControlName="valueFrom"
-          placeholder="From" />
-        <input
-          type="text"
-          class="form-control"
-          formControlName="valueTo"
-          placeholder="To" />
+        <button
+          type="button"
+          class="btn btn-outline-primary btn-sm"
+          (click)="addFilter()"
+          title="Add a new filter">
+          <i class="bi bi-plus-circle"></i> Add Filter
+        </button>
       </div>
-    </ng-container>
-    <ng-template #singleValue>
-      <div class="col">
-        <input
-          type="text"
-          class="form-control"
-          formControlName="value"
-          placeholder="Enter value" />
-      </div>
-    </ng-template>
-    <!-- Remove Button -->
-    <div class="col-auto">
-      <button
-        type="button"
-        class="btn btn-outline-danger btn-sm"
-        (click)="removeFilter(i)"
-        title="Remove this filter">
-        <i class="bi bi-trash"></i>
-      </button>
-    </div>
-  </div>
-  <button
-    type="button"
-    class="btn btn-outline-primary btn-sm"
-    (click)="addFilter()"
-    title="Add a new filter">
-    <i class="bi bi-plus-circle"></i> Add Filter
-  </button>
-</div>
-
 
             <!-- Group By Section -->
             <div formArrayName="groupBy" class="mb-4">
@@ -564,6 +208,10 @@
                     {{ field.label }}
                   </option>
                 </select>
+
+                   <div *ngIf="groupBy.get('field')?.invalid && groupBy.get('field')?.touched" class="text-danger small">
+              Field is required.
+            </div>
                 <button
                   type="button"
                   class="btn btn-outline-danger btn-sm"

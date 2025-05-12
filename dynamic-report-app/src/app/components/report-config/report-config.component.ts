@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, FormArray, Validators, FormControl } from '@ang
 import { ReportConfigService } from '../../service/report-config.service';
 import { MetadataService } from '../../service/metadata.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '../../service/NotificationService.service';
 
 @Component({
   selector: 'app-report-config',
@@ -14,118 +15,54 @@ export class ReportConfigComponent implements OnInit {
 
   previewData: any[] = [];
   displayedColumns: string[] = [];
-
-    showPreview = false;
-    operators: string[] = ['between','equals', 'not equals', 'greater than', 'less than', 'contains'];
-    tablesAndViews: any[] = [];   
-    availableFields: any[] = [];   
-    
-    reportForm = new FormGroup({
-      tableandView: new FormControl(null, Validators.required),
-      selectedColumns: new FormControl([]),
-      filters: new FormArray([]),
-      groupBy: new FormArray([]),
-      sortBy: new FormArray([]),
-    }); // reactive form for preview and save 
-
-    constructor(private snackBar: MatSnackBar,private metadataService: MetadataService,private fb: FormBuilder, private reprotconfig:ReportConfigService) {}
-
-    showSuccess() {
-      // this.toastService.success('Hello, this is a success message!');
-      this.snackBar.open('✅ Success message', 'Close', {
-          duration: 3000,
-          panelClass: ['success-snackbar'],
-          horizontalPosition: 'right',
-          verticalPosition: 'top'
-        });
-    }
-
- 
-    ngOnInit() {
-      this.metadataService.getTablesAndViews().subscribe(data => {
-        console.log(data)
-        this.tablesAndViews = data;
-        this.tablesAndViews = this.tablesAndViews.map(field => ({
-        ...field,
-        label: `${this.capitalize(field.name)} || ${this.capitalize(field.type)}`
-      }));
-      });
-
-    }
- 
-    createFilter(): FormGroup {
-      return this.fb.group({
-        field: [null, Validators.required],
-        operator: ['', Validators.required], 
-        value: ['', Validators.required],
-        valueFrom: ['', Validators.required],
-        valueTo: ['', Validators.required]
-      });
-    }
-    
-    onFieldChange(index: number): void {
-      const filterGroup = this.filters.at(index) as FormGroup;
-      // Reset operator and values when the field changes
-      filterGroup.patchValue({
-        operator: '',
-        value: '',
-        valueFrom: '',
-        valueTo: ''
-      });
-    }
- 
-    onOperatorChange(index: number): void {   
-      const filterGroup = this.filters.at(index) as FormGroup;
-      const selectedOperator = filterGroup.get('operator')?.value;
-      const selectedField = filterGroup.get('field')?.value;
-      const allowedTypes = ['date', 'datetime', 'numeric', 'decimal', 'float', 'integer','int'];
-
-      console.log(selectedField); 
-      if (selectedOperator === 'between') {
-        if (!selectedField || allowedTypes.indexOf(selectedField.data_type.toLowerCase()) === -1) {
-          console.log('cannot use between ')
-          filterGroup.get('operator')!.setValue('');
-        }
-      }
-    }
+  showPreview = false;
+  operators: string[] = ['between','equals', 'not equals', 'greater than', 'less than', 'contains'];
+  tablesAndViews: any[] = [];   
+  availableFields: any[] = [];   
+  shouldUpdatePreview: boolean = false;
   
-    getOperators(selectedField: any): string[] {
-      
-      const numericTypes = ['date', 'datetime', 'numeric', 'decimal', 'float', 'integer'];
- 
-      if (!selectedField) { 
-        return this.operators;
-      }
+  reportForm = new FormGroup({
+    tableandView: new FormControl(null, Validators.required),
+    reportName :new FormControl(),
+    selectedColumns: new FormControl([]),
+    filters: new FormArray([]),
+    groupBy: new FormArray([]),
+    sortBy: new FormArray([]),
+  }); 
 
-       if (selectedField.data_type === 'date' || selectedField.data_type === 'number') {
-        return ['equal to', 'greater than', 'less than', 'between'];
-      }
-
-      if (numericTypes.indexOf(selectedField.data_type.toLowerCase()) !== -1) { 
-        return ['=', '!=', '>', '<', '>=', '<=', 'between'];
-      }
- 
-      return ['=', '!=', 'contains'];
-    }
+  constructor(private notificationService: NotificationService,private metadataService: MetadataService,private fb: FormBuilder, private reprotconfig:ReportConfigService) {}
   
+  ngOnInit() {
+    this.metadataService.getTablesAndViews().subscribe(data => {
+      console.log(data)
+      this.tablesAndViews = data;
+      this.tablesAndViews = this.tablesAndViews.map(field => ({
+      ...field,
+      label: `${this.capitalize(field.name)} || ${this.capitalize(field.type)}`
+    }));
+    });
+  }
+ 
+  createFilter(): FormGroup {
+    return this.fb.group({
+      field: [null, Validators.required],
+      operator: ['', Validators.required], 
+      value: [''],
+      valueFrom: [''],
+      valueTo: [''],
+      selectedField: null
+    });
+  }
+    
+  // 1. Table Change Based on this Bind all Column 
 
-    capitalize(str: string): string {
-      if (!str) return '';
-      const cleanStr = str.replace(/_/g, ' '); // Replace underscores with spaces
-      return cleanStr
-        .toLowerCase()
-        .split(' ')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-    }
-
-    onTableSelect(selectedItem: any) {
-
+  onTableSelect(selectedItem: any) {
       if(selectedItem == null){
+        this.reportForm.get('selectedColumns')?.setValue([]);
+        this.availableFields=[];
         return;
       }
-      console.log(selectedItem.name);
-      //const table = (event.target as HTMLSelectElement).name;
+      console.log(selectedItem.name); 
       const table = selectedItem.name;
       this.metadataService.getColumns(table).subscribe(cols => {
         this.availableFields = cols;
@@ -136,70 +73,105 @@ export class ReportConfigComponent implements OnInit {
         }));
 
         console.log(this.availableFields);
-        this.reportForm.get('selectedColumns')?.setValue([]); // Clear selected columns
+        this.reportForm.get('selectedColumns')?.setValue([]); 
+        (this.reportForm.get('filters') as FormArray).clear();
+        (this.reportForm.get('groupBy') as FormArray).clear();
+        (this.reportForm.get('sortBy') as FormArray).clear();
+      });
+ 
+  }
+
+  // For Filter field change based on that bind operator and value data type
+    onFieldChange(field: any, index: number): void {
+      const filterGroup = this.filters.at(index) as FormGroup;
+
+      const stringTypes = ['varchar', 'character varying', 'character', 'char', 'text', 'citext'];
+      const numericTypes = ['integer', 'smallint', 'bigint', 'decimal', 'numeric', 'real', 'double precision', 'serial', 'bigserial'];
+      const dateTypes = ['date', 'timestamp', 'timestamp without time zone', 'timestamp with time zone', 'time', 'time without time zone', 'time with time zone'];
+      const booleanTypes = ['boolean'];
+
+      let newOperators: string[] = [];
+
+      if (numericTypes.includes(field.data_type)) {
+        newOperators = ['between', 'equals', 'not equals', 'greater than', 'less than'];
+      } else if (stringTypes.includes(field.data_type)) {
+        newOperators = ['equals', 'not equals', 'contains'];
+      } else if (dateTypes.includes(field.data_type)) {
+        newOperators = ['between', 'equals', 'not equals', 'greater than', 'less than'];
+      } else if (booleanTypes.includes(field.data_type)) {
+        newOperators = ['equals', 'not equals'];
+      } else {
+        newOperators = []; // default: unsupported type
+      }
+        
+
+      this.operators = newOperators;
+      filterGroup.patchValue({
+          operator: '',
+          value: '',
+          valueFrom: '',
+          valueTo: '',
+          selectedField: field
       });
     }
+  
+    // now when user change operator add valiaiton for the mention field 
+    onOperatorChange(index: number): void {
+      const filterGroup = this.filters.at(index) as FormGroup;
+      const operator = filterGroup.get('operator')?.value;
 
+      if (operator === 'between') {
+        filterGroup.get('value')?.clearValidators();
+        filterGroup.get('valueFrom')?.setValidators([Validators.required]);
+        filterGroup.get('valueTo')?.setValidators([Validators.required]);
+      } else {
+        filterGroup.get('value')?.setValidators([Validators.required]);
+        filterGroup.get('valueFrom')?.clearValidators();
+        filterGroup.get('valueTo')?.clearValidators();
+      }
+
+      filterGroup.get('value')?.updateValueAndValidity();
+      filterGroup.get('valueFrom')?.updateValueAndValidity();
+      filterGroup.get('valueTo')?.updateValueAndValidity();
+    }
+
+
+    // return data type for the selected field
+    getInputType(dataType: string): string {
+ 
+      const numberTypes = ['integer', 'smallint', 'bigint', 'decimal', 'numeric', 'real', 'double precision', 'serial', 'bigserial'];
+      const dateTypes = ['date', 'timestamp', 'timestamp with time zone', 'timestamp without time zone'];
+      const booleanTypes = ['boolean'];
+
+      if (numberTypes.includes(dataType)) return 'number';
+      if (dateTypes.includes(dataType)) return 'date';
+      if (booleanTypes.includes(dataType)) return 'checkbox';
+
+      return 'text'; // fallback
+    }
+
+
+ 
+    capitalize(str: string): string {
+      if (!str) return '';
+      const cleanStr = str.replace(/_/g, ' '); // Replace underscores with spaces
+      return cleanStr
+        .toLowerCase()
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    }
 
     get selectedColumnsControl(): FormControl {
       return this.reportForm.get('selectedColumns') as FormControl;
     }
 
-    previewReport(): void {
-      
-      if (this.reportForm.invalid) {
-        this.reportForm.markAllAsTouched(); // show validation messages
-        return;
-      }
-
-      const config = this.reportForm.value; 
-
-      this.metadataService.getDataforPreview(config).subscribe((response:any)  =>{
-            console.log(response);
-            const data = response?.data;
-            console.log(data);
-        if (Array.isArray(data) && data.length > 0) {
-          this.previewData = data;
-          this.displayedColumns = Object.keys(data[0]);
-          console.log('a');
-        } else {
-          this.previewData = [];
-          this.displayedColumns = [];
-          console.log('a1');
-        }
-
-        this.showPreview = true;
-      });       
  
-    }
-
-    // Clears the form inputs
-    clearReport(): void {
-      this.showPreview=false;
-      this.reportForm.reset();
-      (this.reportForm.get('filters') as FormArray).clear();
-      (this.reportForm.get('groupBy') as FormArray).clear();
-      (this.reportForm.get('sortBy') as FormArray).clear();
-      this.reprotconfig.clearConfiguration();
-      console.log('Form cleared');
-    }
-
-    // Creates a new report configuration
-    addNewReport(): void {
-      this.reportForm.reset();
-      (this.reportForm.get('filters') as FormArray).clear();
-      (this.reportForm.get('groupBy') as FormArray).clear();
-      (this.reportForm.get('sortBy') as FormArray).clear();
-      this.reprotconfig.clearConfiguration();
-      console.log('New report initiated');
-    }
-
-   // Get all Filter Array
     get filters() {
       return this.reportForm.get('filters') as FormArray;
     }
 
-    // Get all Group By Array
+ 
     get groupBy() {
       return this.reportForm.get('groupBy') as FormArray;
     }
@@ -208,8 +180,6 @@ export class ReportConfigComponent implements OnInit {
       return this.reportForm.get('groupBy')?.value.map((g: any) => g.field) || [];
     }
 
-
-    // Get all Sort By Array
     get sortBy() {
       return this.reportForm.get('sortBy') as FormArray;
     }
@@ -247,39 +217,98 @@ export class ReportConfigComponent implements OnInit {
       this.sortBy.removeAt(index);
     } 
 
+      
     saveConfiguration(): void {
-      const config = this.reportForm.value;
-      this.reprotconfig.saveConfiguration(config);
-      console.log('Report configuration:', config); 
-    }
- 
 
-    saveConfiguration1(): void {
-    const config = this.reportForm.value;
+      if (this.reportForm.invalid) {
+        this.reportForm.markAllAsTouched(); // show validation messages
+        console.log('error')
+        return;
+      }
+      
+    const reportName = this.reportForm.get('reportName')?.value;
 
-    // Check if overall form is valid.
-    if (this.reportForm.invalid) {
-      //this.toastService.error('Please fill out all required fields', 'Validation Error', { positionClass: 'toast-top-right' });
+    if (!reportName || reportName.trim() === '') {
+      this.notificationService.showNotification('Report name is required','error');
       return;
     }
-    
-    // Validate each filter for the "between" operator.
-    for (const filterGroup of this.filters.controls) {
-      const operator = filterGroup.get('operator')?.value;
-      if (operator === 'between') {
-        if (!filterGroup.get('valueFrom')?.value || !filterGroup.get('valueTo')?.value) {
-          // this.toastService.error(
-          //   `Please provide both "From" and "To" values for the "between" filter.`,
-          //   'Validation Error',
-          //   { positionClass: 'toast-top-right' }
-          // );
-          return; // Stop saving if validation fails.
+
+    const config = this.reportForm.value;
+    this.showPreview=false;
+    this.metadataService.SaveReportForamt(config).subscribe({
+        next: (response :any) =>{        
+          this.notificationService.showNotification(response.message, 'success');
+          this.addNewReport();
+        },
+        error:(err) =>{
+          console.error('Error While Saving: ', err.error); 
+          this.notificationService.showNotification(err.error.message, 'error');
         }
-      }
-    }
- 
-    this.reprotconfig.saveConfiguration(config);
+    }) ;
     console.log('Report configuration:', config);
-    //this.toastService.success('Report configuration saved successfully!', 'Success', { positionClass: 'toast-top-right' });
+   
   }
+
+
+    previewReport(): void {
+      
+      if (this.reportForm.invalid) {
+        this.reportForm.markAllAsTouched(); // show validation messages
+        console.log('error')
+        return;
+      }
+
+      const config = this.reportForm.value; 
+
+      console.log(config);
+      this.metadataService.getDataforPreview(config).subscribe({
+        next: (response: any) => {
+          console.log(response);
+          const data = response?.data;
+          console.log(data);
+
+          if (Array.isArray(data) && data.length > 0) {
+            this.previewData = data;
+            this.displayedColumns = Object.keys(data[0]);
+            console.log('a');
+          } else {
+            this.previewData = [];
+            this.displayedColumns = [];
+            console.log('a1');
+          }
+
+          this.shouldUpdatePreview = true;
+          this.showPreview = true;
+        },
+        error: (err) => {
+             this.showPreview = false;
+          console.error('Error fetching data: ', err.error);
+          // Call the notification service to show error
+          this.notificationService.showNotification(err.error.message, 'error');
+        }
+      });
+
+ 
+    }
+
+    // Clears the form inputs
+    clearReport(): void {
+      this.showPreview=false;
+      this.reportForm.reset();
+      (this.reportForm.get('filters') as FormArray).clear();
+      (this.reportForm.get('groupBy') as FormArray).clear();
+      (this.reportForm.get('sortBy') as FormArray).clear();
+      this.reprotconfig.clearConfiguration();
+      console.log('Form cleared');
+    }
+
+    // Creates a new report configuration
+    addNewReport(): void {
+      this.reportForm.reset();
+      (this.reportForm.get('filters') as FormArray).clear();
+      (this.reportForm.get('groupBy') as FormArray).clear();
+      (this.reportForm.get('sortBy') as FormArray).clear();
+      this.reprotconfig.clearConfiguration();
+      console.log('New report initiated');
+    }
 }
