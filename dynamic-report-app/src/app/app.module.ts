@@ -13,7 +13,10 @@ import { ReportConfigComponent } from './components/report-config/report-config.
 import { ReportPreviewComponent } from './components/report-preview/report-preview.component';
 import { FormatNamePipe } from './Pipes/format-name.pipe';
 import { CustomTableComponent } from './components/custom-table/custom-table.component';
+import { ListReportComponent } from './components/list-report/list-report.component';
 //import { ReportCreatorComponent } from './components/report-creator/report-creator.component';
+import {MatPaginator, MatPaginatorModule} from '@angular/material/paginator';
+import {MatTableDataSource, MatTableModule} from '@angular/material/table';
 
 @NgModule({
   declarations: [
@@ -22,7 +25,8 @@ import { CustomTableComponent } from './components/custom-table/custom-table.com
     ReportConfigComponent,
     ReportPreviewComponent,
     FormatNamePipe   ,
-    CustomTableComponent
+    CustomTableComponent,
+    ListReportComponent
   ],
   imports: [
     BrowserModule,
@@ -33,7 +37,9 @@ import { CustomTableComponent } from './components/custom-table/custom-table.com
     MaterialModule ,
     FormsModule ,
     CommonModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatPaginatorModule,
+    MatTableModule
   ],
   providers: [],
   bootstrap: [AppComponent]

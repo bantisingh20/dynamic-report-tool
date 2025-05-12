@@ -1,0 +1,175 @@
+ 
+   body {
+      background-color: #f8f9fa;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .page-header {
+      background-color: #198754;
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .page-header h1 {
+      font-size: 1.75rem;
+      margin: 0;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+      max-width: 100%;
+    }
+
+    .custom-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      table-layout: fixed;
+    }
+
+    .custom-table thead {
+      background-color: #198754;
+      color: white;
+    }
+
+    .custom-table th,
+    .custom-table td {
+      border: 1px solid #dee2e6;
+      padding: 0.45rem 0.6rem;
+      text-align: left;
+      vertical-align: middle;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .custom-table th {
+      text-transform: uppercase;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    .custom-row-even {
+      background-color: rgba(25, 135, 84, 0.15);
+    }
+
+    .custom-row-odd {
+      background-color: rgba(25, 135, 84, 0.05);
+    }
+
+    .scroll-cell {
+      max-height: 100px;
+      overflow-y: auto;
+      word-wrap: break-word;
+      white-space: normal;
+      padding: 0.4rem;
+      font-size: 0.85rem;
+    }
+
+    .scroll-cell::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .scroll-cell::-webkit-scrollbar-thumb {
+      background-color: #bfbfbf;
+      border-radius: 3px;
+    }
+
+    .scroll-cell::-webkit-scrollbar-track {
+      background-color: #f1f1f1;
+    }
+
+    .custom-table .btn {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+      line-height: 1;
+    }
+
+    .custom-table .btn i {
+      margin: 0;
+    }
+
+
+ /* Container adjustments for overall spacing */
+.custom-table-container {
+  margin: 20px;
+}
+
+/* Basic table styling with reduced spacing and medium/small font-size */
+.custom-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px; /* Adjust to 12px for smaller fonts if desired */
+}
+
+/* Header Cells - green background and reduced padding */
+.custom-table th.mat-header-cell {
+  background-color: #4CAF50;  /* Green you can customize */
+  color: #eb0707;
+  padding: 6px 8px;           /* Reduced padding */
+  font-weight: 500;
+  border-bottom: 2px solid #388E3C; /* Darker green border */
+}
+
+/* Data Cells - reduced padding and consistent font size */
+.custom-table td.mat-cell {
+  padding: 6px 8px;
+  border-bottom: 1px solid #ddd;
+  font-size: 14px;
+}
+
+/* Row colors with an odd-even green theme */
+.custom-table tr.mat-row:nth-child(odd) {
+  background-color: #23d832;  /* Light green for odd rows */
+}
+
+.custom-table tr.mat-row:nth-child(even) {
+  background-color: #0ac010;  /* Slightly darker green for even rows */
+}
+
+/* Optional hover effect for rows */
+.custom-table tr.mat-row:hover {
+  background-color: #a5d6a7;  /* A moderate green shade */
+}
+/* Use ::ng-deep to ensure styles penetrate Angular Material's encapsulation */
+::ng-deep .custom-table-container {
+  margin: 10px;  /* Adjust overall container margin */
+}
+
+/* Remove unnecessary spacing and set font-size to medium/small */
+::ng-deep .custom-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px; /* Use 14px or lower for smaller fonts */
+}
+
+/* Header styling: use green background and small padding */
+::ng-deep .custom-table th.mat-header-cell {
+  background-color: #4CAF50 !important; /* Green header */
+  color: #fff !important;
+  padding: 4px 6px !important;  /* Reduced padding */
+  font-weight: 500;
+  border-bottom: 2px solid #388E3C !important;
+}
+
+/* Data cells: remove extra space */
+::ng-deep .custom-table td.mat-cell {
+  padding: 4px 6px !important;
+  border-bottom: 1px solid #ddd;
+}
+
+/* Odd-even row background colors with green shades */
+::ng-deep .custom-table tr.mat-row:nth-child(odd) {
+  background-color: #e8f5e9; /* Lighter green for odd rows */
+}
+
+::ng-deep .custom-table tr.mat-row:nth-child(even) {
+  background-color: #c8e6c9; /* Slightly darker green for even rows */
+}
+
+/* Optional: add a hover effect to rows */
+::ng-deep .custom-table tr.mat-row:hover {
+  background-color: #a5d6a7;
+}
