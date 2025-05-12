@@ -12,6 +12,7 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 /node_modules
 /server/node_modules
+/client/node_modules
 /dynamic-report-app/node_modules
 
 # Runtime data
