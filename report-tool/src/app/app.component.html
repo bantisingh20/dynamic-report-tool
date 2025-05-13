@@ -1,0 +1,184 @@
+<p-menubar>
+  <ng-template pTemplate="start">
+    <span class="font-bold text-lg">My Navbar</span>
+  </ng-template>
+
+  <ng-template pTemplate="end">
+    <div class="flex gap-3">
+      <button pButton icon="pi pi-home" class="p-button-rounded p-button-text text-white"></button>
+      <button pButton icon="pi pi-user" class="p-button-rounded p-button-text text-white"></button>
+      <button pButton icon="pi pi-cog" class="p-button-rounded p-button-text text-white"></button>
+      <button pButton icon="pi pi-moon" class="p-button-rounded p-button-text text-white"
+        (click)="toggleDarkMode()"></button>
+    </div>
+  </ng-template>
+</p-menubar>
+  
+ 
+
+
+<div class="p-4 bg-white shadow-lg rounded-lg">
+  <!-- Table Selection Dropdown -->
+  <div class="mb-4">
+    <label for="tableSelect" class="font-medium text-gray-700">Select Table:</label>
+    <p-dropdown id="tableSelect" [options]="tableOptions" (onChange)="onTableSelect($event)"></p-dropdown>
+  </div>
+
+  <!-- Column Selection -->
+
+ <div class="flex gap-6">
+  <!-- Available Columns (Left Side) -->
+  <div class="w-1/2 border p-4 rounded-lg shadow-md">
+    <h3 class="font-bold mb-2">Available Columns</h3>
+    <ul class="space-y-2">
+      <li *ngFor="let col of availableColumns">
+        <button pButton class="w-full p-2 bg-blue-500 text-white rounded-lg" (click)="moveToSelected(col)">
+          {{ col }}
+        </button>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Action Buttons (Middle) -->
+  <div class="flex flex-col justify-center gap-4">
+    <button pButton icon="pi pi-angle-double-right" class="p-button-rounded bg-green-500 text-white"
+      (click)="moveAllToSelected()" title="Add All"></button>
+    <button pButton icon="pi pi-angle-double-left" class="p-button-rounded bg-red-500 text-white"
+      (click)="moveAllToAvailable()" title="Remove All"></button>
+  </div>
+
+  <!-- Selected Columns (Right Side) -->
+  <div class="w-1/2 border p-4 rounded-lg shadow-md">
+    <h3 class="font-bold mb-2">Selected Columns</h3>
+    <ul class="space-y-2">
+      <li *ngFor="let col of selectedColumns">
+        <button pButton class="w-full p-2 bg-red-500 text-white rounded-lg" (click)="moveToAvailable(col)">
+          {{ col }}
+        </button>
+      </li>
+    </ul>
+  </div>
+</div>
+  <!-- Filter Icon Button -->
+  <button pButton icon="pi pi-filter" class="p-button-rounded p-button-text text-blue-600" (click)="toggleFilterSettings()"></button>
+
+  <!-- Filter, Sort, GroupBy (Displayed on Click) -->
+  <div *ngIf="showFilters" class="mt-4 p-4 border rounded-lg">
+    <h3 class="font-bold text-lg">Filters & Sorting</h3>
+    <div class="flex gap-4">
+      <p-dropdown placeholder="Filter by..." [options]="selectedColumns" (onChange)="setFilter($event)"></p-dropdown>
+      <p-dropdown placeholder="Sort by..." [options]="selectedColumns" (onChange)="setSortBy($event)"></p-dropdown>
+      <p-dropdown placeholder="Group by..." [options]="selectedColumns" (onChange)="setGroupBy($event)"></p-dropdown>
+    </div>
+  </div>
+
+<!-- Filter Icon Button -->
+<button pButton icon="pi pi-filter" class="p-button-rounded p-button-text text-blue-600"
+  (click)="showFilterDialog = true"></button>
+
+<!-- Enhanced Filter Dialog -->
+<p-dialog header="Filters & Sorting" [(visible)]="showFilterDialog" [modal]="true" [style]="{width: '50vw'}"
+  [closable]="true" [dismissableMask]="true">
+  
+  <div class="flex flex-col gap-6">
+    <!-- SORT SECTION -->
+    <div>
+      <h4 class="font-semibold mb-2">Sort By</h4>
+      <div class="flex gap-4">
+        <p-dropdown placeholder="Column" [options]="selectedColumns" [(ngModel)]="sortByColumn"></p-dropdown>
+        <p-dropdown placeholder="Order" [options]="['ASC', 'DESC']" [(ngModel)]="sortOrder"></p-dropdown>
+      </div>
+    </div>
+
+    <!-- FILTER SECTION -->
+    <div>
+      <h4 class="font-semibold mb-2">Filters</h4>
+      <div *ngFor="let filter of filters; let i = index" class="flex gap-4 items-center mb-2">
+        <!-- Column -->
+        <p-dropdown placeholder="Column" [options]="selectedColumns" [(ngModel)]="filter.column"></p-dropdown>
+        
+        <!-- Operator -->
+        <p-dropdown placeholder="Operator" [options]="['=', '!=', '>', '<', '>=', '<=', 'between']"
+          [(ngModel)]="filter.operator"></p-dropdown>
+
+        <!-- Value(s) -->
+        <ng-container [ngSwitch]="filter.operator">
+          <!-- BETWEEN -->
+          <ng-container *ngSwitchCase="'between'">
+            <input type="text" pInputText placeholder="From" [(ngModel)]="filter.value.from" class="w-24" />
+            <input type="text" pInputText placeholder="To" [(ngModel)]="filter.value.to" class="w-24" />
+          </ng-container>
+
+          <!-- SINGLE VALUE -->
+          <ng-container *ngSwitchDefault>
+            <input type="text" pInputText placeholder="Value" [(ngModel)]="filter.value" class="w-48" />
+          </ng-container>
+        </ng-container>
+
+        <!-- Remove Filter Row -->
+        <button pButton icon="pi pi-times" class="p-button-rounded p-button-danger p-button-text"
+          (click)="removeFilter(i)"></button>
+      </div>
+
+      <!-- Add Filter Row -->
+      <button pButton icon="pi pi-plus" label="Add Filter" class="p-button-sm" (click)="addFilter()"></button>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton label="Apply" class="p-button-primary" (click)="applyFilters()"></button>
+    <button pButton label="Cancel" class="p-button-secondary" (click)="showFilterDialog = false"></button>
+  </ng-template>
+</p-dialog>
+
+
+
+  <!-- Save & Load Buttons -->
+  <div class="flex gap-4 mt-4">
+    <button pButton label="Save Filter" class="p-button-success" (click)="saveFilterSettings()"></button>
+    <button pButton label="Load Data" class="p-button-primary" (click)="loadData()"></button>
+  </div>
+
+  <!-- Data Table Preview -->
+  <p-table [value]="previewData" [paginator]="true" [rows]="10">
+    <ng-template pTemplate="header">
+      <tr>
+        <th *ngFor="let col of selectedColumns">{{ col }}</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-row>
+      <tr>
+        <td *ngFor="let col of selectedColumns">{{ row[col] }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+
+<!--  
+
+<div class="card flex justify-center">
+    <p-button label="Check" />
+</div>
+<p-button label="Toggle Dark Mode" (onClick)="toggleDarkMode()"/> -->
+
+
+<!-- 
+<div class="card flex justify-center">
+    <p-select [options]="countries" [(ngModel)]="selectedCountry" optionLabel="name" [filter]="true" filterBy="name" [showClear]="true" placeholder="Select a Country" class="w-full md:w-56">
+        <ng-template #selectedItem let-selectedOption>
+            <div class="flex items-center gap-2">
+                <img src="https://primefaces.org/cdn/primeng/images/demo/flag/flag_placeholder.png" [class]="'flag flag-'" style="width: 18px" />
+                <div>{{ selectedOption.name }}</div>
+            </div>
+        </ng-template>
+        <ng-template let-country #item>
+            <div class="flex items-center gap-2">
+                <img src="https://primefaces.org/cdn/primeng/images/demo/flag/flag_placeholder.png" [class]="'flag flag-' + country.code.toLowerCase()" style="width: 18px" />
+                <div>{{ country.name }}</div>
+            </div>
+        </ng-template>
+    </p-select>
+</div> -->
+<router-outlet />
