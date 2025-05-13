@@ -40,9 +40,38 @@ async function getData(tableName, selectedColumns) {
 }
 
 
-async function SaveUpdate(table, reportName, columns, userId, filterCriteria, groupBy, sortOrder, axisConfig) {
+async function SaveUpdate(reportId,table, reportName, columns, userId, filterCriteria, groupBy, sortOrder, axisConfig) {
 
-  const query = `
+  console.log(reportId);
+  let result;
+  if(reportId != 0){
+   result = await pool.query(`
+      UPDATE report_configuration 
+      SET user_id = $1,
+          report_name = $2,
+          table_name = $3,
+          selected_columns = $4,
+          filter_criteria = $5,
+          group_by = $6,
+          sort_order = $7,
+          axis_config = $8
+      WHERE report_id = $9
+       
+      RETURNING report_id;
+    `, [
+      0,
+      reportName,
+      table,
+      columns,        
+      JSON.stringify(filterCriteria),  
+      groupBy,            
+      sortOrder,          
+      JSON.stringify(axisConfig),
+      reportId   
+    ]);
+  }
+  else{
+   result = await pool.query(`
       INSERT INTO report_configuration (
         user_id,
         report_name,
@@ -55,9 +84,7 @@ async function SaveUpdate(table, reportName, columns, userId, filterCriteria, gr
       )
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING report_id;
-    `;
-
-    const result = await pool.query(query, [
+    `, [
       0,
       reportName,
       table,
@@ -67,15 +94,16 @@ async function SaveUpdate(table, reportName, columns, userId, filterCriteria, gr
       sortOrder,          
       JSON.stringify(axisConfig),   
     ]);
+  }
+  
+    const reportIds = result.rows[0].report_id;
 
-    const reportId = result.rows[0].report_id;
-
-  //  const query = `SELECT ${selectedColumns} FROM ${tableName}` 
-  //  const res = await pool.query(query);
-
-   return reportId;
+  
+   return reportIds;
    
 }
+
+
 module.exports = {
   getTablesAndViews,
   getColumnMetadata,

@@ -1,45 +1,3 @@
-// const express = require('express');
-// const cors = require('cors');
-// const pool = require('./config/db.js');
-// const metadataRoutes = require('./routes/metadata.routes'); 
-// const { ErrorHandling } = require('./middlewares/ErrorHandler.js');
-// require('dotenv').config(); 
-// const app = express();
-// const PORT = 3000;
- 
-
-// //middleware
-// app.use(express.json());
-// app.use(cors());
-
-// //routes
-
-
-// //error handling middleware
-// app.use(ErrorHandling);
-
-// //connection test
-// app.get("/",async(req,res)=>{
-//     console.log(res);
-//     const result = await pool.query("select current_database()");
-//     res.send(`The database name is : ${result.rows[0].current_database}`);
-// })
-
-
-// // GET /api/metadata/tables
-// app.use('/api/metadata', metadataRoutes);
- 
-
-// //server running 
-
-// app.listen(PORT,async () =>{
-//    // console.log(process.env.PGHOST);
-// //    const result = await pool.query("select current_database()");
-// //     console.log(`The database name is : ${result.rows[0].current_database}`);
-//     console.log(`Server is running on localhost :${PORT}`);
-// })
-
-// server.js
 const express = require('express');
 const { Pool } = require('pg');
 const bodyParser = require('body-parser');
@@ -53,10 +11,7 @@ const port = 3000;
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.json());
-// //error handling middleware
-
-
-// Configure your PostgreSQL connection accordingly.
+ 
 const pool = new Pool({
   host: process.env.PGHOST,
   port: process.env.PGPORT,
@@ -134,111 +89,8 @@ app.get('/api/metadata/columns/:tableName', async (req, res) => {
 });
 
 
-// Get all Data For Preview
-// app.post('/api/metadata/report/preview', async (req, res) => {
-//   const { tableandView, selectedColumns = [], filters = [], sortBy = [], groupBy = [] } = req.body;
-
-//   console.log(req.body)
-//   try {
-//     // 1. Check table exists
-//     const tableResult = await pool.query(`
-//       SELECT 1 FROM information_schema.tables
-//       WHERE table_schema = 'public' AND table_name = $1
-//     `, [tableandView]);
-
-//     if (tableResult.rowCount === 0) {
-//       return res.status(400).json({ error: `Table "${tableandView}" does not exist1.` });
-//     }
-
-//     // 2. Get column info
-//     const colResult = await pool.query(`
-//       SELECT column_name, data_type
-//       FROM information_schema.columns
-//       WHERE table_name = $1 AND table_schema = 'public'
-//     `, [tableandView]);
-
-//     const tableColumns = {};
-//     colResult.rows.forEach(col => tableColumns[col.column_name] = col.data_type);
-
-//     // 3. Validate selected columns
-//     const invalidColumns = selectedColumns.filter(col => !tableColumns[col]);
-//     if (invalidColumns.length) {
-//       return res.status(400).json({ error: `Invalid columns: ${invalidColumns.join(', ')}` });
-//     }
-
-//     // 4. Validate filters
-//     for (const [i, filter] of filters.entries()) {
-//       const { field, operator, value, valueFrom, valueTo } = filter;
-
-//       if (!field) {
-//         return res.status(400).json({ error: `Filter at index ${i}: 'field' is required.` });
-//       }
-
-//       if (!tableColumns[field]) {
-//         return res.status(400).json({ error: `Invalid filter column: ${field}` });
-//       }
-
-//       if (!operator) {
-//         return res.status(400).json({ error: `Filter at index ${i}: 'operator' is required.` });
-//       }
-
-//       if (operator === 'between') {
-//         if (valueFrom == null || valueTo == null) {
-//           return res.status(400).json({ error: `Filter at index ${i}: 'valueFrom' and 'valueTo' are required for 'between' operator.` });
-//         }
-//       } else {
-//         if (value == null) {
-//           return res.status(400).json({ error: `Filter at index ${i}: 'value' is required for operator '${operator}'.` });
-//         }
-
-//         const expected = mapDbTypeToJsType(tableColumns[field]);
-//         const actual = typeof value;
-
-//         if (expected !== actual) {
-//           return res.status(400).json({
-//             error: `Filter at index ${i}: Type mismatch for column "${field}": expected ${expected}, got ${actual}`
-//           });
-//         }
-//       }
-//     }
-
-
-//     // 5. Validate sortBy and groupBy
-
-//     console.log(groupBy);
-//     const badSort = sortBy.filter(col => !tableColumns[col.field]);
-//     if (badSort.length) return res.status(400).json({ error: `Invalid sort columns: ${badSort.join(', ')}` });
-
-//     const badGroup = groupBy.filter(col => !tableColumns[col.field]);
-//     if (badGroup.length) return res.status(400).json({ error: `Invalid group columns: ${badGroup.join(', ')}` });
-
-//    const config = {
-//       table: tableandView,
-//       selection: selectedColumns,
-//       filters: filters.map(f => ({
-//         field: f.field,
-//         operator: f.operator,
-//         value: f.value,
-//         valueFrom: f.valueFrom,
-//         valueTo: f.valueTo
-//       })),
-//       groupBy: groupBy.map(g => ({ field: g.field })) ,
-//       sortBy: sortBy.map(col => ({ column: col.field, order: col.direction })) // or add dynamic order if provided
-//     };
-
-//     const data = await Executionfunction(config);
- 
-//     res.json({ message: 'Validation passed', data });
- 
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ error: `Internal server error :${err.message}` });
-//   }
-// });
-
-
  app.post('/api/metadata/report/preview', async (req, res, next) => {
-  const { tableandView, selectedColumns = [], filters = [], sortBy = [], groupBy = [] } = req.body;
+  const { tableandView, selectedColumns = [] ,xyaxis=[], filters = [], sortBy = [], groupBy = [] } = req.body;
 
   console.log(req.body);
   try {
@@ -366,13 +218,43 @@ app.get('/api/metadata/columns/:tableName', async (req, res) => {
         valueTo: f.valueTo
       })),
       groupBy: groupBy.map(g => ({ field: g.field })),
-      sortBy: sortBy.map(col => ({ column: col.field, order: col.direction }))
+      sortBy: sortBy.map(col => ({ column: col.field, order: col.direction })),
+      xyaxis: xyaxis.map(axis => ({
+        x: {
+          field: axis.xAxisField,
+          order: axis.xAxisDirection
+        },
+        y: {
+          field: axis.yAxisField,
+          order: axis.yAxisDirection
+        }
+      }))
     };
 
     // Call the Execution function
-    const data = await Executionfunction(config);
 
-    res.json({ message: 'Validation passed', data });
+    var chartData;
+    const data = await Executionfunction(config); 
+
+      const xAxisField = config.xyaxis[0]?.x.field;
+
+      if (xAxisField) {
+        const groupedData = {};
+
+        for (const row of data) {
+          const key = row[xAxisField];
+          groupedData[key] = (groupedData[key] || 0) + 1;
+        }
+
+        chartData = Object.entries(groupedData).map(([key, count]) => ({
+          x: key,
+          y: count
+        }));
+
+        console.log('Chart Data:', chartData);
+      }
+
+    res.json({ message: 'Validation passed', data,chartData });
     
   } catch (err) {
     // Pass error to the common error handler
@@ -517,11 +399,11 @@ app.get('/api/metadata/List-Report', async (req, res, next) => {
 });
 
 // Retrieve a saved report configuration by id
-app.get('/report/load/:id', async (req, res) => {
+app.get('/api/metadata/report/:id', async (req, res) => {
   try {
     const reportId = req.params.id;
     const result = await pool.query(
-      `SELECT * FROM reports WHERE id = $1`,
+      `SELECT * FROM report_configuration WHERE report_id = $1`,
       [reportId]
     );
     if (result.rows.length === 0) {
@@ -535,16 +417,16 @@ app.get('/report/load/:id', async (req, res) => {
 
 
 // dynamic_query_proc Save a report configuration (assumes a table "reports" exists with columns: id, report_name, config)
-app.post('/api/metadata/report/save', async (req, res) => {
+app.post('/api/metadata/report/save/:id', async (req, res) => {
   try {
-     const { reportName,tableandView,axisConfig,userId, selectedColumns = [], filters = [], sortBy = [], groupBy = [] } = req.body;
-
+     const { reportName,tableandView,xyaxis,userId, selectedColumns = [], filters = [], sortBy = [], groupBy = [] } = req.body;
+    const reportId = req.params.id;
     if (!reportName ) {
       return res.status(400).json({ error: 'Report name and configuration are required' });
     }
-    const data = await SaveUpdate(tableandView, reportName, selectedColumns, userId, filters, groupBy, sortBy, axisConfig);
-    const reportId = data;
-    res.status(200).json({ message:"Report Save Successfully",id: reportId});
+    const data = await SaveUpdate(reportId,tableandView, reportName, selectedColumns, userId, filters, groupBy, sortBy, xyaxis);
+ 
+    res.status(200).json({ message:"Report Save Successfully",id: data});
 
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -558,3 +440,59 @@ app.listen(port, () => {
 
 
 app.use(handleError);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// const express = require('express');
+// const cors = require('cors');
+// const pool = require('./config/db.js');
+// const metadataRoutes = require('./routes/metadata.routes'); 
+// const { ErrorHandling } = require('./middlewares/ErrorHandler.js');
+// require('dotenv').config(); 
+// const app = express();
+// const PORT = 3000;
+ 
+
+// //middleware
+// app.use(express.json());
+// app.use(cors());
+
+// //routes
+
+
+// //error handling middleware
+// app.use(ErrorHandling);
+
+// //connection test
+// app.get("/",async(req,res)=>{
+//     console.log(res);
+//     const result = await pool.query("select current_database()");
+//     res.send(`The database name is : ${result.rows[0].current_database}`);
+// })
+
+
+// // GET /api/metadata/tables
+// app.use('/api/metadata', metadataRoutes);
+ 
+
+// //server running 
+
+// app.listen(PORT,async () =>{
+//    // console.log(process.env.PGHOST);
+// //    const result = await pool.query("select current_database()");
+// //     console.log(`The database name is : ${result.rows[0].current_database}`);
+//     console.log(`Server is running on localhost :${PORT}`);
+// })
+

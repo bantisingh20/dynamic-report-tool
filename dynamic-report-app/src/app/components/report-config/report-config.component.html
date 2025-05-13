@@ -95,103 +95,103 @@
         <div class="card shadow-sm">
           <div class="card-body">
         
-      <div formArrayName="filters" class="mb-4">
-        <h5 class="card-title text-secondary mb-3">
-          <i class="bi bi-funnel text-danger"></i> Filters
-        </h5>
-        <div *ngFor="let filter of filters.controls; let i = index" [formGroupName]="i" class="row g-2 mb-2">
-          <div class="col">
-            <ng-select [items]="availableFields"
-                      bindLabel="label"
-                      (change)="onFieldChange($event, i)"
-                      bindValue="column_name"
-                      [multiple]="false"
-                      formControlName="field"
-                      placeholder="Select filter"
-                      [closeOnSelect]="true" class="">
-            </ng-select>
+            <div formArrayName="filters" class="mb-4">
+              <h5 class="card-title text-secondary mb-3">
+                <i class="bi bi-funnel text-danger"></i> Filters
+              </h5>
+              <div *ngFor="let filter of filters.controls; let i = index" [formGroupName]="i" class="row g-2 mb-2">
+                <div class="col">
+                  <ng-select [items]="availableFields"
+                            bindLabel="label"
+                            (change)="onFieldChange($event, i)"
+                            bindValue="column_name"
+                            [multiple]="false"
+                            formControlName="field"
+                            placeholder="Select filter"
+                            [closeOnSelect]="true" class="">
+                  </ng-select>
 
-            <div *ngIf="filter.get('field')?.invalid && filter.get('field')?.touched" class="text-danger small">
-              Field is required.
-            </div>
-          </div>
+                  <div *ngIf="filter.get('field')?.invalid && filter.get('field')?.touched" class="text-danger small">
+                    Field is required.
+                  </div>
+                </div>
 
-          <div class="col">
-            <select
-              class="form-select"
-              (change)="onOperatorChange(i)"
-              formControlName="operator" 
-              title="Select the filter operator">
-              <option value="">Select Operator</option>
-              <option *ngFor="let op of operators" [value]="op">
-                {{ op }}
-              </option>
-            </select>       
-            <div *ngIf="filter.get('operator')?.invalid && filter.get('operator')?.touched" class="text-danger small">
-              Operator is required.
-            </div>
-          </div>
+                <div class="col">
+                  <select
+                    class="form-select"
+                    (change)="onOperatorChange(i)"
+                    formControlName="operator" 
+                    title="Select the filter operator">
+                    <option value="">Select Operator</option>
+                    <option *ngFor="let op of operators" [value]="op">
+                      {{ op }}
+                    </option>
+                  </select>       
+                  <div *ngIf="filter.get('operator')?.invalid && filter.get('operator')?.touched" class="text-danger small">
+                    Operator is required.
+                  </div>
+                </div>
 
-          <!-- Value Inputs: Conditionally show single input or two inputs for "between" -->
-    
-          <ng-container *ngIf="filter.get('operator')?.value === 'between'; else singleValue">
-            <div class="col">
-              <input
-                [type]="getInputType(filter.get('selectedField')?.value?.data_type)"
-                class="form-control mb-2"
-                formControlName="valueFrom"
-                placeholder="From" 
-                />
-              <div *ngIf="filter.get('valueFrom')?.invalid && filter.get('valueFrom')?.touched" class="text-danger small">
-                From value is required.
+                <!-- Value Inputs: Conditionally show single input or two inputs for "between" -->
+          
+                <ng-container *ngIf="filter.get('operator')?.value === 'between'; else singleValue">
+                  <div class="col">
+                    <input
+                      [type]="getInputType(filter.get('selectedField')?.value?.data_type)"
+                      class="form-control mb-2"
+                      formControlName="valueFrom"
+                      placeholder="From" 
+                      />
+                    <div *ngIf="filter.get('valueFrom')?.invalid && filter.get('valueFrom')?.touched" class="text-danger small">
+                      From value is required.
+                    </div>
+
+                    <input
+                      [type]="getInputType(filter.get('selectedField')?.value?.data_type)"
+                      class="form-control"
+                      formControlName="valueTo"
+                      placeholder="To" />
+                    <div *ngIf="filter.get('valueTo')?.invalid && filter.get('valueTo')?.touched" class="text-danger small">
+                      To value is required.
+                    </div>
+                  </div>
+                </ng-container>
+
+                <!-- Other operators: show single input -->
+                <ng-template #singleValue>
+                  <div class="col">
+                    <input
+                      [type]="getInputType(filter.get('selectedField')?.value?.data_type)"
+                      class="form-control"
+                      formControlName="value"
+                      placeholder="Enter value" />
+                    <div *ngIf="filter.get('value')?.invalid && filter.get('value')?.touched" class="text-danger small">
+                      Value is required.
+                    </div>
+                  </div>
+                </ng-template>
+
+
+                <!-- Remove Button -->
+                <div class="col-auto">
+                  <button
+                    type="button"
+                    class="btn btn-outline-danger btn-sm"
+                    (click)="removeFilter(i)"
+                    title="Remove this filter">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
               </div>
 
-              <input
-                [type]="getInputType(filter.get('selectedField')?.value?.data_type)"
-                class="form-control"
-                formControlName="valueTo"
-                placeholder="To" />
-              <div *ngIf="filter.get('valueTo')?.invalid && filter.get('valueTo')?.touched" class="text-danger small">
-                To value is required.
-              </div>
+              <button
+                type="button"
+                class="btn btn-outline-primary btn-sm"
+                (click)="addFilter()"
+                title="Add a new filter">
+                <i class="bi bi-plus-circle"></i> Add Filter
+              </button>
             </div>
-          </ng-container>
-
-          <!-- Other operators: show single input -->
-          <ng-template #singleValue>
-            <div class="col">
-              <input
-                [type]="getInputType(filter.get('selectedField')?.value?.data_type)"
-                class="form-control"
-                formControlName="value"
-                placeholder="Enter value" />
-              <div *ngIf="filter.get('value')?.invalid && filter.get('value')?.touched" class="text-danger small">
-                Value is required.
-              </div>
-            </div>
-          </ng-template>
-
-
-          <!-- Remove Button -->
-          <div class="col-auto">
-            <button
-              type="button"
-              class="btn btn-outline-danger btn-sm"
-              (click)="removeFilter(i)"
-              title="Remove this filter">
-              <i class="bi bi-trash"></i>
-            </button>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          class="btn btn-outline-primary btn-sm"
-          (click)="addFilter()"
-          title="Add a new filter">
-          <i class="bi bi-plus-circle"></i> Add Filter
-        </button>
-      </div>
 
             <!-- Group By Section -->
             <div formArrayName="groupBy" class="mb-4">
@@ -209,9 +209,9 @@
                   </option>
                 </select>
 
-                   <div *ngIf="groupBy.get('field')?.invalid && groupBy.get('field')?.touched" class="text-danger small">
-              Field is required.
-            </div>
+                  <div *ngIf="groupBy.get('field')?.invalid && groupBy.get('field')?.touched" class="text-danger small">
+                    Field is required.
+                  </div>
                 <button
                   type="button"
                   class="btn btn-outline-danger btn-sm"
@@ -272,29 +272,152 @@
               </button>
             </div>
 
-            <!-- Action Buttons: Preview, Clear, and Save -->
-            <div class="d-flex justify-content-center gap-2">
-              <button
-                type="button"
-                class="btn btn-primary"
-                (click)="previewReport()"
-                title="Preview your report">
-                <i class="bi bi-eye"></i> Preview
-              </button>
-              <button
-                type="button"
-                class="btn btn-secondary"
-                (click)="clearReport()"
-                title="Clear all inputs">
-                <i class="bi bi-eraser"></i> Clear
-              </button>
-              <button
-                type="submit"
-                class="btn btn-success"
-                title="Save your report">
-                <i class="bi bi-save"></i> Save
-              </button>
+
+            <!-- Chart By Section -->
+            <div formArrayName="xyaxis" class="mb-4 d-none">
+              <h5 class="card-title text-secondary mb-3">
+                <i class="bi bi-bar-chart-line text-secondary"></i> X-Y Axis Configuration
+              </h5>
+              <p class="small text-muted">
+                Step 4: Choose fields for X and Y axes and their directions.
+              </p>  
+  
+              <!-- Loop through each X-Y axis configuration -->
+            <div *ngFor="let axis of xyaxis.controls; let i = index" [formGroupName]="i" class="row g-2 mb-2">
+              
+              <!-- X-Axis Field Selection -->
+              <div class="col">
+                <select class="form-select" formControlName="xAxisField">
+                  <option value="">Select X-Axis Field</option>
+                  <option *ngFor="let field of availableFields" [value]="field.column_name">
+                    {{ field.label }}
+                  </option>
+                </select>
+
+                 <div *ngIf="xyaxis.get('xAxisField')?.invalid && xyaxis.get('xAxisField')?.touched" class="text-danger small">
+                    Field is required.
+                  </div>
+              </div>
+              
+              <!-- X-Axis Direction Selection -->
+              <div class="col">
+                <select class="form-select" formControlName="xAxisDirection">
+                  <option value="asc">Ascending (A-Z, small to large)</option>
+                  <option value="desc">Descending (Z-A, large to small)</option>
+                </select>
+              </div>
+              
+              <!-- Y-Axis Field Selection -->
+              <div class="col">
+                <select class="form-select" formControlName="yAxisField">
+                  <option value="">Select Y-Axis Field</option>
+                  <option *ngFor="let field of availableFields" [value]="field.column_name">
+                    {{ field.label }}
+                  </option>
+                </select>
+
+                 <div *ngIf="xyaxis.get('yAxisField')?.invalid && xyaxis.get('yAxisField')?.touched" class="text-danger small">
+                    Field is required.
+                  </div>
+              </div>
+              
+              <!-- Y-Axis Direction Selection -->
+              <div class="col">
+                <select class="form-select" formControlName="yAxisDirection">
+                  <option value="asc">Ascending (A-Z, small to large)</option>
+                  <option value="desc">Descending (Z-A, large to small)</option>
+                </select>
+              </div>
+
+              <!-- Button to Remove X-Y Axis Configuration -->
+              <div class="col-auto">
+                <button
+                  type="button"
+                  class="btn btn-outline-danger btn-sm"
+                  (click)="removeXYAxis(i)"
+                  title="Remove X-Y Axis">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
             </div>
+
+            <!-- Button to Add New X-Y Axis Configuration -->
+            <button
+              type="button"
+              class="btn btn-outline-primary btn-sm"
+              (click)="addXYAxis()"
+              title="Add X-Y Axis">
+              <i class="bi bi-plus-circle"></i> Add X-Y Axis
+            </button>
+          </div>
+
+
+
+            <!-- Action Buttons: Preview, Clear, and Save -->
+             <div class="d-flex flex-wrap justify-content-center gap-2 mt-3">
+
+  <!-- PREVIEW button shows first -->
+  <button
+   
+    type="button"
+    class="btn btn-primary px-3 py-2 text-nowrap text-sm"
+    (click)="previewReport()"
+    title="Preview your report and chart">
+    <i class="bi bi-eye me-1"></i>
+    <span class="d-none d-sm-inline">Load</span>
+  </button>
+
+  <!-- Report & Chart buttons shown after Preview is clicked -->
+        <ng-container *ngIf="showPreviewButtons">
+          <button
+            type="button"
+            class="btn btn-primary px-3 py-2 text-nowrap text-sm"
+            (click)="showReportView()"
+            title="Preview your report">
+            <i class="bi bi-eye me-1"></i>
+            <span class="d-none d-sm-inline">Report</span>
+          </button>
+
+          <button
+            type="button"
+            class="btn btn-primary px-3 py-2 text-nowrap text-sm"
+            *ngIf="previewData.chart?.length"
+            (click)="showChartView()"
+            title="Preview your chart">
+            <i class="bi bi-bar-chart me-1"></i>
+            <span class="d-none d-sm-inline">Chart</span>
+          </button>
+        </ng-container>
+
+  <!-- Other buttons -->
+          <button
+            type="button"
+            class="btn btn-secondary px-3 py-2 text-nowrap text-sm"
+            (click)="addNewReport()"
+            title="Clear all inputs">
+            <i class="bi bi-eraser me-1"></i>
+            <span class="d-none d-sm-inline">Clear</span>
+          </button>
+
+          <button
+            type="submit"
+            class="btn btn-success px-3 py-2 text-nowrap text-sm"
+            title="Save your report">
+            <i class="bi bi-save me-1"></i>
+            <span class="d-none d-sm-inline">Save</span>
+          </button>
+
+          <button
+            type="button"
+            class="btn btn-success px-3 py-2 text-nowrap text-sm"
+            [routerLink]="['/List-Report']"
+            title="Go Back">
+            <i class="bi bi-arrow-left me-1"></i>
+            <span class="d-none d-sm-inline">Back</span>
+          </button>
+        </div>
+
+
 
           </div>
         </div>
@@ -303,19 +426,52 @@
     </div>
   </div>
 </form>
+ 
+ 
+<div 
+  class="modal fade show d-block" 
+  *ngIf="showPreview" 
+  tabindex="-1" 
+  style="background: rgba(0,0,0,0.5); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050;">
+  
+  <div class="modal-dialog modal-fullscreen m-0">
+    <div class="modal-content h-100 d-flex flex-column">
 
-<app-custom-table  *ngIf="showPreview && previewData?.length"
- [data]="previewData" [columns]="displayedColumns"
- [groupBy]="groupByFields"
- ></app-custom-table>
+      <div class="modal-header">
+        <h5 class="modal-title">
+          {{ previewMode === 'report' ? 'Report Preview' : 'Chart Preview' }}
+        </h5>
+        <button type="button" class="btn-close" (click)="closeModal()" aria-label="Close"></button>
+      </div>
 
-<!-- Optional: show a message if no preview data -->
-<div *ngIf="showPreview && previewData?.length === 0" class="text-muted text-center mt-3">
-  No data returned for the selected configuration.
+      <div class="modal-body flex-grow-1 overflow-auto">
+        <ng-container *ngIf="previewMode === 'report' && previewData.table?.length">
+          <app-custom-table
+            [data]="previewData.table"
+            [columns]="displayedColumns"
+            [groupBy]="groupByFields">
+          </app-custom-table>
+        </ng-container>
+
+        <ng-container *ngIf="previewMode === 'chart' && previewData.chart?.length"> 
+          <!-- <app-chart-component [chartDatas]="previewData.chart"></app-chart-component>     -->
+
+            
+
+        </ng-container>
+      </div>
+
+    </div>
+  </div>
 </div>
 
 
-<!-- Help Modal -->
+ 
+<div *ngIf="showPreview && previewData.table?.length === 0" class="text-muted text-center mt-3">
+  No data returned for the selected configuration.
+</div>
+
+ 
 <div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">

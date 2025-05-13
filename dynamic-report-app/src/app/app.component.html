@@ -1,2 +1,24 @@
- <!-- <app-report-config></app-report-config> -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-success px-3">
+  <div class="container-fluid justify-content-between">
+    
+      <!-- Right Section: App Title -->
+    <div class="d-flex align-items-center">
+      <span class="text-white fw-medium fs-5 text-nowrap">Report App</span>
+    </div>
+
+    <!-- Left Section: Icons -->
+    <div class="d-flex align-items-center">
+      <button class="btn btn-success me-2" (click)="goHome()" aria-label="Home">
+        <i class="bi bi-house-fill"></i>
+      </button>
+      <button class="btn btn-success d-none" (click)="goBack()" aria-label="Back">
+        <i class="bi bi-arrow-left-circle-fill"></i>
+      </button>
+    </div>
+
+  
+
+  </div>
+</nav>
+
 <router-outlet />

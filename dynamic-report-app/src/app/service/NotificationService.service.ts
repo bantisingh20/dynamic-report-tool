@@ -15,8 +15,8 @@ export class NotificationService {
       {
         duration: 3000,
         panelClass: [type === 'success' ? 'success-snackbar' : 'error-snackbar'],
-        horizontalPosition: 'right',
-        verticalPosition: 'top'
+        horizontalPosition: 'center',
+        verticalPosition: 'bottom'
       }
     );
   }

@@ -17,6 +17,10 @@ import { ListReportComponent } from './components/list-report/list-report.compon
 //import { ReportCreatorComponent } from './components/report-creator/report-creator.component';
 import {MatPaginator, MatPaginatorModule} from '@angular/material/paginator';
 import {MatTableDataSource, MatTableModule} from '@angular/material/table';
+import { GoogleChartsModule, ChartType } from 'angular-google-charts';
+import { ChartComponentComponent } from './components/chart-component/chart-component.component';
+ 
+
 
 @NgModule({
   declarations: [
@@ -26,7 +30,8 @@ import {MatTableDataSource, MatTableModule} from '@angular/material/table';
     ReportPreviewComponent,
     FormatNamePipe   ,
     CustomTableComponent,
-    ListReportComponent
+    ListReportComponent,
+    ChartComponentComponent 
   ],
   imports: [
     BrowserModule,
@@ -39,7 +44,8 @@ import {MatTableDataSource, MatTableModule} from '@angular/material/table';
     CommonModule,
     MatSnackBarModule,
     MatPaginatorModule,
-    MatTableModule
+    MatTableModule,
+    GoogleChartsModule
   ],
   providers: [],
   bootstrap: [AppComponent]

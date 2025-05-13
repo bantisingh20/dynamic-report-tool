@@ -29,7 +29,14 @@ export class MetadataService {
   }
 
   SaveReportForamt(report :any){
-    return this.http.post(`${this.apiUrl}/report/save`, report);
+    return this.http.post(`${this.apiUrl}/report/save/0`, report);
+  }
+
+  updateReportFormat(report :any,id :any){
+    return this.http.post(`${this.apiUrl}/report/save/${id}`, report);
+  }
+  getReportById(id :any){
+    return this.http.get<any>(`${this.apiUrl}/report/${id}`);
   }
 
   getListOfReportConfigure(){
