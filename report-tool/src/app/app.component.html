@@ -76,58 +76,72 @@
 <button pButton icon="pi pi-filter" class="p-button-rounded p-button-text text-blue-600"
   (click)="showFilterDialog = true"></button>
 
-<!-- Enhanced Filter Dialog -->
-<p-dialog header="Filters & Sorting" [(visible)]="showFilterDialog" [modal]="true" [style]="{width: '50vw'}"
-  [closable]="true" [dismissableMask]="true">
-  
-  <div class="flex flex-col gap-6">
+
+<!-- <p-dialog header="Filters & Sorting" [(visible)]="showFilterDialog" [modal]="true"
+  [style]="{width: '30vw', position: 'fixed', right: '0', top: '0', height: '100vh', margin: '0'}"
+  [baseZIndex]="10000"
+  [closable]="true" [dismissableMask]="true" contentStyle="padding: 1rem; height: calc(100% - 55px); overflow-y: auto;">
+   -->
+  <p-dialog header="Filters & Sorting"
+          [(visible)]="showFilterDialog"
+          [modal]="true"
+          [baseZIndex]="10000"
+          [closable]="true"
+          [dismissableMask]="true"
+          [styleClass]="'filter-dialog'"
+          [contentStyle]="{ padding: '1rem', height: 'calc(100% - 55px)', overflowY: 'auto' }">
+  <div class="flex flex-col gap-3 text-sm">
     <!-- SORT SECTION -->
     <div>
-      <h4 class="font-semibold mb-2">Sort By</h4>
-      <div class="flex gap-4">
-        <p-dropdown placeholder="Column" [options]="selectedColumns" [(ngModel)]="sortByColumn"></p-dropdown>
-        <p-dropdown placeholder="Order" [options]="['ASC', 'DESC']" [(ngModel)]="sortOrder"></p-dropdown>
+      <h5 class="font-medium mb-1">Sort By</h5>
+      <div class="flex gap-2 items-center">
+        <p-dropdown placeholder="Column" [options]="selectedColumns" [(ngModel)]="sortByColumn" 
+          [style]="{width: '150px'}"></p-dropdown>
+        <p-dropdown placeholder="Order" [options]="['ASC', 'DESC']" [(ngModel)]="sortOrder" 
+          [style]="{width: '100px'}"></p-dropdown>
       </div>
     </div>
 
     <!-- FILTER SECTION -->
     <div>
-      <h4 class="font-semibold mb-2">Filters</h4>
-      <div *ngFor="let filter of filters; let i = index" class="flex gap-4 items-center mb-2">
+      <h5 class="font-medium mb-1">Filters</h5>
+      <div *ngFor="let filter of filters; let i = index" class="flex gap-2 items-center mb-1">
         <!-- Column -->
-        <p-dropdown placeholder="Column" [options]="selectedColumns" [(ngModel)]="filter.column"></p-dropdown>
+        <p-dropdown placeholder="Column" [options]="selectedColumns" [(ngModel)]="filter.column" 
+          [style]="{width: '140px'}"></p-dropdown>
         
         <!-- Operator -->
         <p-dropdown placeholder="Operator" [options]="['=', '!=', '>', '<', '>=', '<=', 'between']"
-          [(ngModel)]="filter.operator"></p-dropdown>
+          [(ngModel)]="filter.operator" [style]="{width: '100px'}"></p-dropdown>
 
         <!-- Value(s) -->
         <ng-container [ngSwitch]="filter.operator">
           <!-- BETWEEN -->
           <ng-container *ngSwitchCase="'between'">
-            <input type="text" pInputText placeholder="From" [(ngModel)]="filter.value.from" class="w-24" />
-            <input type="text" pInputText placeholder="To" [(ngModel)]="filter.value.to" class="w-24" />
+            <input type="text" pInputText placeholder="From" [(ngModel)]="filter.value.from" class="w-20 text-sm" />
+            <input type="text" pInputText placeholder="To" [(ngModel)]="filter.value.to" class="w-20 text-sm" />
           </ng-container>
 
           <!-- SINGLE VALUE -->
           <ng-container *ngSwitchDefault>
-            <input type="text" pInputText placeholder="Value" [(ngModel)]="filter.value" class="w-48" />
+            <input type="text" pInputText placeholder="Value" [(ngModel)]="filter.value" class="w-32 text-sm" />
           </ng-container>
         </ng-container>
 
         <!-- Remove Filter Row -->
-        <button pButton icon="pi pi-times" class="p-button-rounded p-button-danger p-button-text"
+        <button pButton icon="pi pi-times" class="p-button-rounded p-button-danger p-button-text p-button-sm"
           (click)="removeFilter(i)"></button>
       </div>
 
       <!-- Add Filter Row -->
-      <button pButton icon="pi pi-plus" label="Add Filter" class="p-button-sm" (click)="addFilter()"></button>
+      <button pButton icon="pi pi-plus" class="p-button-sm p-button-outlined" 
+        (click)="addFilter()"></button>
     </div>
   </div>
 
   <ng-template pTemplate="footer">
-    <button pButton label="Apply" class="p-button-primary" (click)="applyFilters()"></button>
-    <button pButton label="Cancel" class="p-button-secondary" (click)="showFilterDialog = false"></button>
+    <button pButton label="Apply" class="p-button-primary p-button-sm" (click)="applyFilters()"></button>
+    <button pButton label="Cancel" class="p-button-secondary p-button-sm" (click)="showFilterDialog = false"></button>
   </ng-template>
 </p-dialog>
 
@@ -139,20 +153,7 @@
     <button pButton label="Load Data" class="p-button-primary" (click)="loadData()"></button>
   </div>
 
-  <!-- Data Table Preview -->
-  <p-table [value]="previewData" [paginator]="true" [rows]="10">
-    <ng-template pTemplate="header">
-      <tr>
-        <th *ngFor="let col of selectedColumns">{{ col }}</th>
-      </tr>
-    </ng-template>
-
-    <ng-template pTemplate="body" let-row>
-      <tr>
-        <td *ngFor="let col of selectedColumns">{{ row[col] }}</td>
-      </tr>
-    </ng-template>
-  </p-table>
+  
 </div>
 
 
