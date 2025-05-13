@@ -8,7 +8,7 @@
     border-collapse: collapse;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     font-size: 1rem; /* medium size font */
-    table-layout: fixed; /* fix column widths for ellipsis to work */
+   
   }
 
   .custom-table thead {

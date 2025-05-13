@@ -4,6 +4,8 @@ import { ReportConfigService } from '../../service/report-config.service';
 import { MetadataService } from '../../service/metadata.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { NotificationService } from '../../service/NotificationService.service';
+import { ChartType } from 'angular-google-charts';
+import { ActivatedRoute,Router } from '@angular/router';
 
 @Component({
   selector: 'app-report-config',
@@ -12,15 +14,19 @@ import { NotificationService } from '../../service/NotificationService.service';
   styleUrl: './report-config.component.css'
 })
 export class ReportConfigComponent implements OnInit {
-
-  previewData: any[] = [];
+ previewMode: 'report' | 'chart' | null = null;
+ showPreviewButtons :boolean=false;
+  previewData: { table: any[]; chart: any[] } = { table: [], chart: [] };
+  ChartData : any[] =[];
   displayedColumns: string[] = [];
   showPreview = false;
   operators: string[] = ['between','equals', 'not equals', 'greater than', 'less than', 'contains'];
   tablesAndViews: any[] = [];   
   availableFields: any[] = [];   
-  shouldUpdatePreview: boolean = false;
-  
+ 
+  reportId: string | null = null;
+  mode: string | null = null;
+
   reportForm = new FormGroup({
     tableandView: new FormControl(null, Validators.required),
     reportName :new FormControl(),
@@ -28,9 +34,10 @@ export class ReportConfigComponent implements OnInit {
     filters: new FormArray([]),
     groupBy: new FormArray([]),
     sortBy: new FormArray([]),
+    xyaxis: new FormArray([])
   }); 
 
-  constructor(private notificationService: NotificationService,private metadataService: MetadataService,private fb: FormBuilder, private reprotconfig:ReportConfigService) {}
+  constructor(private router: Router,private route: ActivatedRoute,private notificationService: NotificationService,private metadataService: MetadataService,private fb: FormBuilder, private reprotconfig:ReportConfigService) {}
   
   ngOnInit() {
     this.metadataService.getTablesAndViews().subscribe(data => {
@@ -41,8 +48,77 @@ export class ReportConfigComponent implements OnInit {
       label: `${this.capitalize(field.name)} || ${this.capitalize(field.type)}`
     }));
     });
+     
+    // check mode 
+    this.route.queryParamMap.subscribe(params => {
+      this.mode = params.get('mode');  
+      this.reportId = this.route.snapshot.paramMap.get('id');
+      if (this.mode === 'edit' && this.reportId) {
+        this.loadReportData(this.reportId);
+      }
+    });
+
   }
  
+  loadReportData(id: string): void {
+    this.metadataService.getReportById(id).subscribe((response: any) => {
+      const data = response.report;
+      console.log(data);
+      this.getColumns(data.table_name); 
+      
+      this.reportForm.patchValue({
+        tableandView: data.table_name,
+        reportName: data.report_name,
+         selectedColumns: data.selected_columns,
+      });
+  
+      this.setFormArray('filters', data.filter_criteria);
+      this.setFormArray('groupBy', data.group_by);
+       this.setFormArray('sortBy', data.sort_order);
+      // this.setFormArray('xyaxis', data.axis_config);
+
+      console.log(this.reportForm.value);
+    });
+  }
+
+  setFormArray(key: string, values: any[]): void {
+  const formArray = this.reportForm.get(key) as FormArray;
+  formArray.clear();
+
+  if (values && values.length > 0) {
+    values.forEach(val => {
+ 
+      if (typeof val === 'string') {
+        try {
+          val = JSON.parse(val);
+        } catch (e) {
+          console.error('Error parsing JSON:', val);
+          return;
+        }
+      }
+
+    
+      if (typeof val === 'object' && !Array.isArray(val)) {
+        const group = new FormGroup({});
+        for (const key in val) {
+          if (val.hasOwnProperty(key)) {
+            group.addControl(key, new FormControl(val[key]));
+          }
+        }
+        formArray.push(group);
+      } else {
+        formArray.push(new FormControl(val));
+      }
+    });
+  }
+
+ // console.log(formArray); // For debugging: check the form array structure
+}
+
+
+
+
+
   createFilter(): FormGroup {
     return this.fb.group({
       field: [null, Validators.required],
@@ -57,31 +133,37 @@ export class ReportConfigComponent implements OnInit {
   // 1. Table Change Based on this Bind all Column 
 
   onTableSelect(selectedItem: any) {
-      if(selectedItem == null){
-        this.reportForm.get('selectedColumns')?.setValue([]);
-        this.availableFields=[];
-        return;
-      }
-      console.log(selectedItem.name); 
-      const table = selectedItem.name;
-      this.metadataService.getColumns(table).subscribe(cols => {
-        this.availableFields = cols;
 
-        this.availableFields = this.availableFields.map(field => ({
-          ...field,
-          label: this.capitalize(field.column_name)
-        }));
+    console.log(selectedItem);
+    if(selectedItem == null){
+      this.reportForm.get('selectedColumns')?.setValue([]);
+      this.availableFields=[];
+      return;
+    }
+      
+    console.log(selectedItem.name); 
+    const table = selectedItem.name;
+    this.getColumns(table);
+    
+    this.reportForm.get('selectedColumns')?.setValue([]); 
+    (this.reportForm.get('filters') as FormArray).clear();
+    (this.reportForm.get('groupBy') as FormArray).clear();
+    (this.reportForm.get('sortBy') as FormArray).clear();
 
-        console.log(this.availableFields);
-        this.reportForm.get('selectedColumns')?.setValue([]); 
-        (this.reportForm.get('filters') as FormArray).clear();
-        (this.reportForm.get('groupBy') as FormArray).clear();
-        (this.reportForm.get('sortBy') as FormArray).clear();
-      });
- 
   }
 
-  // For Filter field change based on that bind operator and value data type
+  getColumns(table :any){
+    this.metadataService.getColumns(table).subscribe(cols => {
+      this.availableFields = cols;
+
+      this.availableFields = this.availableFields.map(field => ({
+        ...field,label: this.capitalize(field.column_name)
+      })); 
+    }); 
+  }
+
+ 
+ 
     onFieldChange(field: any, index: number): void {
       const filterGroup = this.filters.at(index) as FormGroup;
 
@@ -115,7 +197,7 @@ export class ReportConfigComponent implements OnInit {
       });
     }
   
-    // now when user change operator add valiaiton for the mention field 
+  
     onOperatorChange(index: number): void {
       const filterGroup = this.filters.at(index) as FormGroup;
       const operator = filterGroup.get('operator')?.value;
@@ -136,7 +218,7 @@ export class ReportConfigComponent implements OnInit {
     }
 
 
-    // return data type for the selected field
+ 
     getInputType(dataType: string): string {
  
       const numberTypes = ['integer', 'smallint', 'bigint', 'decimal', 'numeric', 'real', 'double precision', 'serial', 'bigserial'];
@@ -184,6 +266,10 @@ export class ReportConfigComponent implements OnInit {
       return this.reportForm.get('sortBy') as FormArray;
     }
 
+    get xyaxis() {
+      return this.reportForm.get('xyaxis') as FormArray;
+    }
+
     addFilter() {
       this.filters.push(this.createFilter());
     }
@@ -216,44 +302,82 @@ export class ReportConfigComponent implements OnInit {
     removeSorting(index: number) {
       this.sortBy.removeAt(index);
     } 
+ 
+    addXYAxis() {
+      const xyAxisGroup = this.fb.group({
+        xAxisField: ['', Validators.required],
+        xAxisDirection: ['asc', Validators.required],
+        yAxisField: ['', Validators.required],
+        yAxisDirection: ['asc', Validators.required]
+      });
+      this.xyaxis.push(xyAxisGroup);
+    }
 
-      
+ 
+    removeXYAxis(index: number) {
+      this.xyaxis.removeAt(index);
+    }
+
+
     saveConfiguration(): void {
 
       if (this.reportForm.invalid) {
-        this.reportForm.markAllAsTouched(); // show validation messages
+        this.reportForm.markAllAsTouched();  
         console.log('error')
         return;
       }
       
-    const reportName = this.reportForm.get('reportName')?.value;
+      const reportName = this.reportForm.get('reportName')?.value;
 
-    if (!reportName || reportName.trim() === '') {
-      this.notificationService.showNotification('Report name is required','error');
-      return;
+      if (!reportName || reportName.trim() === '') {
+        this.notificationService.showNotification('Report name is required','error');
+        return;
+      }
+
+      const config = this.reportForm.value;
+      this.showPreview=false;
+
+      if (this.mode === 'edit' && this.reportId) {
+        //config.id = this.reportId;
+        this.metadataService.updateReportFormat(config,this.reportId).subscribe({
+          next: (response: any) => {
+            this.notificationService.showNotification(response.message, 'success');
+            this.addNewReport();
+            this.router.navigateByUrl('List-Report');
+          },
+          error: (err) => {
+            console.error('Error While Updating:', err.error); 
+            this.notificationService.showNotification(err.error.message, 'error');
+          }
+        });
+      } else{
+
+        this.metadataService.SaveReportForamt(config).subscribe({
+          next: (response :any) =>{        
+            this.notificationService.showNotification(response.message, 'success');
+            this.addNewReport();
+            this.router.navigateByUrl('List-Report');
+          },
+          error:(err) =>{
+            console.error('Error While Saving: ', err.error); 
+            this.notificationService.showNotification(err.error.message, 'error');
+          }
+        }) ;
+      }
+      
+      console.log('Report configuration:', config);
     }
 
-    const config = this.reportForm.value;
-    this.showPreview=false;
-    this.metadataService.SaveReportForamt(config).subscribe({
-        next: (response :any) =>{        
-          this.notificationService.showNotification(response.message, 'success');
-          this.addNewReport();
-        },
-        error:(err) =>{
-          console.error('Error While Saving: ', err.error); 
-          this.notificationService.showNotification(err.error.message, 'error');
-        }
-    }) ;
-    console.log('Report configuration:', config);
-   
-  }
 
+    previewChart(): void {
 
+    }
+
+    
     previewReport(): void {
       
       if (this.reportForm.invalid) {
-        this.reportForm.markAllAsTouched(); // show validation messages
+        this.reportForm.markAllAsTouched();  
         console.log('error')
         return;
       }
@@ -265,25 +389,36 @@ export class ReportConfigComponent implements OnInit {
         next: (response: any) => {
           console.log(response);
           const data = response?.data;
+          const chartData = response?.chartData;
           console.log(data);
 
           if (Array.isArray(data) && data.length > 0) {
-            this.previewData = data;
-            this.displayedColumns = Object.keys(data[0]);
-            console.log('a');
-          } else {
-            this.previewData = [];
-            this.displayedColumns = [];
-            console.log('a1');
-          }
+            this.previewData = {
+              table: data,
+              chart: chartData || []
+            };
 
-          this.shouldUpdatePreview = true;
-          this.showPreview = true;
+            this.displayedColumns = Object.keys(data[0]);
+            this.showPreviewButtons = true;
+            this.showPreview = true;
+            this.previewMode = 'report'; // default to report view
+          } else {
+            this.previewData = {
+                table: [],
+                chart: []
+              };
+            this.displayedColumns = [];
+            this.showPreviewButtons=false;  
+            this.notificationService.showNotification('No Data Found', 'success');           
+          }
+           
+          //if(Array.isArray(data) && data.length > 0)
+       
+           
         },
         error: (err) => {
-             this.showPreview = false;
+          this.showPreviewButtons=false;
           console.error('Error fetching data: ', err.error);
-          // Call the notification service to show error
           this.notificationService.showNotification(err.error.message, 'error');
         }
       });
@@ -291,23 +426,28 @@ export class ReportConfigComponent implements OnInit {
  
     }
 
-    // Clears the form inputs
-    clearReport(): void {
-      this.showPreview=false;
-      this.reportForm.reset();
-      (this.reportForm.get('filters') as FormArray).clear();
-      (this.reportForm.get('groupBy') as FormArray).clear();
-      (this.reportForm.get('sortBy') as FormArray).clear();
-      this.reprotconfig.clearConfiguration();
-      console.log('Form cleared');
+    closeModal() {
+      this.showPreview = false;
+      this.previewMode = null;
+       
     }
 
-    // Creates a new report configuration
+    showReportView() {
+      this.showPreview =true;
+      this.previewMode = 'report';
+    }
+
+    showChartView() {
+      this.showPreview =true;
+      this.previewMode = 'chart';
+    }
+  
     addNewReport(): void {
       this.reportForm.reset();
       (this.reportForm.get('filters') as FormArray).clear();
       (this.reportForm.get('groupBy') as FormArray).clear();
       (this.reportForm.get('sortBy') as FormArray).clear();
+      (this.reportForm.get('xyaxis') as FormArray).clear();
       this.reprotconfig.clearConfiguration();
       console.log('New report initiated');
     }
