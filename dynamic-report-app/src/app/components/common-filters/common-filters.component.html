@@ -1,0 +1,148 @@
+<form [formGroup]="reportForm" (ngSubmit)="onSave()">
+
+  <div formArrayName="filters" class="mb-4">
+    <h5 class="card-title text-secondary mb-3">
+      <i class="bi bi-funnel text-danger"></i> Filters
+    </h5>
+    <div *ngFor="let filter of filters.controls; let i = index" [formGroupName]="i" class="row g-2 mb-2">
+      <div class="col">
+        <ng-select [items]="availableFields" bindLabel="label" (change)="onFieldChange($event, i)"
+          bindValue="column_name" [multiple]="false" formControlName="field" placeholder="Select filter"
+          [closeOnSelect]="true" class="">
+        </ng-select>
+
+        <div *ngIf="filter.get('field')?.invalid && filter.get('field')?.touched" class="text-danger small">
+          Field is required.
+        </div>
+      </div>
+
+      <div class="col">
+        <select class="form-select" (change)="onOperatorChange(i)" formControlName="operator"
+          title="Select the filter operator">
+          <option value="">Select Operator</option>
+          <option *ngFor="let op of operators" [value]="op">
+            {{ op }}
+          </option>
+        </select>
+        <div *ngIf="filter.get('operator')?.invalid && filter.get('operator')?.touched" class="text-danger small">
+          Operator is required.
+        </div>
+      </div>
+
+      <!-- Value Inputs: Conditionally show single input or two inputs for "between" -->
+
+      <ng-container *ngIf="filter.get('operator')?.value === 'between'; else singleValue">
+        <div class="col">
+          <input [type]="getInputType(filter.get('selectedField')?.value?.data_type)" class="form-control mb-2"
+            formControlName="valueFrom" placeholder="From" />
+          <div *ngIf="filter.get('valueFrom')?.invalid && filter.get('valueFrom')?.touched" class="text-danger small">
+            From value is required.
+          </div>
+
+          <input [type]="getInputType(filter.get('selectedField')?.value?.data_type)" class="form-control"
+            formControlName="valueTo" placeholder="To" />
+          <div *ngIf="filter.get('valueTo')?.invalid && filter.get('valueTo')?.touched" class="text-danger small">
+            To value is required.
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- Other operators: show single input -->
+      <ng-template #singleValue>
+        <div class="col">
+          <input [type]="getInputType(filter.get('selectedField')?.value?.data_type)" class="form-control"
+            formControlName="value" placeholder="Enter value" />
+          <div *ngIf="filter.get('value')?.invalid && filter.get('value')?.touched" class="text-danger small">
+            Value is required.
+          </div>
+        </div>
+      </ng-template>
+
+
+      <!-- Remove Button -->
+      <div class="col-auto">
+        <button type="button" class="btn btn-outline-danger btn-sm" (click)="removeFilter(i)"
+          title="Remove this filter">
+          <i class="bi bi-trash"></i>
+        </button>
+      </div>
+    </div>
+
+    <button type="button" class="btn btn-outline-primary btn-sm" (click)="addFilter()" title="Add a new filter">
+      <i class="bi bi-plus-circle"></i> Add Filter
+    </button>
+  </div>
+
+
+  <!-- Group By Section -->
+  <div formArrayName="groupBy" class="mb-4">
+    <h5 class="card-title text-secondary mb-3">
+      <i class="bi bi-collection text-info"></i> Grouping
+    </h5>
+    <p class="small text-muted">
+      Step 3: Group your data for easier understanding (for example: by department or location).
+    </p>
+    <div *ngFor="let group of groupBy.controls; let i = index" [formGroupName]="i" class="d-flex gap-2 mb-2">
+      <select class="form-select" formControlName="field">
+        <option value="">Select Field</option>
+        <option *ngFor="let field of availableFields" [value]="field.column_name">
+          {{ field.label }}
+        </option>
+      </select>
+
+      <div *ngIf="groupBy.get('field')?.invalid && groupBy.get('field')?.touched" class="text-danger small">
+        Field is required.
+      </div>
+      <button type="button" class="btn btn-outline-danger btn-sm" (click)="removeGrouping(i)" title="Remove grouping">
+        <i class="bi bi-trash"></i>
+      </button>
+    </div>
+    <button *ngIf="groupBy.length === 0" type="button" class="btn btn-outline-primary btn-sm" (click)="addGrouping()"
+      title="Add grouping">
+      <i class="bi bi-plus-circle"></i> Add Grouping
+    </button>
+  </div>
+
+  <!-- Sort By Section -->
+  <div formArrayName="sortBy" class="mb-4">
+    <h5 class="card-title text-secondary mb-3">
+      <i class="bi bi-sort-alpha-down text-secondary"></i> Sorting
+    </h5>
+    <p class="small text-muted">
+      Step 4: Choose how you want to order the data (ascending or descending).
+    </p>
+    <div *ngFor="let sort of sortBy.controls; let i = index" [formGroupName]="i" class="row g-2 mb-2">
+      <div class="col">
+        <select class="form-select" formControlName="field">
+          <option value="">Select Field</option>
+          <option *ngFor="let field of availableFields" [value]="field.column_name">
+            {{ field.label }}
+          </option>
+        </select>
+      </div>
+      <div class="col">
+        <select class="form-select" formControlName="direction">
+          <option value="asc">Ascending (A-Z, small to large)</option>
+          <option value="desc">Descending (Z-A, large to small)</option>
+        </select>
+      </div>
+      <div class="col-auto">
+        <button type="button" class="btn btn-outline-danger btn-sm" (click)="removeSorting(i)" title="Remove sorting">
+          <i class="bi bi-trash"></i>
+        </button>
+      </div>
+    </div>
+    <button type="button" class="btn btn-outline-primary btn-sm" (click)="addSorting()" title="Add sorting">
+      <i class="bi bi-plus-circle"></i> Add Sorting
+    </button>
+  </div>
+
+  <div class="d-flex flex-wrap justify-content-end gap-2 mt-4">
+    <button type="submit" class="btn btn-success">
+      <i class="bi bi-save me-1"></i> Save
+    </button>
+    <button type="button" class=" btn btn-secondary" (click)="onCancel()">
+      <i class="bi bi-x-circle me-1"></i> Cancel
+    </button>
+  </div>
+</form>

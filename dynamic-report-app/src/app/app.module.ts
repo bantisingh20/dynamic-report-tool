@@ -19,6 +19,7 @@ import {MatPaginator, MatPaginatorModule} from '@angular/material/paginator';
 import {MatTableDataSource, MatTableModule} from '@angular/material/table';
 import { GoogleChartsModule, ChartType } from 'angular-google-charts';
 import { ChartComponentComponent } from './components/chart-component/chart-component.component';
+import { CommonFiltersComponent } from './components/common-filters/common-filters.component';
  
 
 
@@ -31,7 +32,8 @@ import { ChartComponentComponent } from './components/chart-component/chart-comp
     FormatNamePipe   ,
     CustomTableComponent,
     ListReportComponent,
-    ChartComponentComponent 
+    ChartComponentComponent ,
+    CommonFiltersComponent
   ],
   imports: [
     BrowserModule,

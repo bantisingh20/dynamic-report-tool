@@ -39,7 +39,7 @@ app.get('/api/metadata/tables', async (req, res) => {
 });
  
 
-// Get all Column of Table / Views
+// Get all Column of Table / Views  SELECT * FROM get_columns_for_tables(ARRAY['products', 'users', 'orders'])
 app.get('/api/metadata/columns/:tableName', async (req, res) => {
   try {
     const tableName = req.params.tableName;
@@ -90,22 +90,22 @@ app.get('/api/metadata/columns/:tableName', async (req, res) => {
 
 
  app.post('/api/metadata/report/preview', async (req, res, next) => {
-  const { tableandView, selectedColumns = [] ,xyaxis=[], filters = [], sortBy = [], groupBy = [] } = req.body;
-
+  const { report_name,tableandview, selectedColumns = [] ,xyaxis=[], filters = [], sortBy = [], groupBy = [] } = req.body;
+   
   console.log(req.body);
   try {
     // 1. Check table exists
     const tableResult = await pool.query(`
       SELECT 1 FROM information_schema.tables
       WHERE table_schema = 'public' AND table_name = $1
-    `, [tableandView]);
+    `, [tableandview]);
 
     if (tableResult.rowCount === 0) {
       // Throw error with status 400 if table is not found
       
       return next({
         status: 400,
-        message: `Table "${tableandView}" does not exist.`,
+        message: `Table "${tableandview}" does not exist.`,
         error: 'Table validation failed.'
       });
     }
@@ -115,7 +115,7 @@ app.get('/api/metadata/columns/:tableName', async (req, res) => {
       SELECT column_name, data_type
       FROM information_schema.columns
       WHERE table_name = $1 AND table_schema = 'public'
-    `, [tableandView]);
+    `, [tableandview]);
 
     const tableColumns = {};
     colResult.rows.forEach(col => tableColumns[col.column_name] = col.data_type);
@@ -208,7 +208,7 @@ app.get('/api/metadata/columns/:tableName', async (req, res) => {
     }
 
     const config = {
-      table: tableandView,
+      table: tableandview,
       selection: selectedColumns,
       filters: filters.map(f => ({
         field: f.field,
@@ -378,6 +378,122 @@ const Executionfunction = async (config) => {
   }
 };
 
+const ExecutionfunctionNew = async (config) => {
+  try {
+    if (!config || !config.table) {
+      throw new Error('Report configuration with table is required');
+    }
+
+    const table = config.table;
+
+    // Get PK/FK columns
+    const pkFkResult = await pool.query(
+      `
+      SELECT kcu.column_name
+      FROM information_schema.table_constraints tc
+      JOIN information_schema.key_column_usage kcu
+        ON tc.constraint_name = kcu.constraint_name
+        AND tc.table_name = kcu.table_name
+      WHERE tc.table_name = $1
+        AND tc.constraint_type IN ('PRIMARY KEY', 'FOREIGN KEY')
+
+      UNION
+
+      SELECT ccu.column_name
+      FROM information_schema.constraint_column_usage ccu
+      JOIN information_schema.referential_constraints rc
+        ON ccu.constraint_name = rc.unique_constraint_name
+      WHERE ccu.table_name = $1
+      `,
+      [table]
+    );
+
+    const excludedColumns = pkFkResult.rows.map(r => r.column_name);
+
+    // Filtered selection
+    let selection = '*';
+
+    if (config.selection && config.selection.length > 0) {
+      const filteredSelection = config.selection.filter(col => !excludedColumns.includes(col));
+      selection = filteredSelection.length > 0 ? filteredSelection.join(', ') : '*';
+    } else {
+      const allColumnsResult = await pool.query(
+        `SELECT column_name FROM information_schema.columns WHERE table_name = $1`,
+        [table]
+      );
+      const allColumns = allColumnsResult.rows.map(r => r.column_name);
+      const filteredColumns = allColumns.filter(col => !excludedColumns.includes(col));
+      selection = filteredColumns.length > 0 ? filteredColumns.join(', ') : '*';
+    }
+
+    const params = [];
+    let paramIndex = 1;
+
+    // WHERE clause
+    let whereClause = '';
+    if (config.filters && config.filters.length > 0) {
+      const filterClauses = config.filters.map(filter => {
+        const sqlOperator = operatorMap[filter.operator.toLowerCase()];
+        if (!sqlOperator) throw new Error(`Unsupported operator: ${filter.operator}`);
+
+        if (sqlOperator === 'BETWEEN') {
+          params.push(filter.valueFrom, filter.valueTo);
+          return `${filter.field} BETWEEN $${paramIndex++} AND $${paramIndex++}`;
+        } else if (sqlOperator === 'ILIKE' || sqlOperator === 'contain') {
+          params.push(`%${filter.value}%`);
+          return `${filter.field} ILIKE $${paramIndex++}`;
+        } else {
+          params.push(filter.value);
+          return `${filter.field} ${sqlOperator} $${paramIndex++}`;
+        }
+      }).join(' AND ');
+      whereClause = ` WHERE ${filterClauses}`;
+    }
+
+    // GROUP BY logic
+    if (config.groupBy && config.groupBy.length > 0) {
+      const groupByCols = config.groupBy.map(g => g.field).join(', ');
+
+      // Build subquery for each group
+      const groupedSQL = `
+        SELECT ${groupByCols}, 
+          JSON_AGG(sub) AS records
+        FROM (
+          SELECT ${selection}
+          FROM ${table}
+          ${whereClause}
+        ) sub
+        GROUP BY ${groupByCols}
+      `;
+
+      console.log("Executing GROUPED SQL:", groupedSQL, 'with params:', params);
+      const result = await pool.query(groupedSQL, params);
+  return {
+    groupBy: config.groupBy,
+    data: result.rows
+  };
+    }
+
+    // Regular (non-grouped) query
+    let sql = `SELECT ${selection} FROM ${table}${whereClause}`;
+
+    // ORDER BY
+    if (config.sortBy && config.sortBy.length > 0) {
+      const sortClauses = config.sortBy.map(sort => `${sort.column} ${sort.order}`).join(', ');
+      sql += ` ORDER BY ${sortClauses}`;
+    }
+
+    console.log("Executing SQL:", sql, 'with params:', params);
+    const result = await pool.query(sql, params);
+    return result.rows;
+  } catch (err) {
+    throw {
+      status: 500,
+      message: "Query execution failed",
+      error: err.message
+    };
+  }
+};
 
 const operatorMap = {
   'equals': '=',
@@ -391,7 +507,7 @@ const operatorMap = {
 // List all saved reports (for the "Saved Reports" view)
 app.get('/api/metadata/List-Report', async (req, res, next) => {
   try {
-    const result = await pool.query(`SELECT report_id, report_name FROM report_configuration`);
+    const result = await pool.query(`SELECT report_id,report_name,table_name as tableandView,selected_columns as selectedColumns,filter_criteria as filters,group_by as groupBy,sort_order as sortBy FROM report_configuration`);
     res.json({ reports: result.rows });
   } catch (err) {
     res.status(500).json({ error: err.message });

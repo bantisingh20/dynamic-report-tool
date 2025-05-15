@@ -1,19 +1,18 @@
 <div class="container mt-4">
- 
- <div class="page-header d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mt-3">
 
-  <h3 class="h4 h3-sm mb-0 text-center text-sm-start">Configuration Management</h3>
+  <div
+    class="page-header d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mt-3">
 
-  <button 
-    class="btn btn-light text-success border border-success w-100 w-sm-auto" 
-    (click)="CreateNewConfig()">
-    <i class="fas fa-plus me-2"></i> Create New Config
-  </button>
+    <h3 class="h4 h3-sm mb-0 text-center text-sm-start">Configuration Management</h3>
 
-</div>
+    <button class="btn btn-light text-success border border-success w-100 w-sm-auto" (click)="CreateNewConfig()">
+      <i class="fas fa-plus me-2"></i> Create New Config
+    </button>
+
+  </div>
 
 
- 
+
   <div class="card shadow-sm">
     <div class="card-body p-3">
       <div class="table-wrapper">
@@ -26,66 +25,72 @@
             </tr>
           </thead>
           <tbody>
-         
-            <tr *ngFor="let config of listData; index as i" [ngClass]="i % 2 === 0 ? 'custom-row-even' : 'custom-row-odd'">
-          <td class="text-center align-middle">{{ i + 1 }}</td>
-          <td class="align-middle">{{ config.report_name }}</td>
-           <td class="text-center align-middle">
-              <div class="d-flex flex-nowrap justify-content-center overflow-auto gap-1">
 
-                <button class="btn btn-warning btn-sm"
-                    data-bs-toggle="tooltip"
-                    data-bs-placement="top"
-                    title="Edit Report"
-                    (click)="goToEdit(config.report_id)">
+            <tr *ngFor="let config of listData; index as i"
+              [ngClass]="i % 2 === 0 ? 'custom-row-even' : 'custom-row-odd'">
+              <td class="text-center align-middle">{{ i + 1 }}</td>
+              <td class="align-middle">{{ config.report_name }}</td>
+              <td class="text-center align-middle">
+                <div class="d-flex flex-nowrap justify-content-center overflow-auto gap-1">
+
+                  <button class="btn btn-warning btn-sm" data-bs-toggle="tooltip" data-bs-placement="top"
+                    title="Edit Report" (click)="goToEdit(config.report_id)">
                     <i class="fas fa-edit"></i>
-                </button>
+                  </button>
 
 
-                <button class="btn btn-info btn-sm text-white"
-                  data-bs-toggle="tooltip"
-                  data-bs-placement="top"
-                  title="Report Preview"
-                  (click)="previewConfig(config.report_id)">
-                  <i class="fas fa-eye"></i>
-                </button>  
+                  <button class="btn btn-info btn-sm text-white" data-bs-toggle="tooltip" data-bs-placement="top"
+                    title="Report Preview" (click)="previewConfig(config.report_id)">
+                    <i class="fas fa-eye"></i>
+                  </button>
 
-                <button class="btn btn-success btn-sm d-none"
+                  <!-- <button class="btn btn-success btn-sm d-none"
                   data-bs-toggle="tooltip"
                   data-bs-placement="top"
                   title="Chart Preview"
                   (click)="previewChart(config)">
                   <i class="fas fa-chart-bar"></i>
-                </button>
+                </button> -->
 
-                 <button class="btn btn-danger btn-sm d-none"
-                  data-bs-toggle="tooltip"
-                  data-bs-placement="top"
-                  title="Delete Report"
-                  (click)="deleteConfig(config)">
-                  <i class="fas fa-trash-alt"></i>
-                </button>
-                
-              </div>
-            </td> 
-        </tr>
-         
+                  <button class="btn btn-danger btn-sm d-none" data-bs-toggle="tooltip" data-bs-placement="top"
+                    title="Delete Report" (click)="deleteConfig(config)">
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
+
+                </div>
+              </td>
+            </tr>
+
           </tbody>
         </table>
       </div>
     </div>
   </div>
- 
-</div>
-  
-<!-- <div *ngIf="selectedConfig && viewType === 'report'" class="mt-4">
-  <div class="w-100 overflow-auto">
-    <app-report-preview></app-report-preview>
-  </div>
-</div> -->
 
-<!-- <div *ngIf="selectedConfig && viewType === 'chart'" class="mt-4">
-  <div class="w-100 overflow-auto">
-    <app-chart-component></app-chart-component>
+</div>
+
+<div class="modal fade show d-block" *ngIf="showPreview" tabindex="-1"
+  style="background: rgba(0,0,0,0.5); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050;">
+
+  <div class="modal-dialog modal-fullscreen m-0">
+    <div class="modal-content h-100 d-flex flex-column">
+
+      <div class="modal-header">
+        <h5 class="modal-title">
+          {{ 'Report Preview'}}
+        </h5>
+        <button type="button" class="btn-close" (click)="closeModal()" aria-label="Close"></button>
+      </div>
+ 
+      <div class="modal-body flex-grow-1 overflow-auto">
+        <ng-container *ngIf="previewData.table?.length">
+          <app-custom-table [data]="previewData.table" [columns]="displayedColumns" >
+          </app-custom-table>
+        </ng-container>
+
+        
+      </div>
+
+    </div>
   </div>
-</div> -->
+</div>
