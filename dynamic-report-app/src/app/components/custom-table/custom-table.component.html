@@ -1,71 +1,76 @@
-  <button class="btn btn-outline-primary" *ngIf="showFilter" type="button" data-bs-toggle="offcanvas" data-bs-target="#filterDrawer">
-      <i class="bi bi-funnel-fill"></i> Filter
-  </button>
+<!-- FLAT TABLE -->
+<button class="d-none btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#filterDrawer">
+  <i class="bi bi-funnel-fill"></i> Filter
+</button>
 
-<div class="table-wrapper p-3 m-3">
-  <div *ngFor="let groupKey of groupKeys">
-    <!-- Group Header -->
-    <h5 class="text-primary mb-2 mt-4">
-      <i class="bi bi-diagram-3"></i> {{ groupKey }}
-    </h5>
 
-    <!-- Group Table -->
-    <table class="custom-table table-bordered table-sm">
+<div *ngIf="!isGrouped && pagedFlatRows.length" class="table-wrapper">
+  <table>
+    <thead>
+      <tr>
+        <th *ngFor="let col of flatColumns">{{ col }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let row of pagedFlatRows">
+        <td *ngFor="let col of flatColumns">{{ row[col] }}</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="pagination">
+    <button (click)="changeFlatPage('prev')" [disabled]="flatCurrentPage === 1">Prev</button>
+    <span>Page {{ flatCurrentPage }} of {{(flatRows.length / itemsPerPage)}}</span>
+    <button (click)="changeFlatPage('next')" [disabled]="flatCurrentPage >= (flatRows.length / itemsPerPage)">
+      Next
+    </button>
+  </div>
+</div>
+
+<!-- GROUPED TABLE -->
+<div *ngIf="isGrouped">
+  <div *ngFor="let group of data.data">
+    <h3>
+      Group:
+      <span *ngFor="let field of groupByFields; let last = last">
+        {{ group[field] }}<span *ngIf="!last"> | </span>
+      </span>
+    </h3>
+
+    <table>
       <thead>
         <tr>
-          <th *ngFor="let col of columns" class="py-2">{{ col | formatName }}</th>
+          <th *ngFor="let col of groupColumns">{{ col }}</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let item of paginatedData[groupKey]; let i = index"
-            [ngClass]="i % 2 === 0 ? 'custom-row-even' : 'custom-row-odd'">
-          <td *ngFor="let col of columns" class="py-2">
-            <div class="scroll-cell">{{ item[col] }}</div>
-          </td>
+        <tr *ngFor="let row of groupedPages[getGroupKey(group)]?.pagedRecords">
+          <td *ngFor="let col of groupColumns">{{ row[col] }}</td>
         </tr>
       </tbody>
     </table>
-
-    <!-- Pagination Controls -->
-    <div class="pagination-controls mt-3">
-      <nav aria-label="Page navigation">
-         
-        <ul class="pagination pagination-sm justify-content-center">
-          <li class="page-item" [class.disabled]="currentPages[groupKey] === 1">
-            <button class="page-link"
-                    (click)="changePage(groupKey, 'previous')"
-                    [disabled]="currentPages[groupKey] === 1">
-              Previous
-            </button>
-          </li>
-          <li class="page-item disabled">
-            <span class="page-link">
-              Page {{ currentPages[groupKey] || 1 }} of {{ totalPages[groupKey] || 1 }}
-            </span>
-          </li>
-          <li class="page-item" [class.disabled]="currentPages[groupKey] === totalPages[groupKey]">
-            <button class="page-link"
-                    (click)="changePage(groupKey, 'next')"
-                    [disabled]="currentPages[groupKey] === totalPages[groupKey]">
-              Next
-            </button>
-          </li>
-        </ul>
-      </nav>
+    <div class="pagination">
+      <button (click)="changeGroupPage(getGroupKey(group), 'prev')"
+        [disabled]="groupedPages[getGroupKey(group)].currentPage === 1">
+        Prev
+      </button>
+      <span>Page {{ groupedPages[getGroupKey(group)].currentPage }}</span>
+      <button (click)="changeGroupPage(getGroupKey(group), 'next')"
+        [disabled]="groupedPages[getGroupKey(group)].pagedRecords.length < itemsPerPage">
+        Next
+      </button>
     </div>
   </div>
 </div>
 
 
-
-<!-- Right Side Drawer -->
 <div class="offcanvas offcanvas-end" tabindex="-1" id="filterDrawer" aria-labelledby="filterDrawerLabel">
   <div class="offcanvas-header">
     <h5 id="filterDrawerLabel">Filter & Configure</h5>
     <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
   </div>
   <div class="offcanvas-body">
-    <app-common-filters >
-    </app-common-filters>
+    <app-common-filters 
+       
+    ></app-common-filters>
   </div>
 </div>

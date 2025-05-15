@@ -16,7 +16,8 @@
           <i class="bi bi-plus-circle"></i> New Report
         </button>
 
-        <button class="d-none btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#filterDrawer">
+        <button class="d-none btn btn-outline-primary" type="button" data-bs-toggle="offcanvas"
+          data-bs-target="#filterDrawer">
           <i class="bi bi-funnel-fill"></i> Filter
         </button>
       </div>
@@ -38,18 +39,10 @@
                 [multiple]="false" formControlName="tableandview" placeholder="Select Table" [closeOnSelect]="true"
                 class="w-100">
               </ng-select> -->
-              <ng-select 
-                  [items]="tablesAndViews" 
-                  bindLabel="label" 
-                  bindValue="name" 
-                  (change)="onTableSelect($event)"
-                  (close)="onDropdownClose()"    
-                  [multiple]="true" 
-                  formControlName="tableandview" 
-                  placeholder="Select Tables" 
-                  [closeOnSelect]="false" 
-                  class="w-100">
-                </ng-select>
+              <ng-select [items]="tablesAndViews" bindLabel="label" bindValue="name" (change)="onTableSelect($event)"
+                (close)="onDropdownClose()" [multiple]="false" formControlName="tableandview"
+                placeholder="Select Tables" [closeOnSelect]="false" class="w-100">
+              </ng-select>
 
               <div *ngIf="reportForm.get('tableandview')?.touched && reportForm.get('tableandview')?.invalid"
                 class="text-danger small">
@@ -62,7 +55,7 @@
               <ng-select [items]="availableFields" bindLabel="label" bindValue="column_name" [multiple]="true"
                 formControlName="selectedColumns" placeholder="Select columns" [closeOnSelect]="false" class="w-100">
               </ng-select>
- 
+
 
 
               <small class="text-muted">Choose the columns you want in your report.</small>
@@ -119,7 +112,7 @@
           </div>
         </div>
       </div>
- 
+
 
       <!-- RIGHT PANEL: Filters, Grouping, and Sorting -->
       <div class="col-md-9 ">
@@ -219,7 +212,7 @@
                   </option>
                 </select>
 
-                <div *ngIf="groupBy.get('field')?.invalid && groupBy.get('field')?.touched" class="text-danger small">
+                <div *ngIf="group.get('field')?.invalid && group.get('field')?.touched" class="text-danger small">
                   Field is required.
                 </div>
                 <button type="button" class="btn btn-outline-danger btn-sm" (click)="removeGrouping(i)"
@@ -249,6 +242,10 @@
                       {{ field.label }}
                     </option>
                   </select>
+
+                  <div *ngIf="sort.get('field')?.invalid && sort.get('field')?.touched" class="text-danger small">
+                    Field is required.
+                  </div>
                 </div>
                 <div class="col">
                   <select class="form-select" formControlName="direction">
@@ -394,10 +391,10 @@
   </div>
 </form>
 
-<ng-container *ngIf="previewMode === 'report' && previewData.table?.length">
-          <app-custom-table [data]="previewData.table" [columns]="displayedColumns" [groupBy]="groupByFields">
-          </app-custom-table>
-  </ng-container>
+<ng-container >
+  <app-custom-table [data]="previewData" >
+  </app-custom-table>
+</ng-container>
 
 
 <!-- <div class="modal fade show d-block" *ngIf="showPreview" tabindex="-1"

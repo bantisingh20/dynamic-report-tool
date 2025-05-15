@@ -18,7 +18,7 @@ export class ReportConfigComponent implements OnInit {
 
   previewMode: 'report' | 'chart' | null = null;
   showPreviewButtons: boolean = false;
-  previewData: { table: any[]; chart: any[] } = { table: [], chart: [] };
+  previewData: any;
   ChartData: any[] = [];
   displayedColumns: string[] = [];
   showPreview = false;
@@ -174,60 +174,60 @@ export class ReportConfigComponent implements OnInit {
 
   onTableSelect(selectedItem: any) {
 
-    // console.log(selectedItem);
-    // if (selectedItem == null) {
+    console.log(selectedItem);
+    if (selectedItem == null) {
+      this.reportForm.get('selectedColumns')?.setValue([]);
+      this.availableFields = [];
+      return;
+    }
+    const table = selectedItem.name;
+    console.log(table);
+    this.getColumns(table);
+
+    this.reportForm.get('selectedColumns')?.setValue([]);
+    (this.reportForm.get('filters') as FormArray).clear();
+    (this.reportForm.get('groupBy') as FormArray).clear();
+    (this.reportForm.get('sortBy') as FormArray).clear();
+
+    // const selectedItems = this.reportForm.get('tableandview')?.value || [];
+
+
+    // if (!selectedItems || selectedItems.length === 0) {
     //   this.reportForm.get('selectedColumns')?.setValue([]);
     //   this.availableFields = [];
     //   return;
     // }
-    // const table = selectedItem.name;
-    // console.log(table);
-    // this.getColumns(table);
 
+    // // Determine the type of the selected items
+    // const hasView = selectedItems.some((item: any) => item?.type === 'VIEW');
+    // const hasTable = selectedItems.some((item: any) => item?.type === 'BASE TABLE');
+
+    // console.log(`view :${hasView} & hasTable :${hasTable} `)
+    // // Enforce constraint: only allow one type at a time
+    // if (hasView && hasTable) {
+    //   // Revert the last selection
+    //   const filtered = selectedItems.filter(
+    //     (item: any) => item?.type === selectedItem.type
+    //   );
+
+    //   //this.reportForm.get('tableandview')?.setValue(?filtered);
+
+    //   alert('You can only select either a BASE TABLE or a VIEW, not both.');
+    //   return;
+    // }
+
+    // // Continue with logic for the most recently selected item
+    // const lastSelected = selectedItems[selectedItems.length - 1];
+    // console.log(lastSelected);
+    // // const table = lastSelected?.name;
+
+    // // console.log('Selected table:', table);
+
+    // // this.getColumns(table);
     // this.reportForm.get('selectedColumns')?.setValue([]);
     // (this.reportForm.get('filters') as FormArray).clear();
     // (this.reportForm.get('groupBy') as FormArray).clear();
     // (this.reportForm.get('sortBy') as FormArray).clear();
-
-    const selectedItems = this.reportForm.get('tableandview')?.value || [];
-
-  
-  if (!selectedItems || selectedItems.length === 0) {
-    this.reportForm.get('selectedColumns')?.setValue([]);
-    this.availableFields = [];
-    return;
-  }
-
-  // Determine the type of the selected items
-  const hasView = selectedItems.some((item: any) => item?.type === 'VIEW');
-  const hasTable = selectedItems.some((item: any) => item?.type === 'BASE TABLE');
-
-  console.log(`view :${hasView} & hasTable :${hasTable} `)
-  // Enforce constraint: only allow one type at a time
-  if (hasView && hasTable) {
-    // Revert the last selection
-    const filtered = selectedItems.filter(
-      (item: any) => item?.type === selectedItem.type
-    );
-
-    //this.reportForm.get('tableandview')?.setValue(?filtered);
-    
-    alert('You can only select either a BASE TABLE or a VIEW, not both.');
-    return;
-  }
-
-  // Continue with logic for the most recently selected item
-  const lastSelected = selectedItems[selectedItems.length - 1];
-  console.log(lastSelected);
-  // const table = lastSelected?.name;
-
-  // console.log('Selected table:', table);
-
-  // this.getColumns(table);
-  this.reportForm.get('selectedColumns')?.setValue([]);
-  (this.reportForm.get('filters') as FormArray).clear();
-  (this.reportForm.get('groupBy') as FormArray).clear();
-  (this.reportForm.get('sortBy') as FormArray).clear();
 
   }
 
@@ -473,41 +473,104 @@ export class ReportConfigComponent implements OnInit {
 
     // console.log('Merged config:', config);
 
+    // this.metadataService.getDataforPreview(config).subscribe({
+    //   next: (response: any) => {
+    //     const responseData = response?.data;
+    //     const rawData = responseData?.data || [];
+    //     const groupBy = responseData?.groupBy || null;
+    //     const chartData = responseData?.chartData || [];
+
+    //     console.log('API Response:', response);
+
+    //     // Grouped data case
+    //     if (Array.isArray(groupBy) && groupBy.length > 0 && Array.isArray(rawData) && rawData[0]?.records) {
+    //       const firstRecord = rawData[0]?.records?.[0];
+
+    //       this.previewData = {
+    //         groupBy,
+    //         data: rawData,
+    //         chartData
+    //       };
+
+    //       this.displayedColumns = firstRecord ? Object.keys(firstRecord) : [];
+    //       this.showPreviewButtons = true;
+    //       this.showPreview = true;
+    //       this.previewMode = 'report';
+    //     }
+
+    //     // Flat data case
+    //     else if (Array.isArray(responseData) && responseData.length > 0) {
+    //       const firstItem = responseData[0];
+
+    //       this.previewData = {
+    //         data: responseData,
+    //         chartData
+    //       };
+
+    //       this.displayedColumns = firstItem ? Object.keys(firstItem) : [];
+    //       this.showPreviewButtons = true;
+    //       this.showPreview = true;
+    //       this.previewMode = 'report';
+    //     }
+
+    //     // No data
+    //     else {
+    //       this.previewData = {
+    //         data: [],
+    //         chartData: []
+    //       };
+
+    //       this.displayedColumns = [];
+    //       this.showPreviewButtons = false;
+    //       this.showPreview = false;
+
+
+    //       this.notificationService.showNotification('No Data Found', 'success');
+    //     }
+    //   },
+
+    //   error: (err) => {
+    //     this.previewData = {
+    //       data: [],
+    //       chartData: []
+    //     };
+
+    //     this.displayedColumns = [];
+    //     this.showPreviewButtons = false;
+    //     this.showPreview = false;
+
+    //     const message = err?.error?.message || 'Failed to fetch preview data.';
+    //     console.error('Error fetching data:', err);
+    //     this.notificationService.showNotification(message, 'error');
+    //   }
+    // });
+
     this.metadataService.getDataforPreview(config).subscribe({
       next: (response: any) => {
-        console.log(response);
-        const data = response?.data;
-        const chartData = response?.chartData;
-        console.log(data);
+        const responseData = response?.data;
 
-        if (Array.isArray(data) && data.length > 0) {
-          this.previewData = {
-            table: data,
-            chart: chartData || []
-          };
+        // Process the preview data with the helper method
+        const { data, groupBy, chartData, displayedColumns, showPreview } = this.metadataService.processPreviewData(responseData);
 
-          this.displayedColumns = Object.keys(data[0]);
-          this.showPreviewButtons = true;
-          this.showPreview = true;
-          this.previewMode = 'report';
-        } else {
-          this.previewData = {
-            table: [],
-            chart: []
-          };
-          this.displayedColumns = [];
-          this.showPreviewButtons = false;
-          this.notificationService.showNotification('No Data Found', 'success');
-        }
+        this.previewData = { groupBy, data, chartData };
+        this.displayedColumns = displayedColumns;
+        this.showPreview = showPreview;
 
+        console.log('API Response:', response);
       },
+
       error: (err) => {
-        this.showPreviewButtons = false;
-        console.error('Error fetching data: ', err.error);
-        this.notificationService.showNotification(err.error.message, 'error');
+        this.previewData = {
+          data: [],
+          chartData: []
+        };
+        this.displayedColumns = [];
+        this.showPreview = false;
+
+        const message = err?.error?.message || 'Failed to fetch preview data.';
+        console.error('Error fetching data:', err);
       }
     });
-
 
   }
 

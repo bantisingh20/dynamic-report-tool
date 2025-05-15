@@ -83,8 +83,8 @@
       </div>
  
       <div class="modal-body flex-grow-1 overflow-auto">
-        <ng-container *ngIf="previewData.table?.length">
-          <app-custom-table [data]="previewData.table" [columns]="displayedColumns" >
+        <ng-container >
+          <app-custom-table [data]="previewData">
           </app-custom-table>
         </ng-container>
 

@@ -18,7 +18,7 @@ export class ListReportComponent implements OnInit, AfterViewInit {
   selectedConfig: any = null;
   viewType: 'report' | 'chart' | null = null;
   showPreview: boolean = false;
-  previewData: { table: any[]; chart: any[] } = { table: [], chart: [] };
+  previewData: any;
   constructor(private router: Router, private metadataService: MetadataService) { }
 
   displayedColumns: string[] = [];
@@ -65,40 +65,43 @@ export class ListReportComponent implements OnInit, AfterViewInit {
   previewConfig(id: any) {
     console.log(id);
     console.log(this.listData);
-     const item = this.listData.find(obj => obj.report_id === id); 
-     this.metadataService.getDataforPreview(item).subscribe({
+    const item = this.listData.find(obj => obj.report_id === id);
+
+    const config = { ...item };
+
+    config.filters = config.filters.map((str: any) => {return typeof str === 'string' ? JSON.parse(str) : str;});
+
+    config.groupBy = config.groupby.map((str: any) => JSON.parse(str));
+    config.sortBy = config.sortby.map((str: any) => JSON.parse(str));
+
+
+    this.metadataService.getDataforPreview(config).subscribe({
       next: (response: any) => {
-        console.log(response);
-        const data = response?.data;
-        const chartData = response?.chartData;
-        console.log(data);
+        const responseData = response?.data;
 
-        if (Array.isArray(data) && data.length > 0) {
-          this.previewData = {
-            table: data,
-            chart: chartData || []
-          };
+        // Process the preview data with the helper method
+        const { data, groupBy, chartData, displayedColumns, showPreview } = this.metadataService.processPreviewData(responseData);
 
-          this.displayedColumns = Object.keys(data[0]);
-          this.showPreview = true;
- 
-        } else {
-          this.previewData = {
-            table: [],
-            chart: []
-          };
-          this.displayedColumns = [];
+        this.previewData = { groupBy, data, chartData ,config,tableName: config.table_name || config.tableandview || 'Unknown' };
+        this.displayedColumns = displayedColumns;
+        this.showPreview = showPreview;
 
-        }
-
+        console.log('API Response:', responseData );
       },
+
       error: (err) => {
+        this.previewData = {
+          data: [],
+          chartData: [],
+          tableName: ''
+        };
+        this.displayedColumns = [];
+        this.showPreview = false;
 
-        console.error('Error fetching data: ', err.error);
-
+        const message = err?.error?.message || 'Failed to fetch preview data.';
+        console.error('Error fetching data:', err);
       }
-    });
- 
+    }); 
   }
 
   closeModal() {

@@ -1,4 +1,5 @@
 import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
+import { MetadataService } from '../../service/metadata.service';
 
 @Component({
   selector: 'app-custom-table',
@@ -6,119 +7,106 @@ import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/cor
   templateUrl: './custom-table.component.html',
   styleUrls: ['./custom-table.component.css']
 })
-export class CustomTableComponent implements OnInit, OnChanges {
-  @Input() data: any[] = [];
-  @Input() groupBy: string[] = [];
-  @Input() columns: string[] = [];
-  @Input() showFilter: boolean = false;
 
-  groupedData: { [key: string]: any[] } = {};
-  groupKeys: string[] = [];
+export class CustomTableComponent implements OnChanges {
+  @Input() data: any;
 
-  pageSizes = [5, 10, 15, 20]; // Array of available page sizes
-  pageSize = 10; // Default page size
-  paginatedData: { [key: string]: any[] } = {}; // Paginated data for each group
-  groupPageSizes: { [groupKey: string]: number } = {};
+  isGrouped = false;
+  itemsPerPage = 10;
+  
+  // Non-grouped table state
+  flatRows: any[] = [];
+  pagedFlatRows: any[] = [];
+  flatCurrentPage = 1;
+  flatColumns: string[] = [];
 
-  currentPages: { [key: string]: number } = {};
-  totalPages: { [key: string]: number } = {};
-  shouldUpdatePreview: boolean = false;
-  constructor() { }
+  // Grouped table state
+  groupedPages: { [key: string]: { currentPage: number; pagedRecords: any[] } } = {};
+  groupByFields: string[] = [];
+  groupColumns: string[] = [];
+  Math: any;
+  previewData: any;
 
-  ngOnInit(): void {
-    this.processGrouping();
-    this.updatePagination();
-  }
-
+  constructor(private metadataService : MetadataService){}
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['data'] || changes['groupBy']) {
-      this.processGrouping();
-      this.updatePagination();
-      this.shouldUpdatePreview = false;
+
+    console.log(`coomon report page : ${this.data.tableName}`)
+    if (changes['data'] && this.data) {
+      this.initTable();
     }
   }
 
-  private processGrouping(): void {
+  initTable() {
+    this.isGrouped = Array.isArray(this.data?.groupBy) && this.data.groupBy.length > 0;
 
-    if (!this.groupBy || this.groupBy.length === 0) {
-      this.groupedData = { 'All Data': this.data };
-      this.groupKeys = ['All Data'];
-      return;
-    }
-
-    const grouped: { [key: string]: any[] } = {};
-
-    for (const row of this.data) {
-      const groupKey = this.groupBy.map(field => row[field]).join(' | ');
-      if (!grouped[groupKey]) {
-        grouped[groupKey] = [];
-      }
-      grouped[groupKey].push(row);
-    }
-
-    this.groupedData = grouped;
-    this.groupKeys = Object.keys(grouped);
-  }
-
-  updatePagination() {
-    this.paginatedData = {};
-
-    for (const groupKey of this.groupKeys) {
-      const groupData = this.groupedData[groupKey];
-      const total = Math.ceil(groupData.length / this.pageSize);
-      this.totalPages[groupKey] = total;
-
-      if (!this.currentPages[groupKey] || this.currentPages[groupKey] > total) {
-        this.currentPages[groupKey] = 1;
-      }
-
-      const startIndex = (this.currentPages[groupKey] - 1) * this.pageSize;
-      const endIndex = startIndex + this.pageSize;
-      this.paginatedData[groupKey] = groupData.slice(startIndex, endIndex);
+    if (this.isGrouped) {
+      this.setupGrouped();
+    } else {
+      this.setupFlat();
     }
   }
 
-  paginateData() {
-    for (const groupKey of this.groupKeys) {
-      const groupData = this.groupedData[groupKey];
-      const pageSize = this.groupPageSizes[groupKey] || this.pageSize;
-      const currentPage = this.currentPages[groupKey] || 1;
-      const startIndex = (currentPage - 1) * pageSize;
-      const endIndex = startIndex + pageSize;
-      this.paginatedData[groupKey] = groupData.slice(startIndex, endIndex);
+  setupFlat() {
+    this.flatRows = this.data?.data || [];
+    this.flatColumns = this.flatRows.length > 0 ? Object.keys(this.flatRows[0]) : [];
+    this.flatCurrentPage = 1;
+    this.updateFlatPage();
+  }
+
+  updateFlatPage() {
+    const start = (this.flatCurrentPage - 1) * this.itemsPerPage;
+    this.pagedFlatRows = this.flatRows.slice(start, start + this.itemsPerPage);
+  }
+
+  changeFlatPage(direction: 'prev' | 'next') {
+    const totalPages = Math.ceil(this.flatRows.length / this.itemsPerPage);
+    if (direction === 'prev' && this.flatCurrentPage > 1) {
+      this.flatCurrentPage--;
+    } else if (direction === 'next' && this.flatCurrentPage < totalPages) {
+      this.flatCurrentPage++;
     }
+    this.updateFlatPage();
   }
 
+  setupGrouped() {
+    const groups = this.data.data || [];
+    this.groupByFields = this.data.groupBy.map((g: any) => g.field);
+    this.groupedPages = {};
 
-  changePage(groupKey: string, direction: string) {
-    const current = this.currentPages[groupKey] || 1;
-    const total = this.totalPages[groupKey] || 1;
-    console.log(`Before change - Group: ${groupKey}, Current Page: ${current}, Total: ${total}`);
+    groups.forEach((group: any) => {
+      const groupKey = this.getGroupKey(group);
+      const records = group.records || [];
 
-    if (direction === 'previous' && current > 1) {
-      this.currentPages[groupKey] = current - 1;
-    } else if (direction === 'next' && current < total) {
-      this.currentPages[groupKey] = current + 1;
+      this.groupColumns = records.length > 0 ? Object.keys(records[0]) : this.groupColumns;
+
+      this.groupedPages[groupKey] = {
+        currentPage: 1,
+        pagedRecords: records.slice(0, this.itemsPerPage)
+      };
+    });
+  }
+
+  changeGroupPage(groupKey: string, direction: 'prev' | 'next') {
+    const group = this.data.data.find((g: any) => this.getGroupKey(g) === groupKey);
+    const allRecords = group.records || [];
+    const totalPages = Math.ceil(allRecords.length / this.itemsPerPage);
+
+    const pageData = this.groupedPages[groupKey];
+    if (!pageData) return;
+
+    if (direction === 'prev' && pageData.currentPage > 1) {
+      pageData.currentPage--;
+    } else if (direction === 'next' && pageData.currentPage < totalPages) {
+      pageData.currentPage++;
     }
 
-    console.log(`After change - Group: ${groupKey}, New Current Page: ${this.currentPages[groupKey]}`);
-    this.paginateData();
+    const start = (pageData.currentPage - 1) * this.itemsPerPage;
+    pageData.pagedRecords = allRecords.slice(start, start + this.itemsPerPage);
   }
 
-
-  onGroupPageSizeChange(groupKey: string) {
-    this.currentPages[groupKey] = 1;
-    const pageSize = this.groupPageSizes[groupKey];
-    const groupData = this.groupedData[groupKey];
-    this.totalPages[groupKey] = Math.ceil(groupData.length / pageSize);
-    this.paginatedData[groupKey] = groupData.slice(0, pageSize);
+  getGroupKey(group: any): string {
+    return this.groupByFields.map(field => group[field]).join('-');
   }
 
-  onPageSizeChange() {
-    for (const groupKey of this.groupKeys) {
-      this.currentPages[groupKey] = 1;
-    }
-    this.updatePagination();
-  }
-
+ 
 }

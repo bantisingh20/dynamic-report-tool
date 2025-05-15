@@ -89,18 +89,23 @@
           {{ field.label }}
         </option>
       </select>
-
-      <div *ngIf="groupBy.get('field')?.invalid && groupBy.get('field')?.touched" class="text-danger small">
-        Field is required.
-      </div>
+      <div *ngIf="group.get('field')?.invalid && group.get('field')?.touched" class="text-danger small">
+      Field is required.
+    </div>
       <button type="button" class="btn btn-outline-danger btn-sm" (click)="removeGrouping(i)" title="Remove grouping">
         <i class="bi bi-trash"></i>
       </button>
+ 
+        
     </div>
+    
     <button *ngIf="groupBy.length === 0" type="button" class="btn btn-outline-primary btn-sm" (click)="addGrouping()"
       title="Add grouping">
       <i class="bi bi-plus-circle"></i> Add Grouping
     </button>
+
+
+  
   </div>
 
   <!-- Sort By Section -->
@@ -119,6 +124,10 @@
             {{ field.label }}
           </option>
         </select>
+
+        <div *ngIf="sort.get('field')?.invalid && sort.get('field')?.touched" class="text-danger small">
+      Field is required.
+    </div>
       </div>
       <div class="col">
         <select class="form-select" formControlName="direction">
@@ -141,7 +150,7 @@
     <button type="submit" class="btn btn-success">
       <i class="bi bi-save me-1"></i> Save
     </button>
-    <button type="button" class=" btn btn-secondary" (click)="onCancel()">
+    <button type="button" class="d-none btn btn-secondary" (click)="onCancel()">
       <i class="bi bi-x-circle me-1"></i> Cancel
     </button>
   </div>

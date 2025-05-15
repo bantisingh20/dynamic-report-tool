@@ -279,7 +279,7 @@ function mapDbTypeToJsType(dbType) {
   return 'string'; // fallback
 }
 
-const Executionfunction = async (config) => {
+const Executionfunction1 = async (config) => {
   try {
     if (!config || !config.table) {
       throw new Error('Report configuration with table is required');
@@ -378,7 +378,7 @@ const Executionfunction = async (config) => {
   }
 };
 
-const ExecutionfunctionNew = async (config) => {
+const Executionfunction = async (config) => {
   try {
     if (!config || !config.table) {
       throw new Error('Report configuration with table is required');
@@ -468,10 +468,7 @@ const ExecutionfunctionNew = async (config) => {
 
       console.log("Executing GROUPED SQL:", groupedSQL, 'with params:', params);
       const result = await pool.query(groupedSQL, params);
-  return {
-    groupBy: config.groupBy,
-    data: result.rows
-  };
+      return { groupBy: config.groupBy,  data: result.rows };
     }
 
     // Regular (non-grouped) query
@@ -480,6 +477,7 @@ const ExecutionfunctionNew = async (config) => {
     // ORDER BY
     if (config.sortBy && config.sortBy.length > 0) {
       const sortClauses = config.sortBy.map(sort => `${sort.column} ${sort.order}`).join(', ');
+     // console.log(sortClauses);
       sql += ` ORDER BY ${sortClauses}`;
     }
 
@@ -532,15 +530,15 @@ app.get('/api/metadata/report/:id', async (req, res) => {
 });
 
 
-// dynamic_query_proc Save a report configuration (assumes a table "reports" exists with columns: id, report_name, config)
+// dynamic_query_proc Save a report configuration  
 app.post('/api/metadata/report/save/:id', async (req, res) => {
   try {
-     const { reportName,tableandView,xyaxis,userId, selectedColumns = [], filters = [], sortBy = [], groupBy = [] } = req.body;
+     const { reportName,tableandview,xyaxis,userId, selectedColumns = [], filters = [], sortBy = [], groupBy = [] } = req.body;
     const reportId = req.params.id;
     if (!reportName ) {
       return res.status(400).json({ error: 'Report name and configuration are required' });
     }
-    const data = await SaveUpdate(reportId,tableandView, reportName, selectedColumns, userId, filters, groupBy, sortBy, xyaxis);
+    const data = await SaveUpdate(reportId,tableandview, reportName, selectedColumns, userId, filters, groupBy, sortBy, xyaxis);
  
     res.status(200).json({ message:"Report Save Successfully",id: data});
 

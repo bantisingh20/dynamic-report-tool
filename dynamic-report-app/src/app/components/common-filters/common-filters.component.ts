@@ -1,19 +1,23 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, SimpleChanges } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 
+
+declare var bootstrap: any;
 @Component({
   selector: 'app-common-filters',
   standalone: false,
   templateUrl: './common-filters.component.html',
   styleUrl: './common-filters.component.css'
 })
+
 export class CommonFiltersComponent implements OnInit {
   @Input() availableFields: any[] = []; // Input for dropdown data
   @Output() cancelled = new EventEmitter<void>();
-
-
-  @Output() save = new EventEmitter<void>();
+  @Input() Allfilters: any;
+  @Output() save = new EventEmitter<any>();
   @Output() cancel = new EventEmitter<void>();
+  @Input() TableorView: any[] = [];
+
 
   reportForm: FormGroup;
   operators: string[] = ['between', 'equals', 'not equals', 'greater than', 'less than', 'contains'];
@@ -33,6 +37,11 @@ export class CommonFiltersComponent implements OnInit {
     //this.addFilter(); // Add default filter
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['Allfilters'] && this.filters) {
+      this.reportForm.patchValue(this.filters);
+    }
+  }
   // ========== Accessors ==========
   get filters(): FormArray {
     return this.reportForm.get('filters') as FormArray;
@@ -100,12 +109,12 @@ export class CommonFiltersComponent implements OnInit {
     this.xyaxis.removeAt(index);
   }
 
- 
+
   onFieldChange(field: any, index: number): void {
 
     console.log(field);
 
-    if(field == undefined){
+    if (field == undefined) {
       return;
     }
     const filterGroup = this.filters.at(index) as FormGroup;
@@ -141,7 +150,7 @@ export class CommonFiltersComponent implements OnInit {
   }
 
 
-   onOperatorChange(index: number): void {
+  onOperatorChange(index: number): void {
     const filterGroup = this.filters.at(index) as FormGroup;
     const operator = filterGroup.get('operator')?.value;
 
@@ -178,9 +187,11 @@ export class CommonFiltersComponent implements OnInit {
     // Add preview logic if needed
   }
 
-  
+
   // ========== Save & Cancel ==========
   onSave() {
+    console.log('Save button clicked'); // Confirm button click triggers this method
+
     if (this.reportForm.valid) {
       const filterConfig = {
         filters: this.filters.getRawValue(),
@@ -189,14 +200,27 @@ export class CommonFiltersComponent implements OnInit {
         xyaxis: this.xyaxis.getRawValue()
       };
       localStorage.setItem('reportBuilderData', JSON.stringify(filterConfig));
-      this.save.emit(); // notify parent to close drawer
+
+      console.log('Common page :', filterConfig); // Print actual data
+      this.save.emit(filterConfig); // notify parent
+
+      const offcanvasElement = document.getElementById('filterDrawer');
+      if (offcanvasElement) {
+        const offcanvas = new bootstrap.Offcanvas(offcanvasElement);
+        offcanvas.hide(); // This hides the offcanvas
+      }
     } else {
+      console.log('Form is invalid');
       this.reportForm.markAllAsTouched();
     }
-
   }
 
   onCancel() {
     this.cancelled.emit();
+    const offcanvasElement = document.getElementById('filterDrawer');
+    if (offcanvasElement) {
+      const offcanvas = new bootstrap.Offcanvas(offcanvasElement);
+      offcanvas.hide(); // This hides the offcanvas
+    }
   }
 }
