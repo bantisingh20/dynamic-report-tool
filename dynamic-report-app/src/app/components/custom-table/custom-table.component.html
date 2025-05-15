@@ -1,3 +1,7 @@
+  <button class="btn btn-outline-primary" *ngIf="showFilter" type="button" data-bs-toggle="offcanvas" data-bs-target="#filterDrawer">
+      <i class="bi bi-funnel-fill"></i> Filter
+  </button>
+
 <div class="table-wrapper p-3 m-3">
   <div *ngFor="let groupKey of groupKeys">
     <!-- Group Header -->
@@ -25,15 +29,7 @@
     <!-- Pagination Controls -->
     <div class="pagination-controls mt-3">
       <nav aria-label="Page navigation">
-       
-        <!-- <label for="pageSize-{{ groupKey }}" class="mr-2">Items per page:</label>
-        <select id="pageSize-{{ groupKey }}"
-                class="form-select-sm"
-                [(ngModel)]="groupPageSizes[groupKey]"
-                (change)="onGroupPageSizeChange(groupKey)">
-          <option *ngFor="let size of pageSizes" [value]="size">{{ size }}</option>
-        </select> -->
-
+         
         <ul class="pagination pagination-sm justify-content-center">
           <li class="page-item" [class.disabled]="currentPages[groupKey] === 1">
             <button class="page-link"
@@ -57,5 +53,19 @@
         </ul>
       </nav>
     </div>
+  </div>
+</div>
+
+
+
+<!-- Right Side Drawer -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="filterDrawer" aria-labelledby="filterDrawerLabel">
+  <div class="offcanvas-header">
+    <h5 id="filterDrawerLabel">Filter & Configure</h5>
+    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body">
+    <app-common-filters >
+    </app-common-filters>
   </div>
 </div>

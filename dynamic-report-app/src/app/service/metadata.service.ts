@@ -40,6 +40,6 @@ export class MetadataService {
   }
 
   getListOfReportConfigure(){
-     return this.http.get<string[]>(`${this.apiUrl}${this.currentPath}`);
+     return this.http.get<string[]>(`${this.apiUrl}/List-Report`);
   }
 }
