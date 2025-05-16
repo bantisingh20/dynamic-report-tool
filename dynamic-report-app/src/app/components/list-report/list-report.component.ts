@@ -4,6 +4,7 @@ import { MetadataService } from '../../service/metadata.service';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { filter } from 'rxjs';
+import { NotificationService } from '../../service/NotificationService.service';
 
 @Component({
   selector: 'app-list-report',
@@ -19,7 +20,7 @@ export class ListReportComponent implements OnInit, AfterViewInit {
   viewType: 'report' | 'chart' | null = null;
   showPreview: boolean = false;
   previewData: any;
-  constructor(private router: Router, private metadataService: MetadataService) { }
+  constructor(private router: Router, private metadataService: MetadataService, private notificationService: NotificationService) { }
 
   displayedColumns: string[] = [];
 
@@ -54,6 +55,7 @@ export class ListReportComponent implements OnInit, AfterViewInit {
       }
       , error: (err) => {
         console.log(err);
+        this.notificationService.showNotification("Something Went Wrong", 'error');
       }
     })
   }
@@ -68,25 +70,37 @@ export class ListReportComponent implements OnInit, AfterViewInit {
     const item = this.listData.find(obj => obj.report_id === id);
 
     const config = { ...item };
-
-    config.filters = config.filters.map((str: any) => {return typeof str === 'string' ? JSON.parse(str) : str;});
-
-    config.groupBy = config.groupby.map((str: any) => JSON.parse(str));
-    config.sortBy = config.sortby.map((str: any) => JSON.parse(str));
-
+ 
+    config.filters = config.filters.map((str: any) => { return typeof str === 'string' ? JSON.parse(str) : str; });
+    config.groupby = config.groupby.map((str: any) => JSON.parse(str));
+    config.sortby = config.sortby.map((str: any) => JSON.parse(str));
+    // ✅ Parse tableandview string into array
+    if (typeof config.tableandview === 'string') {
+      config.tableandview = config.tableandview
+        .replace(/[{}"]/g, '')     // Remove curly braces and quotes
+        .split(',')                // Split by comma
+        .map((s: string) => s.trim());       // Trim whitespace
+    }
 
     this.metadataService.getDataforPreview(config).subscribe({
       next: (response: any) => {
         const responseData = response?.data;
-
-        // Process the preview data with the helper method
+ 
         const { data, groupBy, chartData, displayedColumns, showPreview } = this.metadataService.processPreviewData(responseData);
 
-        this.previewData = { groupBy, data, chartData ,config,tableName: config.table_name || config.tableandview || 'Unknown' };
+        this.previewData = { groupBy, data, chartData, config, tableName: config.table_name || config.tableandview || 'Unknown' };
         this.displayedColumns = displayedColumns;
         this.showPreview = showPreview;
 
-        console.log('API Response:', responseData );
+        console.log('API Response:', responseData);
+
+         if (this.previewData.data.length > 0) {
+          console.log(this.previewData);
+          this.notificationService.showNotification("Fetch Data Successfully.", 'success');
+        } else {
+          console.log(this.previewData);
+          this.notificationService.showNotification("No Data Found.", 'warning');
+        }
       },
 
       error: (err) => {
@@ -100,8 +114,9 @@ export class ListReportComponent implements OnInit, AfterViewInit {
 
         const message = err?.error?.message || 'Failed to fetch preview data.';
         console.error('Error fetching data:', err);
+        this.notificationService.showNotification(err.error.message, 'error');
       }
-    }); 
+    });
   }
 
   closeModal() {

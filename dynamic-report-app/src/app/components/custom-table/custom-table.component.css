@@ -73,6 +73,7 @@ tr:hover {
   padding: 1.5rem;
   border-radius: 6px;
   border: 1px solid #ddd;
+  overflow: scroll;
 }
 
 .pagination button {

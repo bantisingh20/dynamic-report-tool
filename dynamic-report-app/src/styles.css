@@ -1,7 +1,15 @@
 /* You can add global styles to this file, and also import other style files */
 
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
 ::ng-deep .ng-select {
   font-size: 0.875rem;
 }
@@ -14,11 +22,27 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 
 
 .success-snackbar {
-  background-color: #4caf50; /* Green for success */
+  background-color: #4caf50;
+  /* Green for success */
   color: white;
 }
 
 .error-snackbar {
-  background-color: #f44336; /* Red for error */
+  background-color: #f44336;
+  /* Red for error */
+  color: white;
+}
+
+
+.warning-snackbar {
+  background-color: #ebe850;
+  /* Red for error */
+  color: white;
+}
+
+
+.info-snackbar {
+  background-color: #36f4f4;
+  /* Red for error */
   color: white;
 }

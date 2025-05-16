@@ -40,30 +40,34 @@
                 class="w-100">
               </ng-select> -->
               <ng-select [items]="tablesAndViews" bindLabel="label" bindValue="name" (change)="onTableSelect($event)"
-                (close)="onDropdownClose()" [multiple]="false" formControlName="tableandview"
-                placeholder="Select Tables" [closeOnSelect]="false" class="w-100">
+                (close)="onDropdownClose()" [multiple]="true" formControlName="tableandview" placeholder="Select Tables"
+                [closeOnSelect]="false" class="w-100">
               </ng-select>
 
-              <div *ngIf="reportForm.get('tableandview')?.touched && reportForm.get('tableandview')?.invalid"
-                class="text-danger small">
-                Please select a table or view to proceed.
+              <div
+                *ngIf="reportForm.get('selectedcolumns')?.errors?.['minSelected'] && reportForm.get('selectedcolumns')?.touched"
+                class="text-danger">
+                At least one column must be selected.
               </div>
-
             </div>
             <div class="mb-3">
               <label class="form-label">Columns</label>
               <ng-select [items]="availableFields" bindLabel="label" bindValue="column_name" [multiple]="true"
-                formControlName="selectedColumns" placeholder="Select columns" [closeOnSelect]="false" class="w-100">
+                formControlName="selectedcolumns" placeholder="Select columns" [closeOnSelect]="false" class="w-100 multiple-fixed">
               </ng-select>
 
-
+              <div
+                *ngIf="reportForm.get('selectedcolumns')?.errors?.['minSelected'] && reportForm.get('selectedcolumns')?.touched"
+                class="text-danger">
+                At least one column must be selected.
+              </div>
 
               <small class="text-muted">Choose the columns you want in your report.</small>
             </div>
 
             <div class="mb-3">
               <label class="form-label">Report Name :</label>
-              <input type="text" formControlName="reportName" placeholder="Enter Report Name" class="form-control">
+              <input type="text" formControlName="reportname" placeholder="Enter Report Name" class="form-control">
             </div>
           </div>
         </div>
@@ -97,7 +101,7 @@
               <div class="flex-grow-1 min-width-250">
                 <label class="form-label">Columns</label>
                 <ng-select [items]="availableFields" bindLabel="label" bindValue="column_name" [multiple]="true"
-                  formControlName="selectedColumns" placeholder="Select columns" [closeOnSelect]="false" class="w-100">
+                  formControlName="selectedcolumns" placeholder="Select columns" [closeOnSelect]="false" class="w-100">
                 </ng-select>
                 <small class="text-muted">Choose the columns you want in your report.</small>
               </div>
@@ -105,7 +109,7 @@
               <!-- Report Name -->
               <div class="flex-grow-1 min-width-250">
                 <label class="form-label">Report Name</label>
-                <input type="text" formControlName="reportName" placeholder="Enter Report Name" class="form-control">
+                <input type="text" formControlName="reportname" placeholder="Enter Report Name" class="form-control">
               </div>
 
             </div>
@@ -197,7 +201,7 @@
             </div>
 
             <!-- Group By Section -->
-            <div formArrayName="groupBy" class="mb-4">
+            <div formArrayName="groupby" class="mb-4">
               <h5 class="card-title text-secondary mb-3">
                 <i class="bi bi-collection text-info"></i> Grouping
               </h5>
@@ -227,7 +231,7 @@
             </div>
 
             <!-- Sort By Section -->
-            <div formArrayName="sortBy" class="mb-4">
+            <div formArrayName="sortby" class="mb-4">
               <h5 class="card-title text-secondary mb-3">
                 <i class="bi bi-sort-alpha-down text-secondary"></i> Sorting
               </h5>
@@ -391,8 +395,8 @@
   </div>
 </form>
 
-<ng-container >
-  <app-custom-table [data]="previewData" >
+<ng-container>
+  <app-custom-table [data]="previewData">
   </app-custom-table>
 </ng-container>
 

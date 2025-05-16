@@ -1,11 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormArray, Validators, FormControl } from '@angular/forms';
+import { FormBuilder, FormGroup, FormArray, Validators, FormControl, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ReportConfigService } from '../../service/report-config.service';
 import { MetadataService } from '../../service/metadata.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { NotificationService } from '../../service/NotificationService.service';
-import { ChartType } from 'angular-google-charts';
 import { ActivatedRoute, Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 
 declare var bootstrap: any;
 @Component({
@@ -15,7 +14,7 @@ declare var bootstrap: any;
   styleUrl: './report-config.component.css'
 })
 export class ReportConfigComponent implements OnInit {
-
+  originalTablesAndViews: any[] = [];
   previewMode: 'report' | 'chart' | null = null;
   showPreviewButtons: boolean = false;
   previewData: any;
@@ -30,16 +29,18 @@ export class ReportConfigComponent implements OnInit {
   mode: string | null = null;
 
   reportForm = new FormGroup({
-    tableandview: new FormControl(null, Validators.required),
-    reportName: new FormControl(),
-    selectedColumns: new FormControl([]),
+    //  tableandview: new FormControl(),
+    tableandview: new FormControl<string[]>([]),
+    reportname: new FormControl(),
+    selectedcolumns: new FormControl([], minSelectedCheckboxes(1)),
     filters: new FormArray([]),
-    groupBy: new FormArray([]),
-    sortBy: new FormArray([]),
+    groupby: new FormArray([]),
+    sortby: new FormArray([]),
     xyaxis: new FormArray([])
   });
 
-  constructor(private router: Router, private route: ActivatedRoute, private notificationService: NotificationService, private metadataService: MetadataService, private fb: FormBuilder, private reprotconfig: ReportConfigService) { }
+
+  constructor(private http: HttpClient, private router: Router, private route: ActivatedRoute, private notificationService: NotificationService, private metadataService: MetadataService, private fb: FormBuilder, private reprotconfig: ReportConfigService) { }
 
   ngOnInit() {
     this.metadataService.getTablesAndViews().subscribe(data => {
@@ -49,6 +50,8 @@ export class ReportConfigComponent implements OnInit {
         ...field,
         label: `${this.capitalize(field.name)} || ${this.capitalize(field.type)}`
       }));
+
+      this.originalTablesAndViews = [...this.tablesAndViews];
     });
 
     // check mode 
@@ -62,26 +65,59 @@ export class ReportConfigComponent implements OnInit {
 
   }
 
+  // loadReportData(id: string): void {
+  //   this.metadataService.getReportById(id).subscribe((response: any) => {
+  //     const data = response.report;
+  //     console.log(data);
+  //     //this.getColumns(data.table_name);
+
+  //     this.reportForm.patchValue({
+  //       tableandview: data.table_name,
+  //       reportName: data.report_name,
+  //       selectedColumns: data.selected_columns,
+  //     });
+
+  //     this.setFormArray('filters', data.filter_criteria);
+  //     this.setFormArray('groupBy', data.group_by);
+  //     this.setFormArray('sortBy', data.sort_order);
+  //     // this.setFormArray('xyaxis', data.axis_config);
+
+  //     console.log(this.reportForm.value);
+  //   });
+  // }
+
   loadReportData(id: string): void {
     this.metadataService.getReportById(id).subscribe((response: any) => {
       const data = response.report;
-      console.log(data);
-      this.getColumns(data.table_name);
 
+      // Parse PostgreSQL array string to string[]
+      const parsedTableNames = this.parsePostgresArray(data.table_name);
+      this.getColumns(parsedTableNames)
+      // Patch form with parsed values
       this.reportForm.patchValue({
-        tableandview: data.table_name,
-        reportName: data.report_name,
-        selectedColumns: data.selected_columns,
+        tableandview: parsedTableNames,  // correctly assign string[] here
+        reportname: data.report_name,
+        selectedcolumns: data.selected_columns,
       });
 
       this.setFormArray('filters', data.filter_criteria);
-      this.setFormArray('groupBy', data.group_by);
-      this.setFormArray('sortBy', data.sort_order);
-      // this.setFormArray('xyaxis', data.axis_config);
+      this.setFormArray('groupby', data.group_by);
+      this.setFormArray('sortby', data.sort_order);
 
       console.log(this.reportForm.value);
     });
   }
+
+
+
+  parsePostgresArray(input: string): string[] {
+    // Remove the surrounding curly braces and quotes
+    return input
+      .replace(/^{|}$/g, '')      // Remove leading and trailing curly braces
+      .split(',')                 // Split by commas
+      .map(item => item.replace(/^"(.*)"$/, '$1')); // Remove double quotes around each item
+  }
+
 
   closeFilterDrawer() {
     // Optional: Close offcanvas programmatically if needed
@@ -146,104 +182,139 @@ export class ReportConfigComponent implements OnInit {
     });
   }
 
-  // 1. Table Change Based on this Bind all Column 
-  // This method will be called when the dropdown closes
+
   onDropdownClose(): void {
-    const selectedItems = this.reportForm.get('tableandview')?.value;
+    const selectedTables = this.reportForm.get('tableandview')?.value || [];
 
-    console.log('Dropdown closed. Selected items:', selectedItems);
+    if (selectedTables.length === 0) {
+      this.tablesAndViews = [...this.originalTablesAndViews];
+      return;
+    }
 
-    // if (!selectedItems || selectedItems.length === 0) {
-    //   this.reportForm.get('selectedColumns')?.setValue([]);
+    this.metadataService.getAvailableFieldsForTables(selectedTables)
+      .subscribe((fields: any[]) => {
+        this.availableFields = fields;
+      });
+
+    // this.availableFields = this.metadataService.getAvailableFieldsForTables(selectedTables)
+    // this.http.post('http://localhost:3000/api/check-table-relations', { selectedTables }).subscribe((result: any) => {
+    //   const relatedTables = result.relatedTables || [];
+    //   const columnsByTable = result.columnsByTable || {};
+
+    //   const updatedTables = Array.from(new Set([...selectedTables, ...relatedTables]));
+
+    //   this.tablesAndViews = updatedTables.map(name => ({
+    //     name,
+    //     label: this.capitalize(name),
+    //   }));
+
     //   this.availableFields = [];
-    //   return;
-    // }
+    //   for (const tableName of selectedTables) {
+    //     const columns = columnsByTable[tableName];
+    //     if (!columns) continue;
 
-    // Assuming you want to act on the last selected item
-    // const lastSelected = selectedItems[selectedItems.length - 1];
-    // const table = lastSelected.name || lastSelected;
+    //     for (const column of columns) {
+    //       this.availableFields.push({
+    //         column_name: `${tableName}.${column.column_name}`, // used for binding
+    //         label: `${tableName} - ${column.column_name}`,     // shown in dropdown
+    //         data_type: column.data_type,                        // store data type
+    //         raw: `${tableName}.column.${column.column_name}`   // optional: full path string
+    //       });
+    //     }
+    //   }
 
-    // console.log('Last selected table:', table);
-    // this.getColumns(table);
-
-    this.reportForm.get('selectedColumns')?.setValue([]);
-    (this.reportForm.get('filters') as FormArray).clear();
-    (this.reportForm.get('groupBy') as FormArray).clear();
-    (this.reportForm.get('sortBy') as FormArray).clear();
+    //   console.log(this.availableFields);
+    // });
   }
+
 
   onTableSelect(selectedItem: any) {
 
     console.log(selectedItem);
-    if (selectedItem == null) {
-      this.reportForm.get('selectedColumns')?.setValue([]);
-      this.availableFields = [];
+    const selectedTables = this.reportForm.get('tableandview')?.value || [];
+
+    if (selectedTables.length === 0) {
+      // If all cleared, reset to full list
+      this.tablesAndViews = [...this.originalTablesAndViews];
       return;
     }
-    const table = selectedItem.name;
-    console.log(table);
-    this.getColumns(table);
 
-    this.reportForm.get('selectedColumns')?.setValue([]);
+    if (selectedTables) {
+
+      this.metadataService.getTablesLinkTable(selectedTables).subscribe((result: any) => {
+        const relatedTables = result.relatedTables;
+        const columnsByTable = result.columnsByTable;
+
+        if (relatedTables && relatedTables.length > 1) {
+          const updatedTables = Array.from(new Set([...selectedTables, ...relatedTables]));
+
+          this.tablesAndViews = updatedTables.map(name => ({
+            name,
+            label: name
+          }));
+
+          console.log("Linked tables found:", relatedTables);
+          console.log("Columns:", columnsByTable);
+        } else {
+          console.log("Selected tables are not related");
+        }
+      });
+
+      // this.http.post('http://localhost:3000/api/metadata/check-table-relations', { selectedTables })
+      //   .subscribe((result: any) => {
+      //     const relatedTables = result.relatedTables;
+      //     const columnsByTable = result.columnsByTable;
+
+      //     if (relatedTables.length > 1) {
+
+      //       const newRelatedTables = result.relatedTables || [];
+
+      //       // Combine selected + API response
+      //       const updatedTables = Array.from(new Set([...selectedTables, ...newRelatedTables]));
+
+      //       // Rebuild tablesAndViews with only the relevant items
+      //       this.tablesAndViews = updatedTables.map(name => {
+      //         return { name, label: name };
+      //       });
+
+      //       console.log("Linked tables found:", relatedTables);
+      //       console.log("Columns:", columnsByTable);
+      //       // You can now show this in your UI
+      //     } else {
+      //       console.log("Selected tables are not related");
+      //     }
+      //   });
+    }
+
+    this.reportForm.get('selectedcolumns')?.setValue([]);
     (this.reportForm.get('filters') as FormArray).clear();
-    (this.reportForm.get('groupBy') as FormArray).clear();
-    (this.reportForm.get('sortBy') as FormArray).clear();
-
-    // const selectedItems = this.reportForm.get('tableandview')?.value || [];
-
-
-    // if (!selectedItems || selectedItems.length === 0) {
-    //   this.reportForm.get('selectedColumns')?.setValue([]);
-    //   this.availableFields = [];
-    //   return;
-    // }
-
-    // // Determine the type of the selected items
-    // const hasView = selectedItems.some((item: any) => item?.type === 'VIEW');
-    // const hasTable = selectedItems.some((item: any) => item?.type === 'BASE TABLE');
-
-    // console.log(`view :${hasView} & hasTable :${hasTable} `)
-    // // Enforce constraint: only allow one type at a time
-    // if (hasView && hasTable) {
-    //   // Revert the last selection
-    //   const filtered = selectedItems.filter(
-    //     (item: any) => item?.type === selectedItem.type
-    //   );
-
-    //   //this.reportForm.get('tableandview')?.setValue(?filtered);
-
-    //   alert('You can only select either a BASE TABLE or a VIEW, not both.');
-    //   return;
-    // }
-
-    // // Continue with logic for the most recently selected item
-    // const lastSelected = selectedItems[selectedItems.length - 1];
-    // console.log(lastSelected);
-    // // const table = lastSelected?.name;
-
-    // // console.log('Selected table:', table);
-
-    // // this.getColumns(table);
-    // this.reportForm.get('selectedColumns')?.setValue([]);
-    // (this.reportForm.get('filters') as FormArray).clear();
-    // (this.reportForm.get('groupBy') as FormArray).clear();
-    // (this.reportForm.get('sortBy') as FormArray).clear();
+    (this.reportForm.get('groupby') as FormArray).clear();
+    (this.reportForm.get('sortby') as FormArray).clear();
 
   }
 
   getColumns(table: any) {
-    this.metadataService.getColumns(table).subscribe(cols => {
-      this.availableFields = cols;
+    // this.metadataService.getColumns(table).subscribe(cols => {
+    //   this.availableFields = cols;
 
-      this.availableFields = this.availableFields.map(field => ({
-        ...field, label: this.capitalize(field.column_name)
-      }));
-    });
+    //   this.availableFields = this.availableFields.map(field => ({
+    //     ...field, label: this.capitalize(field.column_name)
+    //   }));
+
+    //   console.log(this.availableFields);
+    // });
+
+    this.metadataService.getAvailableFieldsForTables(table)
+      .subscribe((fields: any[]) => {
+        this.availableFields = fields;
+      });
   }
 
 
 
   onFieldChange(field: any, index: number): void {
+
+    console.log(field.data_type);
     const filterGroup = this.filters.at(index) as FormGroup;
 
     const stringTypes = ['varchar', 'character varying', 'character', 'char', 'text', 'citext'];
@@ -324,7 +395,7 @@ export class ReportConfigComponent implements OnInit {
   }
 
   get selectedColumnsControl(): FormControl {
-    return this.reportForm.get('selectedColumns') as FormControl;
+    return this.reportForm.get('selectedcolumns') as FormControl;
   }
 
 
@@ -334,15 +405,15 @@ export class ReportConfigComponent implements OnInit {
 
 
   get groupBy() {
-    return this.reportForm.get('groupBy') as FormArray;
+    return this.reportForm.get('groupby') as FormArray;
   }
 
   get groupByFields(): string[] {
-    return this.reportForm.get('groupBy')?.value.map((g: any) => g.field) || [];
+    return this.reportForm.get('groupby')?.value.map((g: any) => g.field) || [];
   }
 
   get sortBy() {
-    return this.reportForm.get('sortBy') as FormArray;
+    return this.reportForm.get('sortby') as FormArray;
   }
 
   get xyaxis() {
@@ -406,9 +477,9 @@ export class ReportConfigComponent implements OnInit {
       return;
     }
 
-    const reportName = this.reportForm.get('reportName')?.value;
+    const reportname = this.reportForm.get('reportname')?.value;
 
-    if (!reportName || reportName.trim() === '') {
+    if (!reportname || reportname.trim() === '') {
       this.notificationService.showNotification('Report name is required', 'error');
       return;
     }
@@ -557,6 +628,18 @@ export class ReportConfigComponent implements OnInit {
         this.showPreview = showPreview;
 
         console.log('API Response:', response);
+ 
+        // Show appropriate data messages
+        console.log(this.previewData.data.length);
+
+        if (this.previewData.data.length > 0) {
+          console.log(this.previewData);
+          this.notificationService.showNotification("Fetch Data Successfully.", 'success');
+        } else {
+          console.log(this.previewData);
+          this.notificationService.showNotification("No Data Found.", 'warning');
+        }
+
       },
 
       error: (err) => {
@@ -569,6 +652,7 @@ export class ReportConfigComponent implements OnInit {
 
         const message = err?.error?.message || 'Failed to fetch preview data.';
         console.error('Error fetching data:', err);
+        this.notificationService.showNotification(message, 'error');
       }
     });
 
@@ -593,12 +677,24 @@ export class ReportConfigComponent implements OnInit {
   addNewReport(): void {
     this.reportForm.reset();
     (this.reportForm.get('filters') as FormArray).clear();
-    (this.reportForm.get('groupBy') as FormArray).clear();
-    (this.reportForm.get('sortBy') as FormArray).clear();
+    (this.reportForm.get('groupby') as FormArray).clear();
+    (this.reportForm.get('sortby') as FormArray).clear();
     (this.reportForm.get('xyaxis') as FormArray).clear();
     this.reprotconfig.clearConfiguration();
     console.log('New report initiated');
 
     this.router.navigate(['/Create-Custom-Report']);
   }
+}
+
+
+
+function minSelectedCheckboxes(min: number = 1) {
+  return function (control: AbstractControl): ValidationErrors | null {
+    const value = control.value;
+    if (Array.isArray(value) && value.length >= min) {
+      return null;
+    }
+    return { minSelected: true };
+  };
 }

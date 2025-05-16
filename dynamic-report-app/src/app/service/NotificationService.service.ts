@@ -6,18 +6,41 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 })
 export class NotificationService {
 
-  constructor(private snackBar: MatSnackBar) {}
+  constructor(private snackBar: MatSnackBar) { }
 
-  showNotification(message: string, type: 'success' | 'error') {
+  showNotification(message: string, type: 'success' | 'error' | 'warning' | 'info') {
+    let icon: string;
+    let panelClass: string;
+
+    switch (type) {
+      case 'success':
+        icon = '✅';
+        panelClass = 'success-snackbar';
+        break;
+      case 'error':
+        icon = '❌';
+        panelClass = 'error-snackbar';
+        break;
+      case 'warning':
+        icon = '⚠️';
+        panelClass = 'warning-snackbar';
+        break;
+      case 'info':
+        icon = 'ℹ️';
+        panelClass = 'info-snackbar';
+        break;
+    }
+
     this.snackBar.open(
-      type === 'success' ? `✅ ${message}` : `❌ ${message}`,
+      `${icon} ${message}`,
       'Close',
       {
         duration: 3000,
-        panelClass: [type === 'success' ? 'success-snackbar' : 'error-snackbar'],
+        panelClass: [panelClass],
         horizontalPosition: 'center',
         verticalPosition: 'top'
       }
     );
   }
+
 }

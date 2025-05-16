@@ -30,7 +30,7 @@ export class CustomTableComponent implements OnChanges {
   constructor(private metadataService : MetadataService){}
   ngOnChanges(changes: SimpleChanges): void {
 
-    console.log(`coomon report page : ${this.data.tableName}`)
+   // console.log(`coomon report page : ${this.data.tableName}`)
     if (changes['data'] && this.data) {
       this.initTable();
     }
@@ -68,23 +68,49 @@ export class CustomTableComponent implements OnChanges {
     this.updateFlatPage();
   }
 
+  // setupGrouped() {
+  //   const groups = this.data.data || [];
+  //   this.groupByFields = this.data.groupBy.map((g: any) => g.field);
+  //   this.groupedPages = {};
+
+  //   groups.forEach((group: any) => {
+  //     const groupKey = this.getGroupKey(group);
+  //     const records = group.records || [];
+
+  //     this.groupColumns = records.length > 0 ? Object.keys(records[0]) : this.groupColumns;
+
+  //     this.groupedPages[groupKey] = {
+  //       currentPage: 1,
+  //       pagedRecords: records.slice(0, this.itemsPerPage)
+  //     };
+  //   });
+  // }
+
   setupGrouped() {
-    const groups = this.data.data || [];
-    this.groupByFields = this.data.groupBy.map((g: any) => g.field);
-    this.groupedPages = {};
+  const groups = this.data.data || [];
+  const groupByKeys = this.data.groupBy || []; // ['orders - status']
+  this.groupByFields = groupByKeys;
+  this.groupedPages = {};
 
-    groups.forEach((group: any) => {
-      const groupKey = this.getGroupKey(group);
-      const records = group.records || [];
+  groups.forEach((group: any) => {
+    // Dynamically get the value of the group key (e.g., 'shipped')
+    const groupKey = groupByKeys.map((key: string | number) => group[key]).join(' | '); // useful if multiple groupBy fields
 
-      this.groupColumns = records.length > 0 ? Object.keys(records[0]) : this.groupColumns;
+    const records = group.records || [];
 
-      this.groupedPages[groupKey] = {
-        currentPage: 1,
-        pagedRecords: records.slice(0, this.itemsPerPage)
-      };
-    });
-  }
+    // Set the column headers from the first record (if available)
+    if (records.length > 0 && (!this.groupColumns || this.groupColumns.length === 0)) {
+      this.groupColumns = Object.keys(records[0]);
+    }
+
+    // Store paginated group records
+    this.groupedPages[groupKey] = {
+      currentPage: 1,
+      pagedRecords: records.slice(0, this.itemsPerPage),
+    };
+  });
+}
+
 
   changeGroupPage(groupKey: string, direction: 'prev' | 'next') {
     const group = this.data.data.find((g: any) => this.getGroupKey(g) === groupKey);
