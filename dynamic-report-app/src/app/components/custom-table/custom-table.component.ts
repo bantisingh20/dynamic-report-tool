@@ -10,7 +10,6 @@ import { MetadataService } from '../../service/metadata.service';
 
 export class CustomTableComponent implements OnChanges {
   @Input() data: any;
-
   isGrouped = false;
   itemsPerPage = 10;
   

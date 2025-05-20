@@ -53,7 +53,8 @@
             <div class="mb-3">
               <label class="form-label">Columns</label>
               <ng-select [items]="availableFields" bindLabel="label" bindValue="column_name" [multiple]="true"
-                formControlName="selectedcolumns" placeholder="Select columns" [closeOnSelect]="false" class="w-100 multiple-fixed">
+                formControlName="selectedcolumns" placeholder="Select columns" [closeOnSelect]="false"
+                class="w-100 multiple-fixed">
               </ng-select>
 
               <div
@@ -271,7 +272,7 @@
 
 
             <!-- Chart By Section -->
-            <div formArrayName="xyaxis" class="mb-4 d-none">
+            <div formArrayName="xyaxis" class="mb-4">
               <h5 class="card-title text-secondary mb-3">
                 <i class="bi bi-bar-chart-line text-secondary"></i> X-Y Axis Configuration
               </h5>
@@ -284,7 +285,7 @@
 
                 <!-- X-Axis Field Selection -->
                 <div class="col">
-                  <select class="form-select" formControlName="xAxisField">
+                  <select class="form-select" formControlName="xAxisField" (change)="onXAxisFieldChange(i)">
                     <option value="">Select X-Axis Field</option>
                     <option *ngFor="let field of availableFields" [value]="field.column_name">
                       {{ field.label }}
@@ -295,6 +296,18 @@
                     class="text-danger small">
                     Field is required.
                   </div>
+                </div>
+
+                {{showXAxisTransformationOptions(i)}}
+                <!-- X-Axis Data Transformation Options (e.g., Date Handling) -->
+                <div class="col" *ngIf="showXAxisTransformationOptions(i)">
+                  <select class="form-select" formControlName="xAxisTransformation">
+                    <option value="daywise">Day-wise</option>
+                    <option value="monthwise">Month-wise</option>
+                    <option value="weekwise">Week-wise</option>
+                    <option value="yearwise">Yearly</option>
+                    <option value="raw">Raw</option>
+                  </select>
                 </div>
 
                 <!-- X-Axis Direction Selection -->
@@ -320,6 +333,18 @@
                   </div>
                 </div>
 
+                <!-- Y-Axis Aggregation Options (e.g., Sum, Count, etc.) -->
+                <div class="col" *ngIf="showYAxisAggregationOptions(i)">
+                  <select class="form-select" formControlName="yAxisAggregation">
+                    <option value="sum">Sum</option>
+                    <option value="count">Count</option>
+                    <option value="average">Average</option>
+                    <option value="max">Maximum</option>
+                    <option value="min">Minimum</option>
+                    <option value="diff">Difference</option>
+                  </select>
+                </div>
+
                 <!-- Y-Axis Direction Selection -->
                 <div class="col">
                   <select class="form-select" formControlName="yAxisDirection">
@@ -342,6 +367,7 @@
                 <i class="bi bi-plus-circle"></i> Add X-Y Axis
               </button>
             </div>
+
 
 
           </div>
@@ -396,39 +422,13 @@
 </form>
 
 <ng-container>
-  <app-custom-table [data]="previewData">
-  </app-custom-table>
+  <!-- <app-custom-table [data]="previewData">
+  </app-custom-table> -->
+
+  <app-common-table  [data]="previewData"  [datas]="previewData" [isGrouped]="false"  [itemsPerPage]="5">
+
+  </app-common-table>
 </ng-container>
-
-
-<!-- <div class="modal fade show d-block" *ngIf="showPreview" tabindex="-1"
-  style="background: rgba(0,0,0,0.5); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1050;">
-
-  <div class="modal-dialog modal-fullscreen m-0">
-    <div class="modal-content h-100 d-flex flex-column">
-
-      <div class="modal-header">
-        <h5 class="modal-title">
-          {{ previewMode === 'report' ? 'Report Preview' : 'Chart Preview' }}
-        </h5>
-        <button type="button" class="btn-close" (click)="closeModal()" aria-label="Close"></button>
-      </div>
-
-      <div class="modal-body flex-grow-1 overflow-auto">
-        <ng-container *ngIf="previewMode === 'report' && previewData.table?.length">
-          <app-custom-table [data]="previewData.table" [columns]="displayedColumns" [groupBy]="groupByFields">
-          </app-custom-table>
-        </ng-container>
-
-        <ng-container *ngIf="previewMode === 'chart' && previewData.chart?.length">
-         
-        </ng-container>
-      </div>
-
-    </div>
-  </div>
-</div> -->
-
 
 
 <div *ngIf="showPreview && previewData.table?.length === 0" class="text-muted text-center mt-3">

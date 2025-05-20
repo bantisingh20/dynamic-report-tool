@@ -1,0 +1,45 @@
+<!-- FLAT TABLE -->
+ common
+<div *ngIf="!isGrouped && pagedFlatRows.length">
+  <table mat-table [dataSource]="flatDataSource">
+    <ng-container *ngFor="let col of displayedColumns" matColumnDef="{{ col }}">
+      <th mat-header-cell *matHeaderCellDef>{{ col }}</th>
+      <td mat-cell *matCellDef="let row">{{ row[col] }}</td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  </table>
+
+  <mat-paginator [length]="data.length"
+                 [pageSize]="itemsPerPage"
+                 (page)="changeFlatPage($event)">
+  </mat-paginator>
+</div>
+
+<!-- GROUPED TABLE -->
+<div *ngIf="isGrouped">
+  <div *ngFor="let group of groupedData">
+    <h3>
+      Group:
+      <span *ngFor="let field of groupByFields; let last = last">
+        {{ group.records[0][field] }}<span *ngIf="!last"> | </span>
+      </span>
+    </h3>
+
+    <table mat-table [dataSource]="group.pagedRecords">
+      <ng-container *ngFor="let col of displayedColumns" matColumnDef="{{ col }}">
+        <th mat-header-cell *matHeaderCellDef>{{ col }}</th>
+        <td mat-cell *matCellDef="let row">{{ row[col] }}</td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+
+    <mat-paginator [length]="group.records.length"
+                   [pageSize]="group.itemsPerPage"
+                   (page)="changeGroupPage(group.key, $event)">
+    </mat-paginator>
+  </div>
+</div>
