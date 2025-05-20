@@ -405,32 +405,35 @@ app.post('/api/metadata/report/preview', async (req, res, next) => {
 
     // 6. Build config   
  
-    const config = {
-      tables: tableandview,
-      selection: selectedcolumns,
-      filters: filters.map(f => ({
-        field: f.field,
-        operator: f.operator,
-        value: f.value,
-        valueFrom: f.valueFrom,
-        valueTo: f.valueTo
-      })),
-      groupBy: groupby.map(g => ({ field: g.field })),
-      sortBy: sortby.map(col => ({
-        column: col.field,
-        order: col.direction
-      })),
-      xyaxis: xyaxis.map(axis => ({
-        x: {
-          field: axis.xAxisField,
-          order: axis.xAxisDirection
-        },
-        y: {
-          field: axis.yAxisField,
-          order: axis.yAxisDirection
-        }
-      }))
-    };
+     const config = {
+       tables: tableandview,
+       selection: selectedcolumns,
+       filters: filters.map(f => ({
+         field: f.field,
+         operator: f.operator,
+         value: f.value,
+         valueFrom: f.valueFrom,
+         valueTo: f.valueTo
+       })),
+       groupBy: groupby.map(g => ({ field: g.field })),
+       sortBy: sortby.map(col => ({
+         column: col.field,
+         order: col.direction
+       })),
+       xyaxis: xyaxis.map(axis => ({
+         x: {
+           field: axis.xAxisField,
+           order: axis.xAxisDirection,
+           transformation: axis.xAxisTransformation || "raw"  // Handle transformation, default to "raw"
+         },
+         y: {
+           field: axis.yAxisField,
+           order: axis.yAxisDirection,
+           aggregation: axis.yAxisAggregation || "sum"  // Handle aggregation, default to "sum"
+         }
+       }))
+     };
+
 
     // 7. Execute business logic
     const data = await Executionfunction(config);
@@ -457,181 +460,7 @@ app.post('/api/metadata/report/preview', async (req, res, next) => {
     next(err);
   }
 });
-
-//  app.post('/api/metadata/report/preview', async (req, res, next) => {
-//   const { report_name,tableandview=[], selectedColumns = [] ,xyaxis=[], filters = [], sortBy = [], groupBy = [] } = req.body;
-   
-//   console.log(req.body);
-//   try {
-//     // 1. Check table exists
-//     const tableResult = await pool.query(`
-//       SELECT 1 FROM information_schema.tables
-//       WHERE table_schema = 'public' AND table_name = $1
-//     `, [tableandview]);
-
-//     if (tableResult.rowCount === 0) {
-//       // Throw error with status 400 if table is not found
-      
-//       return next({
-//         status: 400,
-//         message: `Table "${tableandview}" does not exist.`,
-//         error: 'Table validation failed.'
-//       });
-//     }
-
-//     // 2. Get column info
-//     const colResult = await pool.query(`
-//       SELECT column_name, data_type
-//       FROM information_schema.columns
-//       WHERE table_name = $1 AND table_schema = 'public'
-//     `, [tableandview]);
-
-//     const tableColumns = {};
-//     colResult.rows.forEach(col => tableColumns[col.column_name] = col.data_type);
-
-//     // 3. Validate selected columns
-//     const invalidColumns = selectedColumns.filter(col => !tableColumns[col]);
-//     if (invalidColumns.length) {
-//       return next({
-//         status: 400,
-//         message: `Invalid columns: ${invalidColumns.join(', ')}`,
-//         error: 'Invalid column selection.'
-//       });
-//     }
-
-//     // 4. Validate filters
-//     for (const [i, filter] of filters.entries()) {
-//       const { field, operator, value, valueFrom, valueTo } = filter;
-
-//       if (!field) {
-//         return next({
-//           status: 400,
-//           message: `Filter at index ${i}: 'field' is required.`,
-//           error: 'Missing filter field.'
-//         });
-//       }
-
-//       if (!tableColumns[field]) {
-//         return next({
-//           status: 400,
-//           message: `Invalid filter column: ${field}`,
-//           error: 'Invalid column in filter.'
-//         });
-//       }
-
-//       if (!operator) {
-//         return next({
-//           status: 400,
-//           message: `Filter at index ${i}: 'operator' is required.`,
-//           error: 'Missing operator in filter.'
-//         });
-//       }
-
-//       if (operator === 'between') {
-//         if (valueFrom == null || valueTo == null) {
-//           return next({
-//             status: 400,
-//             message: `Filter at index ${i}: 'valueFrom' and 'valueTo' are required for 'between' operator.`,
-//             error: 'Invalid range filter.'
-//           });
-//         }
-//       } else {
-//         if (value == null) {
-//           return next({
-//             status: 400,
-//             message: `Filter at index ${i}: 'value' is required for operator '${operator}'.`,
-//             error: 'Missing filter value.'
-//           });
-//         }
-
-//         const expected = mapDbTypeToJsType(tableColumns[field]);
-//         const actual = typeof value;
-
-//         if (expected !== actual) {
-//           return next({
-//             status: 400,
-//             message: `Filter at index ${i}: Type mismatch for column "${field}": expected ${expected}, got ${actual}`,
-//             error: 'Type mismatch in filter.'
-//           });
-//         }
-//       }
-//     }
-
-//     // 5. Validate sortBy and groupBy
-//     const badSort = sortBy.filter(col => !tableColumns[col.field]);
-//     if (badSort.length) {
-//       return next({
-//         status: 400,
-//         message: `Invalid sort columns: ${badSort.join(', ')}`,
-//         error: 'Invalid sort selection.'
-//       });
-//     }
-
-//     const badGroup = groupBy.filter(col => !tableColumns[col.field]);
-//     if (badGroup.length) {
-//       return next({
-//         status: 400,
-//         message: `Invalid group columns: ${badGroup.join(', ')}`,
-//         error: 'Invalid group selection.'
-//       });
-//     }
-
-//     const config = {
-//       table: tableandview,
-//       selection: selectedColumns,
-//       filters: filters.map(f => ({
-//         field: f.field,
-//         operator: f.operator,
-//         value: f.value,
-//         valueFrom: f.valueFrom,
-//         valueTo: f.valueTo
-//       })),
-//       groupBy: groupBy.map(g => ({ field: g.field })),
-//       sortBy: sortBy.map(col => ({ column: col.field, order: col.direction })),
-//       xyaxis: xyaxis.map(axis => ({
-//         x: {
-//           field: axis.xAxisField,
-//           order: axis.xAxisDirection
-//         },
-//         y: {
-//           field: axis.yAxisField,
-//           order: axis.yAxisDirection
-//         }
-//       }))
-//     };
-
-//     // Call the Execution function
-
-//     var chartData;
-//     const data = await Executionfunction(config); 
-
-//       const xAxisField = config.xyaxis[0]?.x.field;
-
-//       if (xAxisField) {
-//         const groupedData = {};
-
-//         for (const row of data) {
-//           const key = row[xAxisField];
-//           groupedData[key] = (groupedData[key] || 0) + 1;
-//         }
-
-//         chartData = Object.entries(groupedData).map(([key, count]) => ({
-//           x: key,
-//           y: count
-//         }));
-
-//         console.log('Chart Data:', chartData);
-//       }
-
-//     res.json({ message: 'Validation passed', data,chartData });
-    
-//   } catch (err) {
-//     // Pass error to the common error handler
-//     next(err);
-//   }
-// });
-
-
+ 
 function mapDbTypeToJsType(dbType) {
   if (['integer', 'int', 'smallint', 'bigint', 'decimal', 'numeric', 'real', 'double precision'].includes(dbType)) {
     return 'number';
@@ -647,221 +476,6 @@ function mapDbTypeToJsType(dbType) {
   }
   return 'string'; // fallback
 }
-
-const Executionfunction_oldgroupnotwork = async (config) => {
-  try {
-    if (!config || !config.table) {
-      throw new Error('Report configuration with table is required');
-    }
-
-    const table = config.table;
-
-    // Get PK, FK of current table AND columns that are FK references in other tables
-    const pkFkResult = await pool.query(
-      `
-      -- Primary and foreign key columns in the current table
-      SELECT kcu.column_name
-      FROM information_schema.table_constraints tc
-      JOIN information_schema.key_column_usage kcu
-        ON tc.constraint_name = kcu.constraint_name
-        AND tc.table_name = kcu.table_name
-      WHERE tc.table_name = $1
-        AND tc.constraint_type IN ('PRIMARY KEY', 'FOREIGN KEY')
-
-      UNION
-
-      -- Columns in the current table that are referenced by foreign keys in other tables
-      SELECT ccu.column_name
-      FROM information_schema.constraint_column_usage ccu
-      JOIN information_schema.referential_constraints rc
-        ON ccu.constraint_name = rc.unique_constraint_name
-      WHERE ccu.table_name = $1
-      `,
-      [table]
-    );
-
-    const excludedColumns = pkFkResult.rows.map(r => r.column_name);
-
-    // Filter selection if provided
-    let selection = '*';
-
-    if (config.selection && config.selection.length > 0) {
-      const filteredSelection = config.selection.filter(col => !excludedColumns.includes(col));
-      selection = filteredSelection.length > 0 ? filteredSelection.join(', ') : '*';
-    } else {
-      // Auto-fetch all non-PK/FK columns
-      const allColumnsResult = await pool.query(
-        `
-        SELECT column_name 
-        FROM information_schema.columns 
-        WHERE table_name = $1
-        `,
-        [table]
-      );
-      
-      const allColumns = allColumnsResult.rows.map(r => r.column_name);
-      const filteredColumns = allColumns.filter(col => !excludedColumns.includes(col));
-      selection = filteredColumns.length > 0 ? filteredColumns.join(', ') : '*';
-    }
-
-    let sql = `SELECT ${selection} FROM ${table}`;
-    const params = [];
-    let paramIndex = 1;
-
-    // WHERE clause
-    if (config.filters && config.filters.length > 0) {
-      const filterClauses = config.filters.map(filter => {
-        const sqlOperator = operatorMap[filter.operator.toLowerCase()];
-        if (!sqlOperator) throw new Error(`Unsupported operator: ${filter.operator}`);
-
-        if (sqlOperator === 'BETWEEN') {
-          params.push(filter.valueFrom, filter.valueTo);
-          return `${filter.field} BETWEEN $${paramIndex++} AND $${paramIndex++}`;
-        } else if (sqlOperator === 'ILIKE') {
-          params.push(`%${filter.value}%`);
-          return `${filter.field} ILIKE $${paramIndex++}`;
-        } else {
-          params.push(filter.value);
-          return `${filter.field} ${sqlOperator} $${paramIndex++}`;
-        }
-      }).join(' AND ');
-      sql += ` WHERE ${filterClauses}`;
-    }
-
-    // ORDER BY
-    if (config.sortBy && config.sortBy.length > 0) {
-      const sortClauses = config.sortBy.map(sort => `${sort.column} ${sort.order}`).join(', ');
-      sql += ` ORDER BY ${sortClauses}`;
-    }
-
-    console.log("Executing SQL:", sql, 'with params:', params);
-    const result = await pool.query(sql, params);
-    return result.rows;
-  } catch (err) {
-    // Returning error in same format for consistency with your middleware
-    throw {
-      status: 500,
-      message: "Query execution failed",
-      error: err.message
-    };
-  }
-};
-
-const Executionfunction2 = async (config) => {
-  try {
-    if (!config || !config.table) {
-      throw new Error('Report configuration with table is required');
-    }
-
-    const table = config.table;
-
-    // Get PK/FK columns
-    const pkFkResult = await pool.query(
-      `
-      SELECT kcu.column_name
-      FROM information_schema.table_constraints tc
-      JOIN information_schema.key_column_usage kcu
-        ON tc.constraint_name = kcu.constraint_name
-        AND tc.table_name = kcu.table_name
-      WHERE tc.table_name = $1
-        AND tc.constraint_type IN ('PRIMARY KEY', 'FOREIGN KEY')
-
-      UNION
-
-      SELECT ccu.column_name
-      FROM information_schema.constraint_column_usage ccu
-      JOIN information_schema.referential_constraints rc
-        ON ccu.constraint_name = rc.unique_constraint_name
-      WHERE ccu.table_name = $1
-      `,
-      [table]
-    );
-
-    const excludedColumns = pkFkResult.rows.map(r => r.column_name);
-
-    // Filtered selection
-    let selection = '*';
-
-    if (config.selection && config.selection.length > 0) {
-      const filteredSelection = config.selection.filter(col => !excludedColumns.includes(col));
-      selection = filteredSelection.length > 0 ? filteredSelection.join(', ') : '*';
-    } else {
-      const allColumnsResult = await pool.query(
-        `SELECT column_name FROM information_schema.columns WHERE table_name = $1`,
-        [table]
-      );
-      const allColumns = allColumnsResult.rows.map(r => r.column_name);
-      const filteredColumns = allColumns.filter(col => !excludedColumns.includes(col));
-      selection = filteredColumns.length > 0 ? filteredColumns.join(', ') : '*';
-    }
-
-    const params = [];
-    let paramIndex = 1;
-
-    // WHERE clause
-    let whereClause = '';
-    if (config.filters && config.filters.length > 0) {
-      const filterClauses = config.filters.map(filter => {
-        const sqlOperator = operatorMap[filter.operator.toLowerCase()];
-        if (!sqlOperator) throw new Error(`Unsupported operator: ${filter.operator}`);
-
-        if (sqlOperator === 'BETWEEN') {
-          params.push(filter.valueFrom, filter.valueTo);
-          return `${filter.field} BETWEEN $${paramIndex++} AND $${paramIndex++}`;
-        } else if (sqlOperator === 'ILIKE' || sqlOperator === 'contain') {
-          params.push(`%${filter.value}%`);
-          return `${filter.field} ILIKE $${paramIndex++}`;
-        } else {
-          params.push(filter.value);
-          return `${filter.field} ${sqlOperator} $${paramIndex++}`;
-        }
-      }).join(' AND ');
-      whereClause = ` WHERE ${filterClauses}`;
-    }
-
-    // GROUP BY logic
-    if (config.groupBy && config.groupBy.length > 0) {
-      const groupByCols = config.groupBy.map(g => g.field).join(', ');
-
-      // Build subquery for each group
-      const groupedSQL = `
-          SELECT sub.${groupByCols}, 
-                JSON_AGG(sub) AS records
-          FROM (
-              SELECT ${selection}
-              FROM ${table}
-              ${whereClause ? `WHERE ${whereClause}` : ''}
-          ) sub
-          GROUP BY sub.${groupByCols}
-      `;
-
-      console.log("Executing GROUPED SQL:", groupedSQL, 'with params:', params);
-      const result = await pool.query(groupedSQL, params);
-      return { groupBy: config.groupBy,  data: result.rows };
-    }
-
-    // Regular (non-grouped) query
-    let sql = `SELECT ${selection} FROM ${table}${whereClause}`;
-
-    // ORDER BY
-    if (config.sortBy && config.sortBy.length > 0) {
-      const sortClauses = config.sortBy.map(sort => `${sort.column} ${sort.order}`).join(', ');
-     // console.log(sortClauses);
-      sql += ` ORDER BY ${sortClauses}`;
-    }
-
-    console.log("Executing SQL:", sql, 'with params:', params);
-    const result = await pool.query(sql, params);
-    return result.rows;
-  } catch (err) {
-    throw {
-      status: 500,
-      message: "Query execution failed",
-      error: err.message
-    };
-  }
-};
-
  
 
 const Executionfunction = async (config) => {
@@ -897,33 +511,9 @@ const Executionfunction = async (config) => {
     // --- Build JOIN logic ---
     let fromClause = `FROM ${tables[0]}`;
     const joinedTables = new Set([tables[0]]);
-     console.log('Initial Joined Tables:', joinedTables);
+    console.log('Initial Joined Tables:', joinedTables);
 
-    // for (const rel of relations) {
-    //   const { source_table, source_column, target_table, target_column } = rel;
-
-    //   // ✅ Only join if BOTH tables are in config.tables
-    //   if (
-    //     config.tables.includes(source_table) &&
-    //     config.tables.includes(target_table)
-    //   ) {
-    //     // Choose base/join tables depending on what's already joined
-    //     const alreadyJoined = [...joinedTables];
-    //     const canJoinSource = joinedTables.has(source_table) && !joinedTables.has(target_table);
-    //     const canJoinTarget = joinedTables.has(target_table) && !joinedTables.has(source_table);
-
-    //     if (canJoinSource) {
-    //       fromClause += ` JOIN ${target_table} ON ${source_table}.${source_column} = ${target_table}.${target_column}`;
-    //       joinedTables.add(target_table);
-    //     } else if (canJoinTarget) {
-    //       fromClause += ` JOIN ${source_table} ON ${source_table}.${source_column} = ${target_table}.${target_column}`;
-    //       joinedTables.add(source_table);
-    //     }
-    //   }
-    // }
-
-  
-  let allTablesJoined = false;
+   let allTablesJoined = false;
 
   while (!allTablesJoined) {
     let orderedRelations = [...relations].sort((a, b) => {
@@ -992,6 +582,38 @@ const Executionfunction = async (config) => {
       });
     }
 
+
+     // --- Handle XY Axis Configuration ---
+    const xySelections = [];
+    const xyGroupBy = [];
+
+    config.xyaxis.forEach(axis => {
+      const { x, y } = axis;
+
+      // X-Axis Transformation
+      let xAxisField = `${x.field}`;
+      let xAxisTransformation = x.transformation || 'raw';
+      
+      if (xAxisTransformation === 'monthwise') {
+        xAxisField = `DATE_TRUNC('month', ${x.field})`;
+      } else if (xAxisTransformation === 'yearwise') {
+        xAxisField = `DATE_TRUNC('year', ${x.field})`;
+      } else if (xAxisTransformation === 'weekwise') {
+        xAxisField = `DATE_TRUNC('week', ${x.field})`;
+      } else if (xAxisTransformation === 'daywise') {
+        xAxisField = `DATE_TRUNC('day', ${x.field})`;
+      }
+
+      xySelections.push(`${xAxisField} AS "X - ${x.field}"`);
+      xyGroupBy.push(xAxisField);
+
+      // Y-Axis Aggregation
+      const yAxisField = `${y.field}`;
+      const yAxisAggregation = y.aggregation || 'sum';
+      xySelections.push(`${yAxisAggregation}(${yAxisField}) AS "Y - ${y.field}"`);
+    });
+
+
     // --- WHERE clause ---
     const params = [];
     let paramIndex = 1;
@@ -1026,56 +648,50 @@ const Executionfunction = async (config) => {
     }
 
 
-   if (config.groupBy?.length > 0) {
-  // Build group-by display fields: SELECT category.name AS "category - name"
-  const groupFields = config.groupBy.map(g => {
-    const [table, column] = g.field.split('.');
-    return `"${table} - ${column}"`;
-  });
+    if (config.groupBy?.length > 0) {
+      // Build group-by display fields: SELECT category.name AS "category - name"
+      const groupFields = config.groupBy.map(g => {
+        const [table, column] = g.field.split('.');
+        return `"${table} - ${column}"`;
+      });
 
-  // Raw group-by fields: category.name, product.id, etc.
-  //const groupByRaw = config.groupBy.map(g => g.field).join(', ');
+      const groupByRaw = config.groupBy.map(g => {
+        const [table, column] = g.field.split('.');
+        return `"${table} - ${column}"`;
+      });
 
-  const groupByRaw = config.groupBy.map(g => {
-    const [table, column] = g.field.split('.');
-    return `"${table} - ${column}"`;
-  });
+      const groupByRaw1 = config.groupBy.map(g => {
+        const [table, column] = g.field.split('.');
+        return `${table} - ${column}`;
+      });
 
-  const groupByRaw1 = config.groupBy.map(g => {
-    const [table, column] = g.field.split('.');
-    return `${table} - ${column}`;
-  });
+      // Fields to select inside subquery
+      const selectionFields = config.selection.map(col => {
+        const [table, column] = col.split('.');
+        return `${table}.${column} AS "${table} - ${column}"`;
+      }).join(', ');
 
-  // Fields to select inside subquery
-  const selectionFields = config.selection.map(col => {
-    const [table, column] = col.split('.');
-    return `${table}.${column} AS "${table} - ${column}"`;
-  }).join(', ');
+      
 
-  
+      // Construct the final grouped SQL
+      const groupedSQL = `
+        SELECT ${groupFields.join(', ')} ,
+          JSON_AGG(sub) AS records
+        FROM (
+          SELECT ${selectionFields}
+          ${fromClause}
+          ${whereClause}
+          ${orderByClause}
+        ) sub
+        GROUP BY ${groupByRaw}
+      `;
 
-  // Construct the final grouped SQL
-  const groupedSQL = `
-    SELECT ${groupFields.join(', ')} ,
-      JSON_AGG(sub) AS records
-    FROM (
-      SELECT ${selectionFields}
-      ${fromClause}
-      ${whereClause}
-      ${orderByClause}
-    ) sub
-    GROUP BY ${groupByRaw}
-  `;
+      //console.log(`banti ${selectionFields}`)
+      console.log("Executing GROUPED SQL:", groupedSQL, 'with params:', params);
+      const result = await pool.query(groupedSQL, params);
 
-  console.log(`banti ${selectionFields}`)
-  console.log("Executing GROUPED SQL:", groupedSQL, 'with params:', params);
-  const result = await pool.query(groupedSQL, params);
-
-  return {
-    groupBy: groupByRaw1,
-    data: result.rows
-  };
-}
+      return { groupBy: groupByRaw1, data: result.rows };
+    }
 
 
 

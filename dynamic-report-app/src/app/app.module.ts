@@ -20,6 +20,7 @@ import {MatTableDataSource, MatTableModule} from '@angular/material/table';
 import { GoogleChartsModule, ChartType } from 'angular-google-charts';
 import { ChartComponentComponent } from './components/chart-component/chart-component.component';
 import { CommonFiltersComponent } from './components/common-filters/common-filters.component';
+import { CommonTableComponent } from './components/common-table/common-table.component';
  
 
 
@@ -33,7 +34,8 @@ import { CommonFiltersComponent } from './components/common-filters/common-filte
     CustomTableComponent,
     ListReportComponent,
     ChartComponentComponent ,
-    CommonFiltersComponent
+    CommonFiltersComponent,
+    CommonTableComponent
   ],
   imports: [
     BrowserModule,

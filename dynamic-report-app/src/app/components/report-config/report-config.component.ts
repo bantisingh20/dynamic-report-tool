@@ -22,6 +22,9 @@ export class ReportConfigComponent implements OnInit {
   displayedColumns: string[] = [];
   showPreview = false;
   operators: string[] = ['between', 'equals', 'not equals', 'greater than', 'less than', 'contains'];
+  numberTypes: string[] = ['integer', 'smallint', 'bigint', 'decimal', 'numeric', 'real', 'double precision', 'serial', 'bigserial'];
+  dateTypes: string[] = ['date', 'timestamp', 'timestamp with time zone', 'timestamp without time zone'];
+  booleanTypes: string[] = ['boolean'];
   tablesAndViews: any[] = [];
   availableFields: any[] = [];
 
@@ -456,9 +459,11 @@ export class ReportConfigComponent implements OnInit {
   addXYAxis() {
     const xyAxisGroup = this.fb.group({
       xAxisField: ['', Validators.required],
-      xAxisDirection: ['asc', Validators.required],
+      xAxisDirection: ['asc'],
+      xAxisTransformation: ['raw'],
       yAxisField: ['', Validators.required],
-      yAxisDirection: ['asc', Validators.required]
+      yAxisDirection: ['asc'],
+      yAxisAggregation: ['sum']
     });
     this.xyaxis.push(xyAxisGroup);
   }
@@ -468,6 +473,39 @@ export class ReportConfigComponent implements OnInit {
     this.xyaxis.removeAt(index);
   }
 
+
+  // Handle changes in the X-Axis field to show transformation options if needed
+  onXAxisFieldChange(index: number) {
+    const xAxisField = this.xyaxis.at(index).get('xAxisField')?.value;
+    const field = this.availableFields.find(f => f.column_name === xAxisField);
+
+    if (this.dateTypes.includes(field?.data_type)) {
+       
+      this.xyaxis.at(index).get('xAxisTransformation')?.setValidators([Validators.required]);
+    } else {
+    
+      this.xyaxis.at(index).get('xAxisTransformation')?.clearValidators();
+    }
+    this.xyaxis.at(index).get('xAxisTransformation')?.updateValueAndValidity();
+  }
+
+  // Check if the X-Axis has date field selected to show transformation options
+  showXAxisTransformationOptions(index: number): boolean {
+    const xAxisField = this.xyaxis.at(index).get('xAxisField')?.value;
+    const field = this.availableFields.find(f => f.column_name === xAxisField);
+ 
+    if(this.dateTypes.includes(field?.data_type)){
+      return true;
+    }
+    else{
+      return false;
+    } 
+  }
+ 
+  showYAxisAggregationOptions(index: number): boolean {
+    const yAxisField = this.xyaxis.at(index).get('yAxisField')?.value;
+    return yAxisField !== '';  
+  }
 
   saveConfiguration(): void {
 
@@ -522,8 +560,7 @@ export class ReportConfigComponent implements OnInit {
   previewChart(): void {
 
   }
-
-
+ 
   previewReport(): void {
 
     console.log(this.reportForm.value);
@@ -533,89 +570,9 @@ export class ReportConfigComponent implements OnInit {
       return;
     }
 
-    const config = { ...this.reportForm.value };
-
-    // const storedData = JSON.parse(localStorage.getItem('reportBuilderData') || '{}');
-
-    // config.filters = storedData.filters || [];
-    // config.groupBy = storedData.groupBy || [];
-    // config.sortBy = storedData.sortBy || [];
-    // config.xyaxis = storedData.xyaxis || [];
-
-    // console.log('Merged config:', config);
-
-    // this.metadataService.getDataforPreview(config).subscribe({
-    //   next: (response: any) => {
-    //     const responseData = response?.data;
-    //     const rawData = responseData?.data || [];
-    //     const groupBy = responseData?.groupBy || null;
-    //     const chartData = responseData?.chartData || [];
-
-    //     console.log('API Response:', response);
-
-    //     // Grouped data case
-    //     if (Array.isArray(groupBy) && groupBy.length > 0 && Array.isArray(rawData) && rawData[0]?.records) {
-    //       const firstRecord = rawData[0]?.records?.[0];
-
-    //       this.previewData = {
-    //         groupBy,
-    //         data: rawData,
-    //         chartData
-    //       };
-
-    //       this.displayedColumns = firstRecord ? Object.keys(firstRecord) : [];
-    //       this.showPreviewButtons = true;
-    //       this.showPreview = true;
-    //       this.previewMode = 'report';
-    //     }
-
-    //     // Flat data case
-    //     else if (Array.isArray(responseData) && responseData.length > 0) {
-    //       const firstItem = responseData[0];
-
-    //       this.previewData = {
-    //         data: responseData,
-    //         chartData
-    //       };
-
-    //       this.displayedColumns = firstItem ? Object.keys(firstItem) : [];
-    //       this.showPreviewButtons = true;
-    //       this.showPreview = true;
-    //       this.previewMode = 'report';
-    //     }
-
-    //     // No data
-    //     else {
-    //       this.previewData = {
-    //         data: [],
-    //         chartData: []
-    //       };
-
-    //       this.displayedColumns = [];
-    //       this.showPreviewButtons = false;
-    //       this.showPreview = false;
-
-
-    //       this.notificationService.showNotification('No Data Found', 'success');
-    //     }
-    //   },
-
-    //   error: (err) => {
-    //     this.previewData = {
-    //       data: [],
-    //       chartData: []
-    //     };
-
-    //     this.displayedColumns = [];
-    //     this.showPreviewButtons = false;
-    //     this.showPreview = false;
-
-    //     const message = err?.error?.message || 'Failed to fetch preview data.';
-    //     console.error('Error fetching data:', err);
-    //     this.notificationService.showNotification(message, 'error');
-    //   }
-    // });
-
+    const config = { ...this.reportForm.value }; 
+     
+    console.log(config) 
     this.metadataService.getDataforPreview(config).subscribe({
       next: (response: any) => {
         const responseData = response?.data;
@@ -628,7 +585,7 @@ export class ReportConfigComponent implements OnInit {
         this.showPreview = showPreview;
 
         console.log('API Response:', response);
- 
+
         // Show appropriate data messages
         console.log(this.previewData.data.length);
 
