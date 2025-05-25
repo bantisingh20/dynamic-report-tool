@@ -563,6 +563,11 @@ export class ReportConfigComponent implements OnInit {
  
   previewReport(): void {
 
+    this.showPreview = false;
+
+    // Simulate an async fetch or set new data
+   
+
     console.log(this.reportForm.value);
     if (this.reportForm.invalid) {
       this.reportForm.markAllAsTouched();
@@ -572,6 +577,7 @@ export class ReportConfigComponent implements OnInit {
 
     const config = { ...this.reportForm.value }; 
      
+    
     console.log(config) 
     this.metadataService.getDataforPreview(config).subscribe({
       next: (response: any) => {
@@ -596,6 +602,11 @@ export class ReportConfigComponent implements OnInit {
           console.log(this.previewData);
           this.notificationService.showNotification("No Data Found.", 'warning');
         }
+
+         setTimeout(() => {
+        //  this.previewData = this.getNewPreviewData(); // fetch or generate data here
+          this.showPreview = true;
+        }, 0);
 
       },
 

@@ -46,3 +46,13 @@ body {
   /* Red for error */
   color: white;
 }
+
+
+mat-paginator {
+  background-color: #f0f0f0;
+}
+
+.mat-paginator-range-label {
+  color: #333;
+  font-size: 14px;
+}

@@ -279,6 +279,9 @@
               <p class="small text-muted">
                 Step 4: Choose fields for X and Y axes and their directions.
               </p>
+              <p class="small text-muted">
+  *Select this option only if you want to display numerical data (e.g., counts) or visualize it in a chart.*
+</p>
 
               <!-- Loop through each X-Y axis configuration -->
               <div *ngFor="let axis of xyaxis.controls; let i = index" [formGroupName]="i" class="row g-2 mb-2">
@@ -297,16 +300,15 @@
                     Field is required.
                   </div>
                 </div>
-
-                {{showXAxisTransformationOptions(i)}}
+ 
                 <!-- X-Axis Data Transformation Options (e.g., Date Handling) -->
                 <div class="col" *ngIf="showXAxisTransformationOptions(i)">
                   <select class="form-select" formControlName="xAxisTransformation">
                     <option value="daywise">Day-wise</option>
                     <option value="monthwise">Month-wise</option>
-                    <option value="weekwise">Week-wise</option>
+                    <!-- <option value="weekwise">Week-wise</option> -->
                     <option value="yearwise">Yearly</option>
-                    <option value="raw">Raw</option>
+                   
                   </select>
                 </div>
 
@@ -381,7 +383,7 @@
         <button type="button" class="btn btn-primary px-3 py-2 text-nowrap text-sm" (click)="previewReport()"
           title="Preview your report and chart">
           <i class="bi bi-eye me-1"></i>
-          <span class="d-none d-sm-inline">Load</span>
+          <span class="d-none d-sm-inline">Search</span>
         </button>
 
         <!-- Report & Chart buttons shown after Preview is clicked -->
@@ -421,13 +423,13 @@
   </div>
 </form>
 
-<ng-container>
+<ng-container *ngIf="showPreview">
   <!-- <app-custom-table [data]="previewData">
   </app-custom-table> -->
+ 
+<app-common-table [tabledata]="previewData"></app-common-table>
 
-  <app-common-table  [data]="previewData"  [datas]="previewData" [isGrouped]="false"  [itemsPerPage]="5">
-
-  </app-common-table>
+ 
 </ng-container>
 
 
