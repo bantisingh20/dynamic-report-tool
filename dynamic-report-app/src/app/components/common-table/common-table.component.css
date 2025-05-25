@@ -1,0 +1,105 @@
+:host {
+  display: block;
+  padding: 1rem;
+}
+
+@media (min-width: 768px) {
+  :host {
+    padding: 2rem 3rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  :host {
+    padding: 3rem 5rem;
+  }
+}
+
+tr:nth-child(odd) {
+  background-color: #d4edda; /* Light green for odd rows */
+}
+
+tr:nth-child(even) {
+  background-color: #f8f9fa; /* Light grey for even rows */
+}
+
+/* HOVER EFFECT */
+tr:hover {
+  background-color: #e6f7ec;
+}
+/* TABLE STYLING */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+th, td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+/* HEADER STYLING */
+th {
+  background-color: #28a745 !important; /* Green */
+  /* color: #fff; */
+  font-weight: bold;
+  text-transform: capitalize;
+}
+
+/* ROW STYLING */
+tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+tr:hover {
+  background-color: #e6f7ec;
+}
+
+/* PAGINATION STYLING */
+.pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 10px;
+}
+
+.table-wrapper {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  overflow: scroll;
+}
+
+.pagination button {
+  padding: 6px 14px;
+  background-color: #28a745; /* Green */
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.pagination button:hover:not(:disabled) {
+  background-color: #218838;
+}
+
+.pagination button:disabled {
+  background-color: #c3e6cb;
+  cursor: not-allowed;
+  color: #fff;
+}
+
+.pagination span {
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+

@@ -1,96 +1,96 @@
-import { Component, Input, OnChanges, OnInit } from '@angular/core';
+import {
+  Component,
+  Input,
+  OnChanges,
+  SimpleChanges,
+  ViewChildren,
+  QueryList,
+  AfterViewInit,
+  ViewChild,
+  ViewEncapsulation
+} from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
-import { PageEvent } from '@angular/material/paginator';
+import { MatPaginator } from '@angular/material/paginator';
+import { MatSort } from '@angular/material/sort';
 
 @Component({
   selector: 'app-common-table',
-  standalone: false,
+  standalone:false,
+  
   templateUrl: './common-table.component.html',
-  styleUrl: './common-table.component.css'
+  styleUrls: ['./common-table.component.css'],
+    encapsulation: ViewEncapsulation.None
 })
-export class CommonTableComponent implements OnInit, OnChanges {
-  @Input() data: any[] = [];  // Input data passed by the user
-   @Input() datas: any;
-  @Input() groupByFields: string[] = [];  // Fields to group by
-  @Input() isGrouped: boolean = false;  // Whether data is grouped or not
-  @Input() itemsPerPage: number = 5;  // Default items per page
+export class CommonTableComponent implements OnChanges, AfterViewInit {
+  @Input() tabledata: any;
 
-  flatDataSource = new MatTableDataSource<any>();
-  groupedData: any[] = [];
-  pagedFlatRows: any[] = [];
-  flatCurrentPage: number = 1;
-
-  // Dynamically generate columns based on the data
+  isGrouped = false;
+  groupByKey: string = '';
   displayedColumns: string[] = [];
 
-  constructor() {}
+  // For grouped tables
+  @ViewChildren(MatPaginator) paginators!: QueryList<MatPaginator>;
+  @ViewChildren(MatSort) sorts!: QueryList<MatSort>;
 
-  ngOnInit(): void {
-   console.log('Received Data:');
-    // if (this.data && this.data.length) {
-     
-    //   this.displayedColumns = Object.keys(this.data[0]);
-    // }
-  //  this.updatePagedFlatRows();
-  }
+  // For flat table
+  flatDataSource = new MatTableDataSource<any>();
+  @ViewChild('flatPaginator') flatPaginator!: MatPaginator;
+  @ViewChild('flatSort') flatSort!: MatSort;
 
-  // Update flat rows based on pagination
-  updatePagedFlatRows(): void {
-    const start = (this.flatCurrentPage - 1) * this.itemsPerPage;
-    const end = start + this.itemsPerPage;
-    this.pagedFlatRows = this.data.slice(start, end);
-    this.flatDataSource.data = this.pagedFlatRows;
-  }
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['tabledata'] && this.tabledata) {
+      this.isGrouped = Array.isArray(this.tabledata.groupBy) && this.tabledata.groupBy.length > 0;
 
-  // Handle flat table pagination
-  changeFlatPage(event: PageEvent): void {
-    this.flatCurrentPage = event.pageIndex + 1;
-    this.itemsPerPage = event.pageSize;
-    this.updatePagedFlatRows();
-  }
+      if (this.isGrouped) {
+        this.groupByKey = this.tabledata.groupBy[0];
+        this.displayedColumns = [];
 
-  // Handle grouped data pagination
-  changeGroupPage(groupKey: string, event: PageEvent): void {
-    const group = this.groupedData.find(g => g.key === groupKey);
-    if (group) {
-      group.currentPage = event.pageIndex + 1;
-      group.itemsPerPage = event.pageSize;
-      this.updatePagedGroupedRecords(groupKey);
-    }
-  }
+        this.tabledata.data.forEach((group: any) => {
+          group.dataSource = new MatTableDataSource(group.records);
 
-  // Update the paged records for grouped data
-  updatePagedGroupedRecords(groupKey: string): void {
-    const group = this.groupedData.find(g => g.key === groupKey);
-    if (group) {
-      const start = (group.currentPage - 1) * group.itemsPerPage;
-      const end = start + group.itemsPerPage;
-      group.pagedRecords = group.records.slice(start, end);
-    }
-  }
+          // Detect columns only once from first group's records
+          if (!this.displayedColumns.length && group.records?.length) {
+            this.displayedColumns = Object.keys(group.records[0]);
+          }
+        });
+      } else {
+        // Flat data case
+        this.flatDataSource = new MatTableDataSource(this.tabledata.data || []);
+        this.displayedColumns = [];
 
-  // Group data based on the groupByFields
-  groupData(): void {
-    const groupedData = this.data.reduce((acc, row) => {
-      const groupKey = this.groupByFields.map(field => row[field]).join('-');
-      if (!acc[groupKey]) {
-        acc[groupKey] = { key: groupKey, records: [], currentPage: 1, itemsPerPage: this.itemsPerPage, pagedRecords: [] };
+        if (this.flatDataSource.data.length > 0) {
+          this.displayedColumns = Object.keys(this.flatDataSource.data[0]);
+        }
       }
-      acc[groupKey].records.push(row);
-      return acc;
-    }, {});
-
-    this.groupedData = Object.values(groupedData);
-    this.groupedData.forEach(group => {
-      group.pagedRecords = group.records.slice(0, this.itemsPerPage);
-    });
+    }
   }
 
-  ngOnChanges(): void {
-    // if (this.isGrouped) {
-    //   this.groupData();
-    // } else {
-    //   this.updatePagedFlatRows();
-    // }
+  ngAfterViewInit() {
+    // Assign paginator and sort for grouped tables
+    if (this.isGrouped && this.tabledata?.data?.length) {
+      this.tabledata.data.forEach((group: any, index: number) => {
+        group.dataSource.paginator = this.paginators.toArray()[index];
+        group.dataSource.sort = this.sorts.toArray()[index];
+      });
+    }
+
+    // Assign paginator and sort for flat table
+    if (!this.isGrouped) {
+      this.flatDataSource.paginator = this.flatPaginator;
+      this.flatDataSource.sort = this.flatSort;
+    }
+  }
+
+  hasData(): boolean {
+    if (!this.tabledata) return false;
+
+    if (this.isGrouped) {
+      return Array.isArray(this.tabledata.data) &&
+        this.tabledata.data.some(
+          (group: any) => Array.isArray(group.records) && group.records.length > 0
+        );
+    } else {
+      return Array.isArray(this.tabledata.data) && this.tabledata.data.length > 0;
+    }
   }
 }

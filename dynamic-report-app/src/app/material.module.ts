@@ -10,6 +10,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSortModule } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { MatListModule } from '@angular/material/list';
 import { MatDividerModule } from '@angular/material/divider';
@@ -18,8 +19,8 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialogModule } from '@angular/material/dialog';
-import { NgSelectModule } from '@ng-select/ng-select';
- 
+import { NgSelectModule } from '@ng-select/ng-select'; 
+import { MatExpansionModule } from '@angular/material/expansion'; 
 
 
 @NgModule({
@@ -40,7 +41,9 @@ import { NgSelectModule } from '@ng-select/ng-select';
     MatSnackBarModule,
     MatDialogModule,
     NgSelectModule,
-    MatTabsModule
+    MatTabsModule,
+    MatSortModule,
+    MatExpansionModule
   ]
 })
 export class MaterialModule { }
