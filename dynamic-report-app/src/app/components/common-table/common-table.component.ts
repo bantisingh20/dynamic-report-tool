@@ -30,12 +30,35 @@ export class CommonTableComponent implements OnChanges, AfterViewInit {
 
   // For grouped tables
   @ViewChildren(MatPaginator) paginators!: QueryList<MatPaginator>;
+   currentPageIndex: number = 0;
+  currentPageSize: number = 5;
+
   @ViewChildren(MatSort) sorts!: QueryList<MatSort>;
 
   // For flat table
   flatDataSource = new MatTableDataSource<any>();
   @ViewChild('flatPaginator') flatPaginator!: MatPaginator;
   @ViewChild('flatSort') flatSort!: MatSort;
+
+  get displayedColumnsWithSrno() {
+    //'srno',
+    return [ ...this.displayedColumns];
+  }
+
+  onPageChange(event: any) {
+    this.currentPageIndex = event.pageIndex;
+    this.currentPageSize = event.pageSize;
+  }
+
+  // Method to calculate the global serial number
+  calculateGlobalSerialNumber(groupIndex: number, rowIndex: number): number {
+    // Global serial number calculation
+    let globalIndex = 0;
+    for (let i = 0; i < groupIndex; i++) {
+      globalIndex += this.tabledata.data[i].dataSource.length;
+    }
+    return globalIndex + rowIndex + 1;
+  }
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['tabledata'] && this.tabledata) {
