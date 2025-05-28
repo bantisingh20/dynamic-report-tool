@@ -24,6 +24,10 @@
     </div>
 
     <div class="row">
+
+
+
+
       <!-- LEFT PANEL: Data Source Selection -->
       <div class="col-md-3">
         <div class="card shadow-sm mb-3">
@@ -31,6 +35,25 @@
             <h5 class="card-title text-secondary">
               <i class="bi bi-table text-success"></i> Data Source
             </h5>
+
+            <div class="mb-3">
+              <label class="form-label">Report Type</label>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" id="countField" formControlName="fieldType" value="count"
+                  (change)="onFieldTypeChange()" />
+                <label class="form-check-label" for="countField">
+                  Count
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" id="summaryField" formControlName="fieldType"
+                  value="summary" (change)="onFieldTypeChange()" />
+                <label class="form-check-label" for="summaryField">
+                  Summary
+                </label>
+              </div>
+            </div>
+
             <p class="small text-muted">Step 1: Choose the table or view below.</p>
             <div class="mb-3">
               <label class="form-label">Table or View</label>
@@ -45,23 +68,23 @@
               </ng-select>
 
               <div
-                *ngIf="reportForm.get('selectedcolumns')?.errors?.['minSelected'] && reportForm.get('selectedcolumns')?.touched"
+                *ngIf="reportForm.get('tableandview')?.errors?.['minSelected'] && reportForm.get('tableandview')?.touched"
                 class="text-danger">
-                At least one column must be selected.
+                At least one Table must be selected.
               </div>
             </div>
-            <div class="mb-3">
+            <div class="mb-3" *ngIf="showColumnsAndGroupBy">
               <label class="form-label">Columns</label>
               <ng-select [items]="availableFields" bindLabel="label" bindValue="column_name" [multiple]="true"
                 formControlName="selectedcolumns" placeholder="Select columns" [closeOnSelect]="false"
                 class="w-100 multiple-fixed">
               </ng-select>
 
-              <div
+              <!-- <div
                 *ngIf="reportForm.get('selectedcolumns')?.errors?.['minSelected'] && reportForm.get('selectedcolumns')?.touched"
                 class="text-danger">
                 At least one column must be selected.
-              </div>
+              </div> -->
 
               <small class="text-muted">Choose the columns you want in your report.</small>
             </div>
@@ -202,7 +225,7 @@
             </div>
 
             <!-- Group By Section -->
-            <div formArrayName="groupby" class="mb-4">
+            <div formArrayName="groupby" class="mb-4" *ngIf="showColumnsAndGroupBy">
               <h5 class="card-title text-secondary mb-3">
                 <i class="bi bi-collection text-info"></i> Grouping
               </h5>
@@ -272,7 +295,7 @@
 
 
             <!-- Chart By Section -->
-            <div formArrayName="xyaxis" class="mb-4">
+            <div formArrayName="xyaxis" class="mb-4" *ngIf="showXYConfig">
               <h5 class="card-title text-secondary mb-3">
                 <i class="bi bi-bar-chart-line text-secondary"></i> X-Y Axis Configuration
               </h5>
@@ -280,40 +303,48 @@
                 Step 4: Choose fields for X and Y axes and their directions.
               </p>
               <p class="small text-muted">
-  *Select this option only if you want to display numerical data (e.g., counts) or visualize it in a chart.*
-</p>
+                *Select this option only if you want to display numerical data (e.g., counts) or visualize it in a
+                chart.*
+              </p>
 
               <!-- Loop through each X-Y axis configuration -->
               <div *ngFor="let axis of xyaxis.controls; let i = index" [formGroupName]="i" class="row g-2 mb-2">
 
                 <!-- X-Axis Field Selection -->
                 <div class="col">
-                  <select class="form-select" formControlName="xAxisField" (change)="onXAxisFieldChange(i)">
+
+                  <ng-select [items]="availableFields" bindLabel="label" bindValue="column_name" [multiple]="false"
+                    formControlName="xAxisField" placeholder="Select columns" [closeOnSelect]="false"
+                    (change)="onXAxisFieldChange(i)" class="w-100 multiple-fixed">
+                  </ng-select>
+
+                  <!-- <select class="form-select" formControlName="xAxisField" (change)="onXAxisFieldChange(i)">
                     <option value="">Select X-Axis Field</option>
                     <option *ngFor="let field of availableFields" [value]="field.column_name">
                       {{ field.label }}
                     </option>
-                  </select>
+                  </select> -->
 
                   <div *ngIf="xyaxis.get('xAxisField')?.invalid && xyaxis.get('xAxisField')?.touched"
                     class="text-danger small">
                     Field is required.
                   </div>
                 </div>
- 
+
                 <!-- X-Axis Data Transformation Options (e.g., Date Handling) -->
+ 
                 <div class="col" *ngIf="showXAxisTransformationOptions(i)">
                   <select class="form-select" formControlName="xAxisTransformation">
-                    <option value="daywise">Day-wise</option>
+                    <option value="daywise" selected>Day-wise</option>
                     <option value="monthwise">Month-wise</option>
                     <!-- <option value="weekwise">Week-wise</option> -->
                     <option value="yearwise">Yearly</option>
-                   
+
                   </select>
                 </div>
 
                 <!-- X-Axis Direction Selection -->
-                <div class="col">
+                <div class="col d-none">
                   <select class="form-select" formControlName="xAxisDirection">
                     <option value="asc">Ascending (A-Z, small to large)</option>
                     <option value="desc">Descending (Z-A, large to small)</option>
@@ -322,7 +353,7 @@
 
                 <!-- Y-Axis Field Selection -->
                 <div class="col">
-                  <select class="form-select" formControlName="yAxisField">
+                  <select class="form-select" formControlName="yAxisField" >
                     <option value="">Select Y-Axis Field</option>
                     <option *ngFor="let field of availableFields" [value]="field.column_name">
                       {{ field.label }}
@@ -338,17 +369,15 @@
                 <!-- Y-Axis Aggregation Options (e.g., Sum, Count, etc.) -->
                 <div class="col" *ngIf="showYAxisAggregationOptions(i)">
                   <select class="form-select" formControlName="yAxisAggregation">
-                    <option value="sum">Sum</option>
-                    <option value="count">Count</option>
-                    <option value="average">Average</option>
-                    <option value="max">Maximum</option>
-                    <option value="min">Minimum</option>
-                    <option value="diff">Difference</option>
+                     <option *ngFor="let op of getYaxisAggregationOptions(i)" [value]="op">
+                    {{ op }}
+                  </option>
+
                   </select>
                 </div>
 
                 <!-- Y-Axis Direction Selection -->
-                <div class="col">
+                <div class="col d-none">
                   <select class="form-select" formControlName="yAxisDirection">
                     <option value="asc">Ascending (A-Z, small to large)</option>
                     <option value="desc">Descending (Z-A, large to small)</option>
@@ -365,7 +394,8 @@
               </div>
 
               <!-- Button to Add New X-Y Axis Configuration -->
-              <button type="button" class="btn btn-outline-primary btn-sm" (click)="addXYAxis()" title="Add X-Y Axis">
+              <button type="button" *ngIf="xyaxis.length === 0" class="btn btn-outline-primary btn-sm"
+                (click)="addXYAxis()" title="Add X-Y Axis">
                 <i class="bi bi-plus-circle"></i> Add X-Y Axis
               </button>
             </div>
@@ -426,10 +456,10 @@
 <ng-container *ngIf="showPreview">
   <!-- <app-custom-table [data]="previewData">
   </app-custom-table> -->
- 
-<app-common-table [tabledata]="previewData"></app-common-table>
 
- 
+  <app-common-table [tabledata]="previewData"></app-common-table>
+
+
 </ng-container>
 
 

@@ -229,12 +229,35 @@ app.post('/api/metadata/report/preview', async (req, res, next) => {
     xyaxis = [],
     filters = [],
     sortby = [],
-    groupby = []
+    groupby = [],
+    fieldType,
   } = req.body;
 
   console.log(req.body);
 
   try {
+
+
+
+    if (fieldType && fieldType.toLowerCase() === 'summary') {
+      if (selectedcolumns.length === 0) {
+      return next({
+          status: 400,
+          message: `Select Column to view in reprot`,
+          error: 'Column validation failed.'
+        });
+      }
+    }
+    else if(fieldType.toLowerCase() === 'count'){
+      if (xyaxis.length === 0) {
+      return next({
+          status: 400,
+          message: `Select X-Y Axis Configuration to View`,
+          error: 'Column validation failed.'
+        });
+      }
+    }
+
     // 1. Validate table list
     const tableResult = await pool.query(`
       SELECT table_name
@@ -407,6 +430,7 @@ app.post('/api/metadata/report/preview', async (req, res, next) => {
  
      const config = {
        tables: tableandview,
+       fieldType,
        selection: selectedcolumns,
        filters: filters.map(f => ({
          field: f.field,
@@ -440,19 +464,19 @@ app.post('/api/metadata/report/preview', async (req, res, next) => {
 
     // 8. Prepare chartData (grouped by x-axis field)
     let chartData;
-    const xAxisField = config.xyaxis[0]?.x.field;
-    if (xAxisField) {
-      const groupedData = {};
-      for (const row of data) {
-        const key = row[xAxisField];
-        groupedData[key] = (groupedData[key] || 0) + 1;
-      }
+    // const xAxisField = config.xyaxis[0]?.x.field;
+    // if (xAxisField) {
+    //   const groupedData = {};
+    //   for (const row of data) {
+    //     const key = row[xAxisField];
+    //     groupedData[key] = (groupedData[key] || 0) + 1;
+    //   }
 
-      chartData = Object.entries(groupedData).map(([key, count]) => ({
-        x: key,
-        y: count
-      }));
-    }
+    //   chartData = Object.entries(groupedData).map(([key, count]) => ({
+    //     x: key,
+    //     y: count
+    //   }));
+    // }
 
     res.json({ message: 'Validation passed', data, chartData });
 
@@ -574,47 +598,15 @@ const Executionfunction = async (config) => {
     }
 
 
-    if(selection == "*"){
-       return next({
-        status: 400,
-        message: `Invalid column selection`,
-        error: 'Invalid column selection.'
-      });
-    }
+    // if(selection == "*" && fieldType.toLowerCase() === 'summary'){
+    //    return next({
+    //     status: 400,
+    //     message: `Invalid column selection`,
+    //     error: 'Invalid column selection.'
+    //   });
+    // }
 
-
-     // --- Handle XY Axis Configuration ---
-    const xySelections = [];
-    const xyGroupBy = [];
-
-    config.xyaxis.forEach(axis => {
-      const { x, y } = axis;
-
-      // X-Axis Transformation
-      let xAxisField = `${x.field}`;
-      let xAxisTransformation = x.transformation || 'raw';
-      
-      if (xAxisTransformation === 'monthwise') {
-        xAxisField = `DATE_TRUNC('month', ${x.field})`;
-      } else if (xAxisTransformation === 'yearwise') {
-        xAxisField = `DATE_TRUNC('year', ${x.field})`;
-      } else if (xAxisTransformation === 'weekwise') {
-        xAxisField = `DATE_TRUNC('week', ${x.field})`;
-      } else if (xAxisTransformation === 'daywise') {
-        xAxisField = `DATE_TRUNC('day', ${x.field})`;
-      }
-
-      xySelections.push(`${xAxisField} AS "X - ${x.field}"`);
-      xyGroupBy.push(xAxisField);
-
-      // Y-Axis Aggregation
-      const yAxisField = `${y.field}`;
-      const yAxisAggregation = y.aggregation || 'sum';
-      xySelections.push(`${yAxisAggregation}(${yAxisField}) AS "Y - ${y.field}"`);
-    });
-
-
-    // --- WHERE clause ---
+   
     const params = [];
     let paramIndex = 1;
     let whereClause = '';
@@ -646,6 +638,108 @@ const Executionfunction = async (config) => {
       const sortFields = config.sortBy.map(s => `${s.column} ${s.order}`);
       orderByClause = ` ORDER BY ${sortFields.join(', ')}`;
     }
+
+
+     // --- Handle XY Axis Configuration ---
+    // const xySelections = [];
+    // const xyGroupBy = [];
+
+    // config.xyaxis.forEach(axis => {
+    //   const { x, y } = axis;
+
+    //   // X-Axis Transformation
+    //   let xAxisField = `${x.field}`;
+    //   let xAxisTransformation = x.transformation || 'raw';
+      
+    //   if (xAxisTransformation === 'monthwise') {
+    //     xAxisField = `DATE_TRUNC('month', ${x.field})`;
+    //   } else if (xAxisTransformation === 'yearwise') {
+    //     xAxisField = `DATE_TRUNC('year', ${x.field})`;
+    //   } else if (xAxisTransformation === 'weekwise') {
+    //     xAxisField = `DATE_TRUNC('week', ${x.field})`;
+    //   } else if (xAxisTransformation === 'daywise') {
+    //     xAxisField = `DATE_TRUNC('day', ${x.field})`;
+    //   }
+
+    //   xySelections.push(`${xAxisField} AS "X - ${x.field}"`);
+    //   xyGroupBy.push(xAxisField);
+
+    //   // Y-Axis Aggregation
+    //   const yAxisField = `${y.field}`;
+    //   const yAxisAggregation = y.aggregation || 'sum';
+    //   xySelections.push(`${yAxisAggregation}(${yAxisField}) AS "Y - ${y.field}"`);
+    // });
+
+
+    // --- WHERE clause ---
+
+  
+    if (config.fieldType.toLowerCase() === 'count' && config.xyaxis?.length > 0) {
+
+      console.log('count Query')
+      const xyaxis = config.xyaxis[0]; // Assuming only one xyaxis object is passed for simplicity
+
+      const xAxisField = xyaxis.x.field;
+      const yAxisField = xyaxis.y.field;
+      const xAxisDirection = xyaxis.x.order;
+      const yAxisDirection = xyaxis.y.order;
+      const xAxisTransformation = xyaxis.x.transformation;
+      const yAxisAggregation = xyaxis.y.aggregation;
+
+          // Handle xAxis transformations (daywise, monthwise, yearwise)
+          let xAxisGroupBy = '';
+          if (xAxisTransformation === 'daywise') {
+            xAxisGroupBy = `DATE_TRUNC('day', ${xAxisField})`;
+          } else if (xAxisTransformation === 'monthwise') {
+            xAxisGroupBy = `TO_CHAR(${xAxisField}, 'YYYY-MM')`; // Format as YYYY-MM
+          } else if (xAxisTransformation === 'yearwise') {
+            xAxisGroupBy = `TO_CHAR(${xAxisField}, 'YYYY')`; // Format as YYYY
+          } else {
+            xAxisGroupBy = `${xAxisField}`; // Default to no transformation
+          }
+
+          // Handle yAxis aggregation
+          let aggregation = '';
+          if (yAxisAggregation === 'count') {
+            aggregation = `COUNT(${yAxisField})`;
+          } else if (yAxisAggregation === 'sum') {
+            aggregation = `SUM(${yAxisField})`;
+          } else if (yAxisAggregation === 'average') {
+            aggregation = `AVG(${yAxisField})`;
+          } else if (yAxisAggregation === 'max') {
+            aggregation = `MAX(${yAxisField})`;
+          } else if (yAxisAggregation === 'min') {
+            aggregation = `MIN(${yAxisField})`;
+          }
+
+          // Build the SELECT statement with aggregation
+          const selectFields = `
+            ${xAxisGroupBy} AS "xAxis",
+            ${aggregation} AS "yAxis"
+          `;
+
+          // Construct the final SQL query with group by and order by
+          const groupedSQL = `
+            SELECT ${selectFields}
+            ${fromClause}
+            ${whereClause}
+            GROUP BY ${xAxisGroupBy}
+            ${orderByClause}
+            `;
+            //FROM ${config.tableandview.join(', ')}
+            //ORDER BY ${xAxisGroupBy} ${xAxisDirection}, "yAxis" ${yAxisDirection}
+
+          console.log("Executing XY Axis SQL:", groupedSQL);
+
+          // Execute the query
+          const result = await pool.query(groupedSQL);
+
+          console.log(result.rows);
+        return { count: true,group :false, groupBy:null, raw :false ,data: result.rows  };
+         // return { count: true,groupBy:false, raw :false ,data: result.rows  };
+          //return { data: result.rows };
+      }
+
 
 
     if (config.groupBy?.length > 0) {
@@ -689,8 +783,8 @@ const Executionfunction = async (config) => {
       //console.log(`banti ${selectionFields}`)
       console.log("Executing GROUPED SQL:", groupedSQL, 'with params:', params);
       const result = await pool.query(groupedSQL, params);
-
-      return { groupBy: groupByRaw1, data: result.rows };
+      return { count: false,group :true, groupBy:groupByRaw1, raw :false ,data: result.rows  };
+      //return { groupBy: groupByRaw1, data: result.rows };
     }
 
 
@@ -700,8 +794,9 @@ const Executionfunction = async (config) => {
 
     console.log("Executing SQL:", sql);
     const result = await pool.query(sql, params);
-
-    return result.rows;
+    return { count: false,group :false, groupBy:[], raw :true ,data: result.rows  };
+    //return { count: false, groupBy:false, raw :true ,data: result.rows  };
+    //return result.rows;
 
   } catch (err) {
     throw {

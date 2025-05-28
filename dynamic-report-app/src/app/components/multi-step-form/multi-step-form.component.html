@@ -1,0 +1,448 @@
+<form [formGroup]="reportForm" (ngSubmit)="saveConfiguration()" class="multi-step-form">
+    <!-- Progress Header -->
+    <div class="progress-header">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="step-indicator">
+                        <div class="step-item" [class.active]="step === 1" [class.completed]="step > 1">
+                            <div class="step-number">
+                                <i *ngIf="step > 1" class="bi bi-check"></i>
+                                <span *ngIf="step <= 1">1</span>
+                            </div>
+                            <div class="step-title">Report Type</div>
+                        </div>
+                        <div class="step-item" [class.active]="step === 2" [class.completed]="step > 2">
+                            <div class="step-number">
+                                <i *ngIf="step > 2" class="bi bi-check"></i>
+                                <span *ngIf="step <= 2">2</span>
+                            </div>
+                            <div class="step-title">Data Source</div>
+                        </div>
+                        <div class="step-item" [class.active]="step === 3" [class.completed]="step > 3">
+                            <div class="step-number">
+                                <i *ngIf="step > 3" class="bi bi-check"></i>
+                                <span *ngIf="step <= 3">3</span>
+                            </div>
+                            <div class="step-title">Filters</div>
+                        </div>
+                        <div class="step-item" [class.active]="step === 4" [class.completed]="step > 4">
+                            <div class="step-number">
+                                <i *ngIf="step > 4" class="bi bi-check"></i>
+                                <span *ngIf="step <= 4">4</span>
+                            </div>
+                            <div class="step-title">Group & Sort</div>
+                        </div>
+                        <div class="step-item" [class.active]="step === 5">
+                            <div class="step-number">5</div>
+                            <div class="step-title">Preview</div>
+                        </div>
+                    </div>
+                    <div class="progress mt-3">
+                        <div class="progress-bar" [style.width.%]="(step / 5) * 100"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Content -->
+    <div class="form-body">
+
+
+        <!-- Step 1: Select Report Type -->
+        <div *ngIf="step === 1" class="step-section">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="section-header">
+                            <h3><i class="bi bi-clipboard-data me-3"></i>Select Report Type</h3>
+                            <p class="lead">Choose the type of report you want to generate</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row justify-content-center">
+                    <div class="col-12 col-md-8 col-lg-6">
+                        <div class="report-type-selection">
+                            <div class="row g-3">
+                                <div class="col-12 col-sm-6">
+                                    <label class="report-option"
+                                        [class.selected]="reportForm.get('reportType')?.value === 'summary'">
+                                        <input type="radio" formControlName="reportType" value="summary"
+                                            (change)="onReportTypeChange('summary')" class="d-none">
+                                        <div class="option-content">
+                                            <div class="option-icon">
+                                                <i class="bi bi-table text-info"></i>
+                                            </div>
+                                            <h5>Summary Report</h5>
+                                            <p>Generate detailed summary with grouping and aggregation</p>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <label class="report-option"
+                                        [class.selected]="reportForm.get('reportType')?.value === 'count'">
+                                        <input type="radio" formControlName="reportType" value="count"
+                                            (change)="onReportTypeChange('count')" class="d-none">
+                                        <div class="option-content">
+                                            <div class="option-icon">
+                                                <i class="bi bi-bar-chart text-success"></i>
+                                            </div>
+                                            <h5>Count Report</h5>
+                                            <p>Generate count-based charts and visualizations</p>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- Step 2: Data Source -->
+        <div *ngIf="step === 2" class="step-section">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="section-header">
+                            <h3><i class="bi bi-database me-3"></i>Configure Data Source</h3>
+                            <p class="lead">Select your data source and configure the fields</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary Report Data Source -->
+                <div  class="row">
+                    <div class="col-12">
+                        <div class="form-section">
+                            <div class="section-title">
+                                <i class="bi bi-table text-success me-2"></i>
+                                <h5>Data Source Configuration</h5>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label fw-semibold">Select Table/View</label>
+                                    <ng-select [items]="tablesAndViews" bindLabel="label" bindValue="name"
+                                        (change)="onTableSelect($event)" formControlName="tableandview"
+                                        placeholder="Select Table" class="custom-select">
+                                    </ng-select>
+                                </div>
+                                <div class="col-12 col-md-6" *ngIf="reportForm.get('reportType')?.value === 'summary'">
+                                    <label class="form-label fw-semibold">Select Columns</label>
+                                    <ng-select [items]="availableFields" bindLabel="label" bindValue="column_name"
+                                        [multiple]="true" formControlName="selectedcolumns" placeholder="Select columns"
+                                        class="custom-select">
+                                    </ng-select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Count Report X-Y Axis Configuration -->
+                <div *ngIf="reportForm.get('reportType')?.value === 'count'" class="row">
+                    <div class="col-12">
+                        <div class="form-section">
+                            <div class="section-title">
+                                <i class="bi bi-bar-chart-line text-warning me-2"></i>
+                                <h5>X-Y Axis Configuration</h5>
+                            </div>
+
+                            <div formArrayName="xyaxis">
+                                <div *ngFor="let axis of xyaxis.controls; let i = index" [formGroupName]="i"
+                                    class="axis-row">
+                                    <div class="row g-3 align-items-end">
+                                        <div class="col-12 col-sm-6 col-lg-3">
+                                            <label class="form-label fw-semibold">X-Axis Field</label>
+                                            <select class="form-select" formControlName="xAxisField">
+                                                <option value="">Select X-Axis Field</option>
+                                                <option *ngFor="let field of availableFields"
+                                                    [value]="field.column_name">
+                                                    {{ field.label }}
+                                                </option>
+                                            </select>
+                                        </div>
+                                        <div class="col-12 col-sm-6 col-lg-2">
+                                            <label class="form-label fw-semibold">Direction</label>
+                                            <select class="form-select" formControlName="xAxisDirection">
+                                                <option value="asc">Ascending</option>
+                                                <option value="desc">Descending</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-12 col-sm-6 col-lg-3">
+                                            <label class="form-label fw-semibold">Y-Axis Field</label>
+                                            <select class="form-select" formControlName="yAxisField">
+                                                <option value="">Select Y-Axis Field</option>
+                                                <option *ngFor="let field of availableFields"
+                                                    [value]="field.column_name">
+                                                    {{ field.label }}
+                                                </option>
+                                            </select>
+                                        </div>
+                                        <div class="col-12 col-sm-6 col-lg-2">
+                                            <label class="form-label fw-semibold">Aggregation</label>
+                                            <select class="form-select" formControlName="yAxisAggregation">
+                                                <option value="sum">Sum</option>
+                                                <option value="count">Count</option>
+                                                <option value="average">Average</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-12 col-lg-2">
+                                            <button type="button" class="btn btn-outline-danger w-100"
+                                                (click)="removeXYAxis(i)">
+                                                <i class="bi bi-trash me-1"></i>Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-3">
+                                <button type="button" class="btn btn-success" (click)="addXYAxis()">
+                                    <i class="bi bi-plus-circle me-2"></i>Add X-Y Axis
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Step 3: Filters Section -->
+        <div *ngIf="step === 3" class="step-section">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="section-header">
+                            <h3><i class="bi bi-funnel me-3"></i>Configure Filters</h3>
+                            <p class="lead">Add filters to refine your data selection</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12">
+                        <div class="form-section">
+                            <div class="section-title">
+                                <i class="bi bi-funnel text-danger me-2"></i>
+                                <h5>Data Filters</h5>
+                            </div>
+
+                            <div formArrayName="filters">
+                                <div *ngFor="let filter of filters.controls; let i = index" [formGroupName]="i"
+                                    class="filter-row">
+                                    <div class="row g-3 align-items-end">
+                                        <div class="col-12 col-sm-6 col-lg-3">
+                                            <label class="form-label fw-semibold">Field</label>
+                                            <ng-select [items]="availableFields" bindLabel="label"
+                                                bindValue="column_name" formControlName="field"
+                                                placeholder="Select filter" [closeOnSelect]="true"
+                                                class="custom-select">
+                                            </ng-select>
+                                        </div>
+                                        <div class="col-12 col-sm-6 col-lg-3">
+                                            <label class="form-label fw-semibold">Operator</label>
+                                            <select class="form-select" formControlName="operator">
+                                                <option value="">Select Operator</option>
+                                                <option *ngFor="let op of operators" [value]="op">{{ op }}</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-12 col-sm-6 col-lg-4">
+                                            <label class="form-label fw-semibold">Value</label>
+                                            <input class="form-control" formControlName="value"
+                                                placeholder="Enter filter value" />
+                                        </div>
+                                        <div class="col-12 col-sm-6 col-lg-2">
+                                            <button type="button" class="btn btn-outline-danger w-100"
+                                                (click)="removeFilter(i)">
+                                                <i class="bi bi-trash me-1"></i>Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-3">
+                                <button type="button" class="btn btn-success" (click)="addFilter()">
+                                    <i class="bi bi-plus-circle me-2"></i>Add Filter
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- Step 4: Grouping and Sorting -->
+        <div *ngIf="step === 4" class="step-section">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="section-header">
+                            <h3><i class="bi bi-collection me-3"></i>Group & Sort Configuration</h3>
+                            <p class="lead">Configure grouping and sorting for your report</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div *ngIf="reportForm.get('reportType')?.value === 'summary'">
+                    <!-- Grouping Section -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="form-section">
+                                <div class="section-title">
+                                    <i class="bi bi-collection text-info me-2"></i>
+                                    <h5>Grouping Configuration</h5>
+                                </div>
+
+                                <div formArrayName="groupby">
+                                    <div *ngFor="let group of groupBy.controls; let i = index" [formGroupName]="i"
+                                        class="group-row">
+                                        <div class="row g-3 align-items-end">
+                                            <div class="col-12 col-sm-8 col-lg-10">
+                                                <label class="form-label fw-semibold">Group By Field</label>
+                                                <select class="form-select" formControlName="field">
+                                                    <option value="">Select Field</option>
+                                                    <option *ngFor="let field of availableFields"
+                                                        [value]="field.column_name">
+                                                        {{ field.label }}
+                                                    </option>
+                                                </select>
+                                            </div>
+                                            <div class="col-12 col-sm-4 col-lg-2">
+                                                <button type="button" class="btn btn-outline-danger w-100"
+                                                    (click)="removeGrouping(i)">
+                                                    <i class="bi bi-trash me-1"></i>Remove
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3">
+                                    <button type="button" class="btn btn-success" (click)="addGrouping()">
+                                        <i class="bi bi-plus-circle me-2"></i>Add Grouping
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sorting Section -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="form-section">
+                                <div class="section-title">
+                                    <i class="bi bi-sort-alpha-down text-secondary me-2"></i>
+                                    <h5>Sorting Configuration</h5>
+                                </div>
+
+                                <div formArrayName="sortby">
+                                    <div *ngFor="let sort of sortBy.controls; let i = index" [formGroupName]="i"
+                                        class="sort-row">
+                                        <div class="row g-3 align-items-end">
+                                            <div class="col-12 col-sm-6 col-lg-5">
+                                                <label class="form-label fw-semibold">Sort Field</label>
+                                                <select class="form-select" formControlName="field">
+                                                    <option value="">Select Field</option>
+                                                    <option *ngFor="let field of availableFields"
+                                                        [value]="field.column_name">
+                                                        {{ field.label }}
+                                                    </option>
+                                                </select>
+                                            </div>
+                                            <div class="col-12 col-sm-6 col-lg-5">
+                                                <label class="form-label fw-semibold">Direction</label>
+                                                <select class="form-select" formControlName="direction">
+                                                    <option value="asc">Ascending</option>
+                                                    <option value="desc">Descending</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-12 col-lg-2">
+                                                <button type="button" class="btn btn-outline-danger w-100"
+                                                    (click)="removeSorting(i)">
+                                                    <i class="bi bi-trash me-1"></i>Remove
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3">
+                                    <button type="button" class="btn btn-success" (click)="addSorting()">
+                                        <i class="bi bi-plus-circle me-2"></i>Add Sorting
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Step 5: Preview and Save -->
+        <div *ngIf="step === 5" class="step-section">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="section-header">
+                            <h3><i class="bi bi-eye me-3"></i>Preview & Save</h3>
+                            <p class="lead">Review your configuration and save the report</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row justify-content-center">
+                    <div class="col-12 col-lg-8">
+                        <div class="preview-section">
+                            <div class="alert alert-success d-flex align-items-center">
+                                <i class="bi bi-check-circle-fill me-3 fs-4"></i>
+                                <div>
+                                    <h5 class="mb-1">Configuration Complete!</h5>
+                                    <p class="mb-0">Your report configuration is ready to be saved. Click the save
+                                        button below to create your report.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div> <!-- End form-body -->
+
+    <!-- Navigation Footer -->
+    <div class="form-footer">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <button *ngIf="step > 1" type="button" class="btn btn-outline-secondary btn-lg"
+                            (click)="prevStep()">
+                            <i class="bi bi-arrow-left me-2"></i>Back
+                        </button>
+                        <div *ngIf="step === 1"></div>
+
+                        <div class="d-flex gap-3">
+                            <button *ngIf="step < 5" type="button" class="btn btn-primary btn-lg" (click)="nextStep()">
+                                Next<i class="bi bi-arrow-right ms-2"></i>
+                            </button>
+                            <button *ngIf="step === 5" type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-save me-2"></i>Save Configuration
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>

@@ -3,6 +3,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { ReportConfigComponent } from './components/report-config/report-config.component';
 import { ListReportComponent } from './components/list-report/list-report.component';
 import { CustomTableComponent } from './components/custom-table/custom-table.component';
+import { MultiStepFormComponent } from './components/multi-step-form/multi-step-form.component';
 
 const routes: Routes = [
   { path: '', redirectTo: 'List-Report', pathMatch: 'full' },

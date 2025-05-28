@@ -21,6 +21,7 @@ import { GoogleChartsModule, ChartType } from 'angular-google-charts';
 import { ChartComponentComponent } from './components/chart-component/chart-component.component';
 import { CommonFiltersComponent } from './components/common-filters/common-filters.component';
 import { CommonTableComponent } from './components/common-table/common-table.component';
+import { MultiStepFormComponent } from './components/multi-step-form/multi-step-form.component';
  
 
 
@@ -35,7 +36,8 @@ import { CommonTableComponent } from './components/common-table/common-table.com
     ListReportComponent,
     ChartComponentComponent ,
     CommonFiltersComponent,
-    CommonTableComponent
+    CommonTableComponent,
+    MultiStepFormComponent
   ],
   imports: [
     BrowserModule,

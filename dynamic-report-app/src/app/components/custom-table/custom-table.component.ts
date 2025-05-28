@@ -36,12 +36,20 @@ export class CustomTableComponent implements OnChanges {
   }
 
   initTable() {
-    this.isGrouped = Array.isArray(this.data?.groupBy) && this.data.groupBy.length > 0;
+    // this.isGrouped = Array.isArray(this.data?.groupBy) && this.data.groupBy.length > 0;
+
+    // if (this.isGrouped) {
+    //   this.setupGrouped();
+    // } else {
+    //   this.setupFlat();
+    // }
+
+    this.isGrouped = this.data?.groupBy === true; // groupBy is explicitly true
 
     if (this.isGrouped) {
-      this.setupGrouped();
+      this.setupGrouped();  // Proceed with grouped data handling
     } else {
-      this.setupFlat();
+      this.setupFlat();     // Proceed with flat data handling
     }
   }
 
@@ -85,30 +93,60 @@ export class CustomTableComponent implements OnChanges {
   //   });
   // }
 
-  setupGrouped() {
-  const groups = this.data.data || [];
-  const groupByKeys = this.data.groupBy || []; // ['orders - status']
-  this.groupByFields = groupByKeys;
-  this.groupedPages = {};
+//   setupGrouped() {
+//   const groups = this.data.data || [];
+//   const groupByKeys = this.data.groupBy || []; // ['orders - status']
+//   this.groupByFields = groupByKeys;
+//   this.groupedPages = {};
 
+//   groups.forEach((group: any) => {
+//     // Dynamically get the value of the group key (e.g., 'shipped')
+//     const groupKey = groupByKeys.map((key: string | number) => group[key]).join(' | '); // useful if multiple groupBy fields
+
+//     const records = group.records || [];
+
+//     // Set the column headers from the first record (if available)
+//     if (records.length > 0 && (!this.groupColumns || this.groupColumns.length === 0)) {
+//       this.groupColumns = Object.keys(records[0]);
+//     }
+
+//     // Store paginated group records
+//     this.groupedPages[groupKey] = {
+//       currentPage: 1,
+//       pagedRecords: records.slice(0, this.itemsPerPage),
+//     };
+//   });
+// }
+
+setupGrouped() {
+  const groups = this.data?.data || []; // Safely access 'data' if it exists
+  const groupByKeys = this.data?.groupBy || []; // If groupBy is not set, default to empty array
+  this.groupByFields = groupByKeys; // Save the groupBy keys (fields to group by)
+  this.groupedPages = {}; // Initialize the grouped pages
+
+  // Loop through the groups to process each one
   groups.forEach((group: any) => {
-    // Dynamically get the value of the group key (e.g., 'shipped')
-    const groupKey = groupByKeys.map((key: string | number) => group[key]).join(' | '); // useful if multiple groupBy fields
+    // Dynamically get the value of the group key (handles multiple groupBy fields)
+    const groupKey = groupByKeys.map((key: string | number) => {
+      return group[key] !== undefined ? group[key] : ''; // If key is undefined, return empty string
+    }).join(' | '); // Concatenate multiple keys if there are multiple fields in groupBy
 
-    const records = group.records || [];
+    const records = group?.records || []; // Safely get records, default to an empty array if not available
 
     // Set the column headers from the first record (if available)
     if (records.length > 0 && (!this.groupColumns || this.groupColumns.length === 0)) {
-      this.groupColumns = Object.keys(records[0]);
+      this.groupColumns = Object.keys(records[0]); // Use the first record to determine column names
     }
 
     // Store paginated group records
+    // For pagination, we slice based on current page (start from page 1)
     this.groupedPages[groupKey] = {
       currentPage: 1,
-      pagedRecords: records.slice(0, this.itemsPerPage),
+      pagedRecords: records.slice(0, this.itemsPerPage), // Adjust slicing for pagination
     };
   });
 }
+
 
 
   changeGroupPage(groupKey: string, direction: 'prev' | 'next') {

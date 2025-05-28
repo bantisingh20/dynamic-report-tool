@@ -1,20 +1,24 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormArray, Validators, FormControl, AbstractControl, ValidationErrors } from '@angular/forms';
-import { ReportConfigService } from '../../service/report-config.service';
-import { MetadataService } from '../../service/metadata.service';
-import { NotificationService } from '../../service/NotificationService.service';
-import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { Component, OnInit } from '@angular/core';
+import { AbstractControl, FormArray, FormBuilder, FormControl, FormGroup, ValidationErrors, Validators } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { NotificationService } from '../../service/NotificationService.service';
+import { MetadataService } from '../../service/metadata.service';
+import { ReportConfigService } from '../../service/report-config.service';
 
 declare var bootstrap: any;
+
 @Component({
-  selector: 'app-report-config',
+  selector: 'app-multi-step-form',
   standalone: false,
-  templateUrl: './report-config.component.html',
-  styleUrl: './report-config.component.css'
+  templateUrl: './multi-step-form.component.html',
+  styleUrl: './multi-step-form.component.css'
 })
-export class ReportConfigComponent implements OnInit {
-  originalTablesAndViews: any[] = [];
+
+export class MultiStepFormComponent implements OnInit {
+   step = 1;
+
+ originalTablesAndViews: any[] = [];
   previewMode: 'report' | 'chart' | null = null;
   showPreviewButtons: boolean = false;
   previewData: any;
@@ -22,23 +26,20 @@ export class ReportConfigComponent implements OnInit {
   displayedColumns: string[] = [];
   showPreview = false;
   operators: string[] = ['between', 'equals', 'not equals', 'greater than', 'less than', 'contains'];
-  Countoperators: string[] = ['sum', 'count', 'average', 'max', 'min'];
   numberTypes: string[] = ['integer', 'smallint', 'bigint', 'decimal', 'numeric', 'real', 'double precision', 'serial', 'bigserial'];
   dateTypes: string[] = ['date', 'timestamp', 'timestamp with time zone', 'timestamp without time zone'];
   booleanTypes: string[] = ['boolean'];
   tablesAndViews: any[] = [];
   availableFields: any[] = [];
-  showColumnsAndGroupBy: boolean = true;
-  showXYConfig: boolean = true;
+
   reportId: string | null = null;
   mode: string | null = null;
 
   reportForm = new FormGroup({
-    //  tableandview: new FormControl(),
-    fieldType: new FormControl('summary', Validators.required),
+    reportType: new FormControl('summary'), // Now just a simple string
     tableandview: new FormControl<string[]>([]),
     reportname: new FormControl(),
-    selectedcolumns: new FormControl([]),//.minSelectedCheckboxes(1)
+    selectedcolumns: new FormControl([], minSelectedCheckboxes(1)),
     filters: new FormArray([]),
     groupby: new FormArray([]),
     sortby: new FormArray([]),
@@ -46,7 +47,9 @@ export class ReportConfigComponent implements OnInit {
   });
 
 
-  constructor(private http: HttpClient, private router: Router, private route: ActivatedRoute, private notificationService: NotificationService, private metadataService: MetadataService, private fb: FormBuilder, private reprotconfig: ReportConfigService) { }
+  constructor(private http: HttpClient, private router: Router, private route: ActivatedRoute, 
+    private notificationService: NotificationService, private metadataService: MetadataService, private fb: FormBuilder, 
+    private reprotconfig: ReportConfigService) { }
 
   ngOnInit() {
     this.metadataService.getTablesAndViews().subscribe(data => {
@@ -69,44 +72,8 @@ export class ReportConfigComponent implements OnInit {
       }
     });
 
-    this.onFieldTypeChange();
   }
-
-
-
-  onFieldTypeChange() {
-    const fieldType = this.reportForm.get('fieldType')?.value;
-
-    // Show/Hide sections based on selection
-    if (fieldType === 'count') {
-      this.showColumnsAndGroupBy = false;
-      this.showXYConfig = true;  // Show XY config in case of Count
-    } else if (fieldType === 'summary') {
-      this.showColumnsAndGroupBy = true;
-      this.showXYConfig = false;  // Hide XY config in case of Summary
-    }
-  }
-  // loadReportData(id: string): void {
-  //   this.metadataService.getReportById(id).subscribe((response: any) => {
-  //     const data = response.report;
-  //     console.log(data);
-  //     //this.getColumns(data.table_name);
-
-  //     this.reportForm.patchValue({
-  //       tableandview: data.table_name,
-  //       reportName: data.report_name,
-  //       selectedColumns: data.selected_columns,
-  //     });
-
-  //     this.setFormArray('filters', data.filter_criteria);
-  //     this.setFormArray('groupBy', data.group_by);
-  //     this.setFormArray('sortBy', data.sort_order);
-  //     // this.setFormArray('xyaxis', data.axis_config);
-
-  //     console.log(this.reportForm.value);
-  //   });
-  // }
-
+ 
   loadReportData(id: string): void {
     this.metadataService.getReportById(id).subscribe((response: any) => {
       const data = response.report;
@@ -476,9 +443,9 @@ export class ReportConfigComponent implements OnInit {
 
   addXYAxis() {
     const xyAxisGroup = this.fb.group({
-      xAxisField: [null, Validators.required],
+      xAxisField: ['', Validators.required],
       xAxisDirection: ['asc'],
-      xAxisTransformation: ['daywise'],
+      xAxisTransformation: ['raw'],
       yAxisField: ['', Validators.required],
       yAxisDirection: ['asc'],
       yAxisAggregation: ['sum']
@@ -498,71 +465,31 @@ export class ReportConfigComponent implements OnInit {
     const field = this.availableFields.find(f => f.column_name === xAxisField);
 
     if (this.dateTypes.includes(field?.data_type)) {
-
+       
       this.xyaxis.at(index).get('xAxisTransformation')?.setValidators([Validators.required]);
     } else {
-this.xyaxis.at(index).get('xAxisTransformation')?.setValue(null);  
+    
       this.xyaxis.at(index).get('xAxisTransformation')?.clearValidators();
     }
     this.xyaxis.at(index).get('xAxisTransformation')?.updateValueAndValidity();
   }
 
-
-
- //// Add this method to your component
-  getYaxisAggregationOptions(index: number): string[] {
-    const yAxisField = this.xyaxis.at(index).get('yAxisField')?.value;
-    const field = this.availableFields.find(f => f.column_name === yAxisField);
-
-    // Check if the field is numeric
-    if (field && this.numberTypes.includes(field.data_type)) {
-      return ['sum', 'count', 'average', 'max', 'min']; // Full list for numeric fields
-    } else {
-      return ['count', 'max', 'min']; // Limited list for non-numeric fields
-    }
-  }
-
-// getYaxisAggregationOptions(index: number) {
-//   const yAxisField = this.xyaxis.at(index).get('yAxisField')?.value;
-//   const field = this.availableFields.find(f => f.column_name === yAxisField);
-
-//   if (field && this.numberTypes.includes(field.data_type)) {
-//     // Return an array of objects with value and label for each option
-//     return [
-//       { value: 'sum', label: 'Sum' },
-//       { value: 'count', label: 'Count' },
-//       { value: 'average', label: 'Average' },
-//       { value: 'max', label: 'Maximum' },
-//       { value: 'min', label: 'Minimum' }
-//     ];
-//   } else {
-//     return [
-//       { value: 'count', label: 'Count' },
-       
-//       { value: 'max', label: 'Maximum' },
-//       { value: 'min', label: 'Minimum' }
-//     ];
-//   }
-// }
-
-
-
   // Check if the X-Axis has date field selected to show transformation options
   showXAxisTransformationOptions(index: number): boolean {
     const xAxisField = this.xyaxis.at(index).get('xAxisField')?.value;
     const field = this.availableFields.find(f => f.column_name === xAxisField);
-
-    if (this.dateTypes.includes(field?.data_type)) {
+ 
+    if(this.dateTypes.includes(field?.data_type)){
       return true;
     }
-    else {
+    else{
       return false;
-    }
+    } 
   }
-
+ 
   showYAxisAggregationOptions(index: number): boolean {
     const yAxisField = this.xyaxis.at(index).get('yAxisField')?.value;
-    return yAxisField !== '';
+    return yAxisField !== '';  
   }
 
   saveConfiguration(): void {
@@ -618,11 +545,14 @@ this.xyaxis.at(index).get('xAxisTransformation')?.setValue(null);
   previewChart(): void {
 
   }
-
+ 
   previewReport(): void {
 
     this.showPreview = false;
-  
+
+    // Simulate an async fetch or set new data
+   
+
     console.log(this.reportForm.value);
     if (this.reportForm.invalid) {
       this.reportForm.markAllAsTouched();
@@ -630,22 +560,22 @@ this.xyaxis.at(index).get('xAxisTransformation')?.setValue(null);
       return;
     }
 
-    const config = { ...this.reportForm.value };
-
-
-    console.log(config)
+    const config = { ...this.reportForm.value }; 
+     
+    
+    console.log(config) 
     this.metadataService.getDataforPreview(config).subscribe({
       next: (response: any) => {
         const responseData = response?.data;
-       
-         
+
+        // Process the preview data with the helper method
         const { data, groupBy, chartData, displayedColumns, showPreview } = this.metadataService.processPreviewData(responseData);
 
         this.previewData = { groupBy, data, chartData };
         this.displayedColumns = displayedColumns;
         this.showPreview = showPreview;
 
-        console.log('API Response:', responseData);
+        console.log('API Response:', response);
 
         // Show appropriate data messages
         console.log(this.previewData.data.length);
@@ -658,8 +588,8 @@ this.xyaxis.at(index).get('xAxisTransformation')?.setValue(null);
           this.notificationService.showNotification("No Data Found.", 'warning');
         }
 
-        setTimeout(() => {
-          //  this.previewData = this.getNewPreviewData(); // fetch or generate data here
+         setTimeout(() => {
+        //  this.previewData = this.getNewPreviewData(); // fetch or generate data here
           this.showPreview = true;
         }, 0);
 
@@ -708,10 +638,29 @@ this.xyaxis.at(index).get('xAxisTransformation')?.setValue(null);
 
     this.router.navigate(['/Create-Custom-Report']);
   }
+
+   nextStep() {
+    if (this.step < 5) {
+      this.step++;
+    }
+  }
+
+  prevStep() {
+    if (this.step > 1) {
+      this.step--;
+    }
+  }
+
+  onReportTypeChange(type: string) {
+    if (type === 'summary') {
+      this.step = 2; // Skip directly to the columns setup for Summary
+    } else {
+      this.step = 2; // Continue to XY configuration for Count
+    }
+  }
 }
 
-
-
+ 
 function minSelectedCheckboxes(min: number = 1) {
   return function (control: AbstractControl): ValidationErrors | null {
     const value = control.value;

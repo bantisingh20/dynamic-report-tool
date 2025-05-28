@@ -1,5 +1,92 @@
 
-<ng-container *ngIf="hasData(); else noDataTemplate">
+
+ <div style="padding-left: 16px; padding-right: 16px;">
+ 
+
+  <ng-container *ngIf="hasData(); else noDataTemplate">
+ 
+  <ng-container *ngIf="isGrouped">
+    <mat-accordion>
+      <mat-expansion-panel *ngFor="let group of tabledata.data; let i = index">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            {{ group[groupByKey] || 'Group ' + (i + 1) }} ({{ group.records?.length || 0 }} items)
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <div style="padding-left: 16px; padding-right: 16px;">
+          <table mat-table [dataSource]="group.dataSource" matSort class="">
+
+            <!-- Serial Number Column -->
+            <!-- <ng-container matColumnDef="srno">
+              <th mat-header-cell *matHeaderCellDef> SR No </th>
+              <td mat-cell *matCellDef="let element; let i = index"> 
+                {{ (currentPageIndex * currentPageSize) + (i + 1) }}
+              </td>
+            </ng-container> -->
+
+            <!-- Other columns -->
+            <ng-container *ngFor="let column of displayedColumns" [matColumnDef]="column">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header> {{ column }} </th>
+              <td mat-cell *matCellDef="let element"> {{ element[column] }} </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumnsWithSrno" class="custom-header"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumnsWithSrno;"></tr>
+          </table>
+
+          <mat-paginator
+            [pageSizeOptions]="[5, 10, 20]"
+            showFirstLastButtons
+            [pageSize]="5"
+            (page)="onPageChange($event)">
+          </mat-paginator>
+        </div>
+      </mat-expansion-panel>
+    </mat-accordion>
+  </ng-container>
+
+  <ng-container *ngIf="!isGrouped">
+    <div style="padding-left: 16px; padding-right: 16px;">
+      <table mat-table [dataSource]="flatDataSource" matSort class="mat-elevation-z8">
+
+        <!-- Serial Number Column -->
+        <!-- <ng-container matColumnDef="srno">
+          <th mat-header-cell *matHeaderCellDef> SR No </th>
+          <td mat-cell *matCellDef="let element; let i = index">
+            {{ (currentPageIndex * currentPageSize) + (i + 1) }}
+          </td>
+        </ng-container> -->
+
+        <!-- Other columns -->
+        <ng-container *ngFor="let column of displayedColumns" [matColumnDef]="column">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header> {{ column }} </th>
+          <td mat-cell *matCellDef="let element"> {{ element[column] }} </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumnsWithSrno" class="custom-header"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumnsWithSrno;"></tr>
+      </table>
+
+      <mat-paginator
+        #flatPaginator
+        [pageSizeOptions]="[5, 10, 20]"
+        showFirstLastButtons
+        [pageSize]="5"
+        (page)="onPageChange($event)">
+      </mat-paginator>
+    </div>
+  </ng-container>
+
+</ng-container>
+
+<ng-template #noDataTemplate>
+  <div class="no-data-message" style="text-align:center; padding:2rem; color:gray; font-style: italic;">
+    No data available to display.
+  </div>
+</ng-template>
+
+<!-- <ng-container *ngIf="hasData(); else noDataTemplate">
  
   <ng-container *ngIf="isGrouped">
     <mat-accordion>
@@ -56,4 +143,6 @@
   <div class="no-data-message" style="text-align:center; padding:2rem; color:gray; font-style: italic;">
     No data available to display.
   </div>
-</ng-template>
+</ng-template> -->
+
+ </div>
