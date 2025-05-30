@@ -40,7 +40,7 @@ async function getData(tableName, selectedColumns) {
 }
 
 
-async function SaveUpdate(reportId,table, reportName, columns, userId, filterCriteria, groupBy, sortOrder, axisConfig) {
+async function SaveUpdate(fieldType,reportId,table, reportName, columns, userId, filterCriteria, groupBy, sortOrder, axisConfig) {
 
   console.log(reportId);
   let result;
@@ -55,6 +55,7 @@ async function SaveUpdate(reportId,table, reportName, columns, userId, filterCri
           group_by = $6,
           sort_order = $7,
           axis_config = $8
+          fieldType = $10
       WHERE report_id = $9
        
       RETURNING report_id;
@@ -63,11 +64,12 @@ async function SaveUpdate(reportId,table, reportName, columns, userId, filterCri
       reportName,
       table,
       columns,        
-      JSON.stringify(filterCriteria),  
+      filterCriteria,  
       groupBy,            
       sortOrder,          
-      JSON.stringify(axisConfig),
-      reportId   
+      axisConfig,
+      reportId  ,
+      fieldType 
     ]);
   }
   else{
@@ -80,19 +82,21 @@ async function SaveUpdate(reportId,table, reportName, columns, userId, filterCri
         filter_criteria,
         group_by,
         sort_order,
-        axis_config
+        axis_config,
+                  fieldType  
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8,$9)
       RETURNING report_id;
     `, [
       0,
       reportName,
-      table,
-      columns,        
-      JSON.stringify(filterCriteria),  
-      groupBy,            
-      sortOrder,          
-      JSON.stringify(axisConfig),   
+       table,              // table_name expects Text[]
+  columns,            // selected_columns expects Text[]
+  filterCriteria,     // JSONB[]
+  groupBy,            // JSONB[]
+  sortOrder,          // JSONB[]
+  axisConfig          // JSONB[]
+  ,fieldType
     ]);
   }
   
