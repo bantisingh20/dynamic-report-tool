@@ -39,14 +39,14 @@
             <div class="mb-3">
               <label class="form-label">Report Type</label>
               <div class="form-check">
-                <input class="form-check-input" type="radio" id="countField" formControlName="fieldType" value="count"
+                <input class="form-check-input" type="radio" id="countField" formControlName="fieldtype" value="count"
                   (change)="onFieldTypeChange()" />
                 <label class="form-check-label" for="countField">
                   Count
                 </label>
               </div>
               <div class="form-check">
-                <input class="form-check-input" type="radio" id="summaryField" formControlName="fieldType"
+                <input class="form-check-input" type="radio" id="summaryField" formControlName="fieldtype"
                   value="summary" (change)="onFieldTypeChange()" />
                 <label class="form-check-label" for="summaryField">
                   Summary
@@ -75,10 +75,24 @@
             </div>
             <div class="mb-3" *ngIf="showColumnsAndGroupBy">
               <label class="form-label">Columns</label>
-              <ng-select [items]="availableFields" bindLabel="label" bindValue="column_name" [multiple]="true"
+              <!-- <ng-select [items]="availableFields" bindLabel="label" bindValue="column_name" [multiple]="true"
                 formControlName="selectedcolumns" placeholder="Select columns" [closeOnSelect]="false"
-                class="w-100 multiple-fixed">
-              </ng-select>
+                class="w-100 multiple-fixed">  
+
+              </ng-select> -->
+
+              <ng-select 
+  [items]="availableFields"
+  bindLabel="label"
+  bindValue="column_name"
+  [multiple]="true"
+  formControlName="selectedcolumns"
+  placeholder="Select columns"
+  [closeOnSelect]="false"
+  class="w-100 multiple-fixed">
+
+  
+</ng-select>
 
               <!-- <div
                 *ngIf="reportForm.get('selectedcolumns')?.errors?.['minSelected'] && reportForm.get('selectedcolumns')?.touched"

@@ -70,17 +70,19 @@ export class ListReportComponent implements OnInit, AfterViewInit {
     const item = this.listData.find(obj => obj.report_id === id);
 
     const config = { ...item };
- 
-    config.filters = config.filters.map((str: any) => { return typeof str === 'string' ? JSON.parse(str) : str; });
-    config.groupby = config.groupby.map((str: any) => JSON.parse(str));
-    config.sortby = config.sortby.map((str: any) => JSON.parse(str));
-    // ✅ Parse tableandview string into array
-    if (typeof config.tableandview === 'string') {
-      config.tableandview = config.tableandview
-        .replace(/[{}"]/g, '')     // Remove curly braces and quotes
-        .split(',')                // Split by comma
-        .map((s: string) => s.trim());       // Trim whitespace
-    }
+    // console.log(config);
+    // config.filters = config.filters.map((str: any) => { return typeof str === 'string' ? JSON.parse(str) : str; });
+    // config.groupby = config.groupby.map((str: any) => JSON.parse(str));
+    // config.sortby = config.sortby.map((str: any) => JSON.parse(str));
+    // // ✅ Parse tableandview string into array
+    // if (typeof config.tableandview === 'string') {
+    //   config.tableandview = config.tableandview
+    //     .replace(/[{}"]/g, '')     // Remove curly braces and quotes
+    //     .split(',')                // Split by comma
+    //     .map((s: string) => s.trim());       // Trim whitespace
+    // }
+
+    
 
     this.metadataService.getDataforPreview(config).subscribe({
       next: (response: any) => {

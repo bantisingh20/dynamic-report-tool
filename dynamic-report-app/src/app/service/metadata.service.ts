@@ -42,7 +42,7 @@ export class MetadataService {
           for (const column of columns) {
             fields.push({
               column_name: `${tableName}.${column.column_name}`,
-              label: `${tableName} - ${column.column_name}`,
+              label: `${column.column_name}`,
               data_type: column.data_type,
               raw: `${tableName}.column.${column.column_name}`,
             });
@@ -109,11 +109,12 @@ export class MetadataService {
   processPreviewData(responseData: any) {
 
     const rawData = responseData?.data || [];
-    const groupBy = responseData?.groupBy || false; // true if data is grouped, false if not
+    const groupBy = responseData?.group || false; // true if data is grouped, false if not
     const chartData = responseData?.count || false; // true if count data is available
     const isRaw = responseData?.raw || false; // true if raw data is present
 
-    console.log(responseData);
+    console.log('service',rawData)
+    console.log('service console',responseData);
 
     // Handle grouped data case (groupBy is true)
     if (groupBy) {
@@ -122,7 +123,7 @@ export class MetadataService {
             const firstRecord = rawData[0]?.records[0];
 
             return {
-                groupBy,
+                groupBy: responseData?.groupBy,
                 data: rawData,
                 chartData,
                 displayedColumns: firstRecord ? Object.keys(firstRecord) : [],

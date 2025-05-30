@@ -62,6 +62,8 @@ export class CommonTableComponent implements OnChanges, AfterViewInit {
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['tabledata'] && this.tabledata) {
+
+      console.log('banti',this.tabledata)
       this.isGrouped = Array.isArray(this.tabledata.groupBy) && this.tabledata.groupBy.length > 0;
 
       if (this.isGrouped) {

@@ -19,7 +19,7 @@ const handleError = (err, req, res, next) => {
   }
    console.error(500);
   // 500 Internal Server Error (fallback for other errors)
-  console.error(err.stack);
+  console.error(err);
   return res.status(500).json({
     status: 500,
     message: 'Something went wrong.',

@@ -28,6 +28,7 @@ app.get('/api/metadata/tables', async (req, res) => {
       FROM information_schema.tables
       WHERE table_schema = 'public' and table_type !='VIEW'
     `);
+    //const result = await pool.query('select * from get_table_metadata()')
     const data = result.rows.map(row => ({
     name: row.name,
     type: row.type
@@ -95,7 +96,29 @@ app.get('/api/metadata/tables', async (req, res) => {
 
 app.post('/api/metadata/check-table-relations', async (req, res) => {
   try {
+    debugger;
     const { selectedTables } = req.body;
+
+    // If only one table is selected, return its columns
+    if (selectedTables.length === 1) {
+      const singleTable = selectedTables[0];
+
+      // Get columns for the single table
+      const columnsQuery = `
+        SELECT column_name, data_type
+        FROM information_schema.columns
+        WHERE table_name = $1;
+      `;
+      const columnResult = await pool.query(columnsQuery, [singleTable]);
+
+      const columns = columnResult.rows.map(row => ({
+        column_name: row.column_name,
+        data_type: row.data_type
+      }));
+      //return res.json({ relatedTables: [...relatedTables], columnsByTable });
+      return res.json({ relatedTables: [singleTable], columnsByTable: { [singleTable]: columns } });
+    }
+
 
     const query = `
       SELECT
@@ -113,7 +136,7 @@ app.post('/api/metadata/check-table-relations', async (req, res) => {
         AND (tc.table_name = ANY($1) OR ccu.table_name = ANY($1));
     `;
 
-    const { rows } = await pool.query(query, [selectedTables]);
+    const { rows } = await pool.query(query, [selectedTables]); // this will show all table which are link with pass table
 
     const relatedTables = new Set();
     const fkColumns = new Set();
@@ -125,7 +148,7 @@ app.post('/api/metadata/check-table-relations', async (req, res) => {
       fkColumns.add(`${row.target_table}.${row.target_column}`);
     }
 
-    // Get primary key columns
+    // Get primary key columns  tc.constraint_type = 'PRIMARY KEY'       AND
     const pkQuery = `
       SELECT
         tc.table_name,
@@ -134,12 +157,11 @@ app.post('/api/metadata/check-table-relations', async (req, res) => {
         information_schema.table_constraints AS tc
         JOIN information_schema.key_column_usage AS kcu
           ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema
-      WHERE tc.constraint_type = 'PRIMARY KEY'
-        AND tc.table_name = ANY($1);
+      WHERE  tc.table_name = ANY($1);
     `;
 
     const pkResult = await pool.query(pkQuery, [[...relatedTables]]);
-    const pkColumns = new Set();
+    const pkColumns   = new Set();
     pkResult.rows.forEach(row => {
       pkColumns.add(`${row.table_name}.${row.column_name}`);
     });
@@ -173,53 +195,53 @@ app.post('/api/metadata/check-table-relations', async (req, res) => {
  
 
 // Get all Column of Table / Views  SELECT * FROM get_columns_for_tables(ARRAY['products', 'users', 'orders'])
-app.get('/api/metadata/columns/:tableName', async (req, res) => {
-  try {
-    const tableName = req.params.tableName;
-    if (!tableName) {
-      return res.status(400).json({ error: 'Table name is required' });
-    }
+// app.get('/api/metadata/columns/:tableName', async (req, res) => {
+//   try {
+//     const tableName = req.params.tableName;
+//     if (!tableName) {
+//       return res.status(400).json({ error: 'Table name is required' });
+//     }
 
-    const result = await pool.query(
-      `
-      SELECT col.column_name, col.data_type
-      FROM information_schema.columns col
-      WHERE col.table_name = $1
-      AND col.column_name NOT IN (
-        -- Primary Key columns
-        SELECT kcu.column_name
-        FROM information_schema.table_constraints tc
-        JOIN information_schema.key_column_usage kcu
-          ON tc.constraint_name = kcu.constraint_name
-         AND tc.table_name = kcu.table_name
-        WHERE tc.table_name = $1
-          AND tc.constraint_type = 'PRIMARY KEY'
+//     const result = await pool.query(
+//       `
+//       SELECT col.column_name, col.data_type
+//       FROM information_schema.columns col
+//       WHERE col.table_name = $1
+//       AND col.column_name NOT IN (
+//         -- Primary Key columns
+//         SELECT kcu.column_name
+//         FROM information_schema.table_constraints tc
+//         JOIN information_schema.key_column_usage kcu
+//           ON tc.constraint_name = kcu.constraint_name
+//          AND tc.table_name = kcu.table_name
+//         WHERE tc.table_name = $1
+//           AND tc.constraint_type = 'PRIMARY KEY'
         
-        UNION
+//         UNION
 
-        -- Foreign Key columns
-        SELECT kcu.column_name
-        FROM information_schema.table_constraints tc
-        JOIN information_schema.key_column_usage kcu
-          ON tc.constraint_name = kcu.constraint_name
-         AND tc.table_name = kcu.table_name
-        WHERE tc.table_name = $1
-          AND tc.constraint_type = 'FOREIGN KEY'
-      )
-      `,
-      [tableName]
-    );
+//         -- Foreign Key columns
+//         SELECT kcu.column_name
+//         FROM information_schema.table_constraints tc
+//         JOIN information_schema.key_column_usage kcu
+//           ON tc.constraint_name = kcu.constraint_name
+//          AND tc.table_name = kcu.table_name
+//         WHERE tc.table_name = $1
+//           AND tc.constraint_type = 'FOREIGN KEY'
+//       )
+//       `,
+//       [tableName]
+//     );
 
-    const data = result.rows.map(row => ({
-      column_name: row.column_name,
-      data_type: row.data_type
-    }));
+//     const data = result.rows.map(row => ({
+//       column_name: row.column_name,
+//       data_type: row.data_type
+//     }));
 
-    res.json(data);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+//     res.json(data);
+//   } catch (err) {
+//     res.status(500).json({ error: err.message });
+//   }
+// });
 
 app.post('/api/metadata/report/preview', async (req, res, next) => {
   const {
@@ -230,16 +252,13 @@ app.post('/api/metadata/report/preview', async (req, res, next) => {
     filters = [],
     sortby = [],
     groupby = [],
-    fieldType,
+    fieldtype,
   } = req.body;
 
   console.log(req.body);
 
-  try {
-
-
-
-    if (fieldType && fieldType.toLowerCase() === 'summary') {
+  try { 
+    if (fieldtype && fieldtype.toLowerCase() === 'summary') {
       if (selectedcolumns.length === 0) {
       return next({
           status: 400,
@@ -248,7 +267,7 @@ app.post('/api/metadata/report/preview', async (req, res, next) => {
         });
       }
     }
-    else if(fieldType.toLowerCase() === 'count'){
+    else if(fieldtype.toLowerCase() === 'count'){
       if (xyaxis.length === 0) {
       return next({
           status: 400,
@@ -430,7 +449,7 @@ app.post('/api/metadata/report/preview', async (req, res, next) => {
  
      const config = {
        tables: tableandview,
-       fieldType,
+       fieldtype,
        selection: selectedcolumns,
        filters: filters.map(f => ({
          field: f.field,
@@ -535,7 +554,7 @@ const Executionfunction = async (config) => {
     // --- Build JOIN logic ---
     let fromClause = `FROM ${tables[0]}`;
     const joinedTables = new Set([tables[0]]);
-    console.log('Initial Joined Tables:', joinedTables);
+    //console.log('Initial Joined Tables:', joinedTables);
 
    let allTablesJoined = false;
 
@@ -546,7 +565,7 @@ const Executionfunction = async (config) => {
       return 1;
     });
 
-    console.log('Ordered Relations:', orderedRelations);
+    //console.log('Ordered Relations:', orderedRelations);
 
     let tablesJoinedThisRound = false;
 
@@ -559,7 +578,7 @@ const Executionfunction = async (config) => {
           const sourceJoined = joinedTables.has(source_table);
           const targetJoined = joinedTables.has(target_table);
 
-          console.log(`Trying to join: ${source_table} -> ${target_table}`, sourceJoined, targetJoined);
+          //console.log(`Trying to join: ${source_table} -> ${target_table}`, sourceJoined, targetJoined);
 
           // 🔁 Join only if one of the tables is already joined
           if (sourceJoined && !targetJoined) {
@@ -584,8 +603,8 @@ const Executionfunction = async (config) => {
     }
   }
 
-  console.log('Final FROM clause:', fromClause);
-  console.log('Joined tables:', joinedTables);
+  //console.log('Final FROM clause:', fromClause);
+ // console.log('Joined tables:', joinedTables);
 
     // --- Colum Selection ---
     let selection = '*';
@@ -629,54 +648,24 @@ const Executionfunction = async (config) => {
       }).join(' AND ');
 
       whereClause = ` WHERE ${filterClauses}`;
+
+      console.log(filterClauses);
     }
  
 
+ 
     // --- ORDER BY clause ---
     let orderByClause = '';
     if (config.sortBy?.length > 0) {
       const sortFields = config.sortBy.map(s => `${s.column} ${s.order}`);
       orderByClause = ` ORDER BY ${sortFields.join(', ')}`;
     }
-
-
-     // --- Handle XY Axis Configuration ---
-    // const xySelections = [];
-    // const xyGroupBy = [];
-
-    // config.xyaxis.forEach(axis => {
-    //   const { x, y } = axis;
-
-    //   // X-Axis Transformation
-    //   let xAxisField = `${x.field}`;
-    //   let xAxisTransformation = x.transformation || 'raw';
-      
-    //   if (xAxisTransformation === 'monthwise') {
-    //     xAxisField = `DATE_TRUNC('month', ${x.field})`;
-    //   } else if (xAxisTransformation === 'yearwise') {
-    //     xAxisField = `DATE_TRUNC('year', ${x.field})`;
-    //   } else if (xAxisTransformation === 'weekwise') {
-    //     xAxisField = `DATE_TRUNC('week', ${x.field})`;
-    //   } else if (xAxisTransformation === 'daywise') {
-    //     xAxisField = `DATE_TRUNC('day', ${x.field})`;
-    //   }
-
-    //   xySelections.push(`${xAxisField} AS "X - ${x.field}"`);
-    //   xyGroupBy.push(xAxisField);
-
-    //   // Y-Axis Aggregation
-    //   const yAxisField = `${y.field}`;
-    //   const yAxisAggregation = y.aggregation || 'sum';
-    //   xySelections.push(`${yAxisAggregation}(${yAxisField}) AS "Y - ${y.field}"`);
-    // });
-
-
-    // --- WHERE clause ---
-
-  
-    if (config.fieldType.toLowerCase() === 'count' && config.xyaxis?.length > 0) {
+ 
+    // --- Count clause --- 
+    if (config.fieldtype.toLowerCase() === 'count' && config.xyaxis?.length > 0) {
 
       console.log('count Query')
+      
       const xyaxis = config.xyaxis[0]; // Assuming only one xyaxis object is passed for simplicity
 
       const xAxisField = xyaxis.x.field;
@@ -728,20 +717,20 @@ const Executionfunction = async (config) => {
             `;
             //FROM ${config.tableandview.join(', ')}
             //ORDER BY ${xAxisGroupBy} ${xAxisDirection}, "yAxis" ${yAxisDirection}
-
+         
           console.log("Executing XY Axis SQL:", groupedSQL);
 
           // Execute the query
-          const result = await pool.query(groupedSQL);
+          const result = await pool.query(groupedSQL,params);
 
           console.log(result.rows);
         return { count: true,group :false, groupBy:null, raw :false ,data: result.rows  };
          // return { count: true,groupBy:false, raw :false ,data: result.rows  };
           //return { data: result.rows };
-      }
+    }
 
 
-
+    // --- Group by clause ---
     if (config.groupBy?.length > 0) {
       // Build group-by display fields: SELECT category.name AS "category - name"
       const groupFields = config.groupBy.map(g => {
@@ -786,8 +775,7 @@ const Executionfunction = async (config) => {
       return { count: false,group :true, groupBy:groupByRaw1, raw :false ,data: result.rows  };
       //return { groupBy: groupByRaw1, data: result.rows };
     }
-
-
+  
 
     // --- Final SQL ---
     const sql = `SELECT ${selection} ${fromClause}${whereClause}${orderByClause}`;
@@ -820,7 +808,7 @@ const operatorMap = {
 // List all saved reports (for the "Saved Reports" view)
 app.get('/api/metadata/List-Report', async (req, res, next) => {
   try {
-    const result = await pool.query(`SELECT report_id,report_name,table_name as tableandView,selected_columns as selectedColumns,filter_criteria as filters,group_by as groupBy,sort_order as sortBy FROM report_configuration`);
+    const result = await pool.query(`SELECT fieldType,report_id,report_name,table_name as tableandView,selected_columns as selectedColumns,filter_criteria as filters,group_by as groupBy,sort_order as sortBy FROM report_configuration`);
     res.json({ reports: result.rows });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -848,12 +836,12 @@ app.get('/api/metadata/report/:id', async (req, res) => {
 // dynamic_query_proc Save a report configuration  
 app.post('/api/metadata/report/save/:id', async (req, res) => {
   try {
-     const { reportname,tableandview = [],xyaxis,userId, selectedcolumns = [], filters = [], sortby = [], groupby = [] } = req.body;
+     const { reportname,userId,fieldType ,tableandview = [],xyaxis =[], selectedcolumns = [], filters = [], sortby = [], groupby = [] } = req.body;
     const reportId = req.params.id;
     if (!reportname ) {
       return res.status(400).json({ error: 'Report name and configuration are required' });
     }
-    const data = await SaveUpdate(reportId,tableandview, reportname, selectedcolumns, userId, filters, groupby, sortby, xyaxis);
+    const data = await SaveUpdate(fieldType,reportId,tableandview, reportname, selectedcolumns, userId, filters, groupby, sortby, xyaxis);
  
     res.status(200).json({ message:"Report Save Successfully",id: data});
 

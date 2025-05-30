@@ -35,7 +35,7 @@ export class ReportConfigComponent implements OnInit {
 
   reportForm = new FormGroup({
     //  tableandview: new FormControl(),
-    fieldType: new FormControl('summary', Validators.required),
+    fieldtype: new FormControl('summary', Validators.required),
     tableandview: new FormControl<string[]>([]),
     reportname: new FormControl(),
     selectedcolumns: new FormControl([]),//.minSelectedCheckboxes(1)
@@ -111,12 +111,12 @@ export class ReportConfigComponent implements OnInit {
     this.metadataService.getReportById(id).subscribe((response: any) => {
       const data = response.report;
 
-      // Parse PostgreSQL array string to string[]
-      const parsedTableNames = this.parsePostgresArray(data.table_name);
-      this.getColumns(parsedTableNames)
+      console.log(data); 
+      //const parsedTableNames = this.parsePostgresArray(data.table_name);
+      this.getColumns(data.table_name)
       // Patch form with parsed values
       this.reportForm.patchValue({
-        tableandview: parsedTableNames,  // correctly assign string[] here
+        tableandview: data.table_name,   
         reportname: data.report_name,
         selectedcolumns: data.selected_columns,
       });
