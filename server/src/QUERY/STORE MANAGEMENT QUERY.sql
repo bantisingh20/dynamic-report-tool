@@ -1,11 +1,12 @@
 -- DROP TABLES IN REVERSE DEPENDENCY ORDER
-DROP TABLE IF EXISTS reviews, payments, shipping_addresses, order_items, orders, products, categories, users;
+DROP TABLE IF EXISTS reviews,report_configuration, payments, shipping_addresses, order_items, orders, products, categories, users;
 
 
  create TABLE report_configuration (
     report_id SERIAL PRIMARY KEY,
-    report_name VARCHAR(255) NOT NULL,
+    report_name VARCHAR(1000) NOT NULL,
     user_id INT,
+    fieldtype VARCHAR(500) NOT NULL, 
     table_name Text[],
     selected_columns Text[],
     filter_criteria JSONB[],
@@ -52,7 +53,7 @@ CREATE TABLE orders (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-ALTER tABLE ORDERS add order_date TIMESTAMP
+ALTER tABLE ORDERS add order_date TIMESTAMP;
 
 -- ORDER ITEMS TABLE
 CREATE TABLE order_items (

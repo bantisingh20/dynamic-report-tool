@@ -50,7 +50,7 @@ export class ReportConfigComponent implements OnInit {
 
   ngOnInit() {
     this.metadataService.getTablesAndViews().subscribe(data => {
-      console.log(data)
+     // console.log(data)
       this.tablesAndViews = data;
       this.tablesAndViews = this.tablesAndViews.map(field => ({
         ...field,
@@ -75,7 +75,7 @@ export class ReportConfigComponent implements OnInit {
 
 
   onFieldTypeChange() {
-    const fieldType = this.reportForm.get('fieldType')?.value;
+    const fieldType = this.reportForm.get('fieldtype')?.value;
 
     // Show/Hide sections based on selection
     if (fieldType === 'count') {
@@ -125,7 +125,7 @@ export class ReportConfigComponent implements OnInit {
       this.setFormArray('groupby', data.group_by);
       this.setFormArray('sortby', data.sort_order);
 
-      console.log(this.reportForm.value);
+     // console.log(this.reportForm.value);
     });
   }
 
@@ -623,7 +623,7 @@ this.xyaxis.at(index).get('xAxisTransformation')?.setValue(null);
 
     this.showPreview = false;
   
-    console.log(this.reportForm.value);
+    //console.log(this.reportForm.value);
     if (this.reportForm.invalid) {
       this.reportForm.markAllAsTouched();
       console.log('error')
@@ -631,9 +631,7 @@ this.xyaxis.at(index).get('xAxisTransformation')?.setValue(null);
     }
 
     const config = { ...this.reportForm.value };
-
-
-    console.log(config)
+ 
     this.metadataService.getDataforPreview(config).subscribe({
       next: (response: any) => {
         const responseData = response?.data;
