@@ -1,35 +1,50 @@
 const express = require('express');
-const cors = require('cors'); 
-const { handleError  } = require('./middlewares/ErrorHandler');
-const metadataRoutes = require('./routes/metadata.routes'); 
-const path = require('path');
+const cors = require('cors');
+const { handleError } = require('./middlewares/ErrorHandler');
+const metadataRoutes = require('./routes/metadata.routes');
 const bodyParser = require('body-parser');
-const { Pool } = require('pg');
-const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
-const port = 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.json());
+
+// Routes
 app.use('/api/metadata', metadataRoutes);
 
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
+// Error handler (after routes)
+app.use(handleError);
 
-// async function testConnection() {
-//   try {
-//     const res = await pool.query('SELECT NOW()');
-//     console.log('Connected to DB:', res.rows[0]);
-//   } catch (err) {
-//     console.error('Database connection error:', err);
-//   }
-// }
+module.exports = app; // Export plain app (used by both local and Vercel)
 
-//testConnection();
+
+// const express = require('express');
+// const cors = require('cors'); 
+// const { handleError  } = require('./middlewares/ErrorHandler');
+// const metadataRoutes = require('./routes/metadata.routes'); 
+// const path = require('path');
+// const bodyParser = require('body-parser');
+// const { Pool } = require('pg');
+// const fs = require('fs');
+// require('dotenv').config();
+
+// const app = express();
+// const port = 3000;
+
+// app.use(cors());
+// app.use(bodyParser.json());
+// app.use(express.json());
+// app.use('/api/metadata', metadataRoutes);
+
+// app.listen(port, () => {
+//   console.log(`Server running on port ${port}`);
+// });
+
+
+// app.use(handleError);
+
 
 
 // async function runSQLFile() {
@@ -63,4 +78,13 @@ app.listen(port, () => {
 // }
 
 //runSQLFile();
-app.use(handleError);
+// async function testConnection() {
+//   try {
+//     const res = await pool.query('SELECT NOW()');
+//     console.log('Connected to DB:', res.rows[0]);
+//   } catch (err) {
+//     console.error('Database connection error:', err);
+//   }
+// }
+
+//testConnection();
