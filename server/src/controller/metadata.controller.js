@@ -4,12 +4,12 @@ const { mapDbTypeToJsType } = require("../utils/Operator.utils.js");
 
 async function listTablesAndViews(req, res) {
   try {
-    const result = await pool.query(`
-      SELECT table_name as name,table_type as type
-      FROM information_schema.tables
-      WHERE table_schema = 'public' and table_type !='VIEW'
-    `);
-    //const result = await pool.query('select * from get_table_metadata()')
+    // const result = await pool.query(`
+    //   SELECT table_name as name,table_type as type
+    //   FROM information_schema.tables
+    //   WHERE table_schema = 'public' and table_type !='VIEW'
+    // `);
+    const result = await pool.query('select * from get_table_metadata()')
     const data = result.rows.map((row) => ({
       name: row.name,
       type: row.type,
@@ -20,16 +20,15 @@ async function listTablesAndViews(req, res) {
   }
 }
 
+
 async function CheckRelationAndListOfColumn(req, res) {
   try {
-    debugger;
     const { selectedTables } = req.body;
 
-    // If only one table is selected, return its columns
+    // If only one table is selected, just fetch and return its columns
     if (selectedTables.length === 1) {
       const singleTable = selectedTables[0];
 
-      // Get columns for the single table
       const columnsQuery = `
         SELECT column_name, data_type
         FROM information_schema.columns
@@ -41,42 +40,128 @@ async function CheckRelationAndListOfColumn(req, res) {
         column_name: row.column_name,
         data_type: row.data_type,
       }));
-      //return res.json({ relatedTables: [...relatedTables], columnsByTable });
+
       return res.json({
         relatedTables: [singleTable],
         columnsByTable: { [singleTable]: columns },
       });
     }
 
-    const query = `
+    // Fetch foreign key relationships involving selected tables
+    const fkQuery = `
       SELECT
         tc.table_name AS source_table,
         kcu.column_name AS source_column,
         ccu.table_name AS target_table,
         ccu.column_name AS target_column
       FROM 
+        information_schema.table_constraints AS tc
+        JOIN information_schema.key_column_usage AS kcu
+          ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema
+        JOIN information_schema.constraint_column_usage AS ccu
+          ON ccu.constraint_name = tc.constraint_name AND ccu.table_schema = tc.table_schema
+      WHERE tc.constraint_type = 'FOREIGN KEY'
+        AND (tc.table_name = ANY($1) OR ccu.table_name = ANY($1));
+    `;
+    const { rows: fkRows } = await pool.query(fkQuery, [selectedTables]);
+
+    // Collect all related tables from FK relationships
+    const relatedTables = new Set();
+    fkRows.forEach(row => {
+      relatedTables.add(row.source_table);
+      relatedTables.add(row.target_table);
+    });
+
+    // Fetch all columns for all related tables
+    const columnQuery = `
+      SELECT table_name, column_name, data_type
+      FROM information_schema.columns
+      WHERE table_name = ANY($1);
+    `;
+    const { rows: columnRows } = await pool.query(columnQuery, [[...relatedTables]]);
+
+    const columnsByTable = {};
+    columnRows.forEach(row => {
+      if (!columnsByTable[row.table_name]) {
+        columnsByTable[row.table_name] = [];
+      }
+      columnsByTable[row.table_name].push({
+        column_name: row.column_name,
+        data_type: row.data_type,
+      });
+    });
+
+    res.json({
+      relatedTables: [...relatedTables],
+      columnsByTable,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+
+async function CheckRelationAndListOfColumn_removeprimaryforeginkey(req, res) {
+  try {
+    debugger;
+    const { selectedTables } = req.body;  
+
+    // If only one table is selected, return its columns
+    if (selectedTables.length === 1) {
+      const singleTable = selectedTables[0]; // Get the single selected table
+
+      // Get all columns and their data types for the single table
+      const columnsQuery = `
+        SELECT column_name, data_type
+        FROM information_schema.columns
+        WHERE table_name = $1;
+      `;
+      const columnResult = await pool.query(columnsQuery, [singleTable]);
+
+      // Format the column results into an array of objects
+      const columns = columnResult.rows.map((row) => ({
+        column_name: row.column_name,
+        data_type: row.data_type,
+      }));
+
+      // Return the single table and its columns
+      return res.json({
+        relatedTables: [singleTable],
+        columnsByTable: { [singleTable]: columns },
+      });
+    }
+
+    // Get foreign key relationships involving any of the selected tables
+    const query = `
+      SELECT
+        tc.table_name AS source_table,               -- table where FK is defined
+        kcu.column_name AS source_column,            -- FK column in source_table
+        ccu.table_name AS target_table,              -- table referenced by FK
+        ccu.column_name AS target_column             -- PK column in target_table
+      FROM 
         information_schema.table_constraints AS tc 
         JOIN information_schema.key_column_usage AS kcu
           ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema
         JOIN information_schema.constraint_column_usage AS ccu
           ON ccu.constraint_name = tc.constraint_name AND ccu.table_schema = tc.table_schema
-      WHERE constraint_type = 'FOREIGN KEY'
-        AND (tc.table_name = ANY($1) OR ccu.table_name = ANY($1));
+      WHERE constraint_type = 'FOREIGN KEY'          -- Only foreign keys
+        AND (tc.table_name = ANY($1) OR ccu.table_name = ANY($1)); -- Filter by selected tables
     `;
 
-    const { rows } = await pool.query(query, [selectedTables]); // this will show all table which are link with pass table
+    // Execute the FK relationship query
+    const { rows } = await pool.query(query, [selectedTables]);
 
-    const relatedTables = new Set();
-    const fkColumns = new Set();
+    const relatedTables = new Set(); // Track all related tables (source and target)
+    const fkColumns = new Set();     // Track foreign key columns
 
     for (const row of rows) {
-      relatedTables.add(row.source_table);
-      relatedTables.add(row.target_table);
-      fkColumns.add(`${row.source_table}.${row.source_column}`);
-      fkColumns.add(`${row.target_table}.${row.target_column}`);
+      relatedTables.add(row.source_table); // Add source table to related
+      relatedTables.add(row.target_table); // Add target table to related
+      fkColumns.add(`${row.source_table}.${row.source_column}`); // Track FK column
+      fkColumns.add(`${row.target_table}.${row.target_column}`); // Track referenced PK column
     }
 
-    // Get primary key columns  tc.constraint_type = 'PRIMARY KEY'       AND
+    // Get primary key columns for the related tables
     const pkQuery = `
       SELECT
         tc.table_name,
@@ -85,27 +170,30 @@ async function CheckRelationAndListOfColumn(req, res) {
         information_schema.table_constraints AS tc
         JOIN information_schema.key_column_usage AS kcu
           ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema
-      WHERE  tc.table_name = ANY($1);
+      WHERE  tc.table_name = ANY($1); -- Filter to related tables only
     `;
 
-    const pkResult = await pool.query(pkQuery, [[...relatedTables]]);
-    const pkColumns = new Set();
+    const pkResult = await pool.query(pkQuery, [[...relatedTables]]); // Execute PK query
+    const pkColumns = new Set(); // Track primary key columns
+
     pkResult.rows.forEach((row) => {
-      pkColumns.add(`${row.table_name}.${row.column_name}`);
+      pkColumns.add(`${row.table_name}.${row.column_name}`); // Add to PK set
     });
 
-    // Now fetch all columns and exclude PK + FK
+    // Get all columns for the related tables
     const columnsQuery = `
-      SELECT table_name, column_name,data_type
+      SELECT table_name, column_name, data_type
       FROM information_schema.columns
       WHERE table_name = ANY($1)
     `;
-    const columnResult = await pool.query(columnsQuery, [[...relatedTables]]);
+    const columnResult = await pool.query(columnsQuery, [[...relatedTables]]); // Execute column fetch
 
-    const columnsByTable = {};
+    const columnsByTable = {}; // To store columns for each table
 
     columnResult.rows.forEach((row) => {
       const key = `${row.table_name}.${row.column_name}`;
+
+      // Exclude columns that are part of PK or FK
       if (!pkColumns.has(key) && !fkColumns.has(key)) {
         if (!columnsByTable[row.table_name]) {
           columnsByTable[row.table_name] = [];
@@ -117,69 +205,46 @@ async function CheckRelationAndListOfColumn(req, res) {
       }
     });
 
+    // Return related tables and filtered (non-PK, non-FK) columns
     res.json({ relatedTables: [...relatedTables], columnsByTable });
   } catch (err) {
+    // Return error response if something goes wrong
     res.status(500).json({ error: err.message });
   }
 }
+ 
 
 async function PreviewReport(req, res, next) {
-  const {
-    report_name,
-    tableandview = [],
-    selectedcolumns = [],
-    xyaxis = [],
-    filters = [],
-    sortby = [],
-    groupby = [],
-    fieldtype,
-  } = req.body;
+  const { report_name,  tableandview = [], selectedcolumns = [], xyaxis = [], filters = [], sortby = [], groupby = [],  fieldtype, } = req.body;
 
   //console.log(req.body);
 
   try {
     if (fieldtype && fieldtype.toLowerCase() === "summary") {
       if (selectedcolumns.length === 0) {
-        return next({
-          status: 400,
-          message: `Select Column to view in reprot`,
-          error: "Column validation failed.",
-        });
+        return next({ status: 400, message: `Select Column to view in reprot`, error: "Column validation failed.",});
       }
     } else if (fieldtype.toLowerCase() === "count") {
       if (xyaxis.length === 0) {
-        return next({
-          status: 400,
-          message: `Select X-Y Axis Configuration to View`,
-          error: "Column validation failed.",
-        });
+        return next({status: 400, message: `Select X-Y Axis Configuration to View`, error: "Column validation failed.", });
       }
     }
 
     // 1. Validate table list
-    const tableResult = await pool.query(
-      `
-      SELECT table_name
-      FROM information_schema.tables
-      WHERE table_schema = 'public' AND table_name = ANY($1)
-    `,
-      [tableandview]
-    );
+    const tableResult = await pool.query( ` SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = ANY($1)`,[tableandview] );
 
-    const foundTables = tableResult.rows.map((row) => row.table_name);
-    const missingTables = tableandview.filter((t) => !foundTables.includes(t));
+    const foundTables = tableResult.rows.map((row) => row.table_name); // first get all the tables that exist in the database
+    //console.log("Found tables:", foundTables);
+    const missingTables = tableandview.filter((t) => !foundTables.includes(t));// then filter the selected tables to find which ones are missing
+    //console.log("Missing tables:", missingTables);
 
+    //if join is not possible then return error
     if (missingTables.length > 0) {
-      return next({
-        status: 400,
-        message: `The following tables do not exist: ${missingTables.join(
-          ", "
-        )}`,
-        error: "Table validation failed.",
-      });
+      return next({ status: 400, message: `The following tables do not exist: ${missingTables.join(", " )}`,error: "Table validation failed.", });
     }
 
-    // 2. Check foreign key relationships among tables
+    // 2. Check foreign key relationships among tables yaha pr join k liye relation check krna hai 
+    // afar multiple tables hai toh unke beech join possible hai ya nahi agar nahi hai toh error msg return karna hai 
     const relResult = await pool.query(
       `
           SELECT
@@ -225,13 +290,10 @@ async function PreviewReport(req, res, next) {
     });
 
     // 3. Validate selectedColumns (e.g. ["orders.date", "users.name"])
+    // agar user ne koi column select kiya jo table ka nahi hai toh error msg return karna hai
     const invalidColumns = selectedcolumns.filter((col) => !columnMap.has(col));
     if (invalidColumns.length > 0) {
-      return next({
-        status: 400,
-        message: `Invalid selected columns: ${invalidColumns.join(", ")}`,
-        error: "Invalid column selection.",
-      });
+      return next({ status: 400, message: `Invalid selected columns: ${invalidColumns.join(", ")}`, error: "Invalid column selection.", });
     }
 
     // 4. Validate filters
@@ -239,66 +301,34 @@ async function PreviewReport(req, res, next) {
       const { field, operator, value, valueFrom, valueTo } = filter;
 
       if (!field) {
-        return next({
-          status: 400,
-          message: `Filter at index ${i}: 'field' is required.`,
-          error: "Missing filter field.",
-        });
+        return next({status: 400, message: `Filter at index ${i}: 'field' is required.`, error: "Missing filter field.", });
       }
 
       if (!columnMap.has(field)) {
-        return next({
-          status: 400,
-          message: `Invalid filter column: ${field}`,
-          error: "Invalid column in filter.",
-        });
+        return next({  status: 400, message: `Invalid filter column: ${field}`,  error: "Invalid column in filter.", });
       }
 
       if (!operator) {
-        return next({
-          status: 400,
-          message: `Filter at index ${i}: 'operator' is required.`,
-          error: "Missing operator.",
-        });
+        return next({  status: 400,  message: `Filter at index ${i}: 'operator' is required.`,  error: "Missing operator.", });
       }
 
       if (operator === "between") {
         if (valueFrom == null || valueTo == null) {
-          return next({
-            status: 400,
-            message: `Filter at index ${i}: 'valueFrom' and 'valueTo' are required for 'between' operator.`,
-            error: "Missing range values.",
-          });
+          return next({   status: 400, message: `Filter at index ${i}: 'valueFrom' and 'valueTo' are required for 'between' operator.`, error: "Missing range values.",});
         }
       } else {
         if (value == null) {
-          return next({
-            status: 400,
-            message: `Filter at index ${i}: 'value' is required for operator '${operator}'.`,
-            error: "Missing filter value.",
-          });
+          return next({ status: 400,  message: `Filter at index ${i}: 'value' is required for operator '${operator}'.`,  error: "Missing filter value.", });
         }
 
-        const valueAsNumber =
-          typeof value === "string" && !isNaN(Number(value))
-            ? Number(value)
-            : value;
+        const valueAsNumber = typeof value === "string" && !isNaN(Number(value)) ? Number(value) : value;
         const expectedType = await mapDbTypeToJsType(columnMap.get(field));
-       // console.log("Expected type:", expectedType);
         let actualType = typeof valueAsNumber;
-       // console.log("Actual type:", actualType);
-
-        if (expectedType === "string" && actualType === "number") {
-          // value = String(value);
-          actualType = "string";
-        }
-
+        if (expectedType === "string" && actualType === "number") { actualType = "string"; } // Handle case where number is passed as string}
+        //if (expectedType === "number" && actualType === "string") { actualType = "number"; } // Handle case where string is passed as number
+        // console.log("Expected type:", expectedType); // console.log("Actual type:", actualType); //console.log("Final actual type:", actualType);
         if (expectedType !== actualType) {
-          return next({
-            status: 400,
-            message: `Filter at index ${i}: Type mismatch for column "${field}": expected ${expectedType}, got ${actualType}`,
-            error: "Type mismatch in filter.",
-          });
+          return next({ status: 400,  message: `Filter at index ${i}: Type mismatch for column "${field}": expected ${expectedType}, got ${actualType}`, error: "Type mismatch in filter.",  });
         }
       }
     }
@@ -306,41 +336,21 @@ async function PreviewReport(req, res, next) {
     // 5. Validate sortBy and groupBy
     const badSort = sortby.filter((col) => !columnMap.has(col.field));
     if (badSort.length > 0) {
-      return next({
-        status: 400,
-        message: `Invalid sort columns: ${badSort
-          .map((c) => c.field)
-          .join(", ")}`,
-        error: "Invalid sort selection.",
-      });
+      return next({status: 400,message: `Invalid sort columns: ${badSort.map((c) => c.field).join(", ")}`, error: "Invalid sort selection.", });
     }
 
     // ✅ 3. Check if groupby columns are also included in selectedColumns
     const selectedColumnSet = new Set(selectedcolumns);
-    const missingInSelect = groupby
-      .map((col) => col.field)
-      .filter((field) => !selectedColumnSet.has(field));
+    const missingInSelect = groupby.map((col) => col.field).filter((field) => !selectedColumnSet.has(field));
 
     if (missingInSelect.length > 0) {
-      return next({
-        status: 400,
-        message: `Group by columns must be selected: ${missingInSelect.join(
-          ", "
-        )}`,
-        error: "Invalid group selection.",
-      });
+      return next({ status: 400, message: `Group by columns must be selected: ${missingInSelect.join(", ")}`, error: "Invalid group selection.", });
     }
 
-    // groyup by
+    // groyup by col selected columns me nahi hai toh error msg return karna hai
     const badGroup = groupby.filter((col) => !columnMap.has(col.field));
     if (badGroup.length > 0) {
-      return next({
-        status: 400,
-        message: `Invalid group columns: ${badGroup
-          .map((c) => c.field)
-          .join(", ")}`,
-        error: "Invalid group selection.",
-      });
+      return next({ status: 400,message: `Invalid group columns: ${badGroup.map((c) => c.field).join(", ")}`, error: "Invalid group selection.", });
     }
 
     // 6. Build config
