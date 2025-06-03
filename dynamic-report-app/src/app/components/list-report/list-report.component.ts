@@ -65,42 +65,30 @@ export class ListReportComponent implements OnInit, AfterViewInit {
   }
 
   previewConfig(id: any) {
-    console.log(id);
-    console.log(this.listData);
+    //console.log(id);
+    //console.log(this.listData);
     const item = this.listData.find(obj => obj.report_id === id);
 
     const config = { ...item };
-    // console.log(config);
-    // config.filters = config.filters.map((str: any) => { return typeof str === 'string' ? JSON.parse(str) : str; });
-    // config.groupby = config.groupby.map((str: any) => JSON.parse(str));
-    // config.sortby = config.sortby.map((str: any) => JSON.parse(str));
-    // // ✅ Parse tableandview string into array
-    // if (typeof config.tableandview === 'string') {
-    //   config.tableandview = config.tableandview
-    //     .replace(/[{}"]/g, '')     // Remove curly braces and quotes
-    //     .split(',')                // Split by comma
-    //     .map((s: string) => s.trim());       // Trim whitespace
-    // }
-
-    
-
+    //console.log(config);
+     
     this.metadataService.getDataforPreview(config).subscribe({
       next: (response: any) => {
         const responseData = response?.data;
- 
-        const { data, groupBy, chartData, displayedColumns, showPreview } = this.metadataService.processPreviewData(responseData);
+        console.log('API Response:', responseData);
+        const { data, groupBy, chartData, displayedColumns, showPreview,ischart } = this.metadataService.processPreviewData(responseData);
 
-        this.previewData = { groupBy, data, chartData, config, tableName: config.table_name || config.tableandview || 'Unknown' };
+        this.previewData = { groupBy, data,ischart, chartData, config, tableName: config.table_name || config.tableandview || 'Unknown' };
         this.displayedColumns = displayedColumns;
         this.showPreview = showPreview;
 
-        console.log('API Response:', responseData);
+       
 
          if (this.previewData.data.length > 0) {
-          console.log(this.previewData);
+          //console.log(this.previewData);
           this.notificationService.showNotification("Fetch Data Successfully.", 'success');
         } else {
-          console.log(this.previewData);
+          //console.log(this.previewData);
           this.notificationService.showNotification("No Data Found.", 'warning');
         }
       },

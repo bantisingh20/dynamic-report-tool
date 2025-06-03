@@ -110,9 +110,10 @@ export class MetadataService {
 
     const rawData = responseData?.data || [];
     const groupBy = responseData?.group || false; // true if data is grouped, false if not
-    const chartData = responseData?.count || false; // true if count data is available
+    const ischart = responseData?.count || false; // true if count data is available
     const isRaw = responseData?.raw || false; // true if raw data is present
-
+    const chartData = responseData?.chart || [] ; // true if count data is available
+ 
     console.log('service',rawData)
     console.log('service console',responseData);
 
@@ -125,7 +126,8 @@ export class MetadataService {
             return {
                 groupBy: responseData?.groupBy,
                 data: rawData,
-                chartData,
+                chartData, 
+                ischart,
                 displayedColumns: firstRecord ? Object.keys(firstRecord) : [],
                 showPreview: true
             };
@@ -139,7 +141,8 @@ export class MetadataService {
 
             return {
                 data: rawData,
-                chartData,
+                chartData, 
+                ischart,
                 displayedColumns: firstItem ? Object.keys(firstItem) : [],
                 showPreview: true
             };

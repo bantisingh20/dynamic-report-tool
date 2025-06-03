@@ -9,17 +9,20 @@ import { ChartType } from 'angular-google-charts';
   templateUrl: './chart-component.component.html',
   styleUrl: './chart-component.component.css'
 })
-
-
+ 
 export class ChartComponentComponent implements OnInit {
-  @Input() chartDatas: any[] = []; 
+  @Input() chartDatas: any[] = [];
+ 
   chartType: ChartType = ChartType.ColumnChart;
   chartData: any[] = [];
   chartColumns: string[] = [];
   chartOptions: any = {};
   chartWidth = 400;
   chartHeight = 400;
-
+  // data : any[]=[ ['year', 'sales'],
+  // [1, 1396.035],
+  // [2, 1653.069],
+  // [3, 1496.28375]]
   constructor(private http: HttpClient) {}
 
   ngOnInit() { 
@@ -28,51 +31,25 @@ export class ChartComponentComponent implements OnInit {
   
   getChartData(chartType: ChartType) {
     const apiUrl = '';
-    
-    if (apiUrl) {
-      this.http.get<any[]>(apiUrl).subscribe((data) => {
-        this.processChartData(chartType, data);   
-      });
-    }
+    console.log(this.chartDatas);
+    this.processChartData(chartType, this.chartDatas); 
   }
+ 
 
-  // Process data based on the chart type
-  processChartData(chartType: ChartType, data: any[]) {
+   
+  processChartData(chartType: ChartType, chart: any) {
     switch (chartType) {
       case ChartType.ColumnChart:
-        this.chartColumns = ['Year', 'Sales'];
-        this.chartData = data.map(item => [item.year, item.sales]);
-        this.chartOptions = {
-          title: 'Sales Over Time',
-          hAxis: { title: 'Year' },
-          vAxis: { title: 'Sales' },
-          colors: ['#4caf50']
+         this.chartColumns = chart.data[0]; // First row defines columns
+         this.chartData = chart.data.slice(1); // Skip the header row        
+         this.chartOptions = {
+         title: chart.title,
+         hAxis: { title: chart.xAxisLabel },
+         vAxis: { title: chart.yAxisLabel },
+         colors: ['#4caf50']
         };
         break;
-        
-      case ChartType.PieChart:
-        this.chartColumns = ['Category', 'Value'];
-        this.chartData = data.map(item => [item.category, item.value]);
-        this.chartOptions = {
-          title: 'Expenses Distribution',
-          is3D: true,
-          colors: ['#ff5722', '#2196f3', '#8bc34a']
-        };
-        break;
-        
-      case ChartType.LineChart:
-        this.chartColumns = ['Month', 'Revenue'];
-        this.chartData = data.map(item => [item.month, item.revenue]);
-        this.chartOptions = {
-          title: 'Revenue Over Time',
-          hAxis: { title: 'Month' },
-          vAxis: { title: 'Revenue' },
-          legend: { position: 'bottom' },
-          curveType: 'function'
-        };
-        break;
-
-      // Add other chart types as needed...
+          
       
       default:
         break;

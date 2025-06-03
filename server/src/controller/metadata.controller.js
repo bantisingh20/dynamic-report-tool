@@ -4,12 +4,12 @@ const { mapDbTypeToJsType } = require("../utils/Operator.utils.js");
 
 async function listTablesAndViews(req, res) {
   try {
-    // const result = await pool.query(`
-    //   SELECT table_name as name,table_type as type
-    //   FROM information_schema.tables
-    //   WHERE table_schema = 'public' and table_type !='VIEW'
-    // `);
-    const result = await pool.query('select * from get_table_metadata()')
+    const result = await pool.query(`
+      SELECT table_name as name,table_type as type
+      FROM information_schema.tables
+      WHERE table_schema = 'public' and table_type !='VIEW'
+    `);
+    //const result = await pool.query('select * from get_table_metadata()')
     const data = result.rows.map((row) => ({
       name: row.name,
       type: row.type,
@@ -26,26 +26,26 @@ async function CheckRelationAndListOfColumn(req, res) {
     const { selectedTables } = req.body;
 
     // If only one table is selected, just fetch and return its columns
-    if (selectedTables.length === 1) {
-      const singleTable = selectedTables[0];
+    // if (selectedTables.length === 1) {
+    //   const singleTable = selectedTables[0];
 
-      const columnsQuery = `
-        SELECT column_name, data_type
-        FROM information_schema.columns
-        WHERE table_name = $1;
-      `;
-      const columnResult = await pool.query(columnsQuery, [singleTable]);
+    //   const columnsQuery = `
+    //     SELECT column_name, data_type
+    //     FROM information_schema.columns
+    //     WHERE table_name = $1;
+    //   `;
+    //   const columnResult = await pool.query(columnsQuery, [singleTable]);
 
-      const columns = columnResult.rows.map((row) => ({
-        column_name: row.column_name,
-        data_type: row.data_type,
-      }));
+    //   const columns = columnResult.rows.map((row) => ({
+    //     column_name: row.column_name,
+    //     data_type: row.data_type,
+    //   }));
 
-      return res.json({
-        relatedTables: [singleTable],
-        columnsByTable: { [singleTable]: columns },
-      });
-    }
+    //   return res.json({
+    //     relatedTables: [singleTable],
+    //     columnsByTable: { [singleTable]: columns },
+    //   });
+    // }
 
     // Fetch foreign key relationships involving selected tables
     const fkQuery = `
@@ -66,7 +66,7 @@ async function CheckRelationAndListOfColumn(req, res) {
     const { rows: fkRows } = await pool.query(fkQuery, [selectedTables]);
 
     // Collect all related tables from FK relationships
-    const relatedTables = new Set();
+    const relatedTables = new Set(selectedTables); // by default add column of selectdd table
     fkRows.forEach(row => {
       relatedTables.add(row.source_table);
       relatedTables.add(row.target_table);
@@ -398,7 +398,7 @@ async function PreviewReport(req, res, next) {
 async function ListReport(req, res) {
   try {
     const result = await pool.query(
-      `SELECT *,report_id,report_name,table_name as tableandView,selected_columns as selectedColumns,filter_criteria as filters,group_by as groupBy,sort_order as sortBy FROM report_configuration`
+      `SELECT fieldtype,report_id,report_name,table_name as tableandView,selected_columns as selectedColumns,filter_criteria as filters,group_by as groupBy,sort_order as sortBy,axis_config as xyaxis FROM report_configuration`
     );
     res.json({ reports: result.rows });
   } catch (err) {

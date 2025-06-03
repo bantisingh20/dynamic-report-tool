@@ -22,21 +22,33 @@ export class ReportConfigComponent implements OnInit {
   displayedColumns: string[] = [];
   showPreview = false;
   operators: string[] = ['between', 'equals', 'not equals', 'greater than', 'less than', 'contains'];
+  operators2 = [
+    { label: 'between', symbol: 'between' },
+    { label: 'equals', symbol: '=' },
+    { label: 'not equals', symbol: '≠' },
+    { label: 'greater than', symbol: '>' },
+    { label: 'less than', symbol: '<' },
+    { label: 'greater than equal to', symbol: '>=' },
+    { label: 'less than equal to', symbol: '<=' },
+    { label: 'contains', symbol: 'like' }, // or use 'includes' icon like '∈'
+  ];
+
+  stringTypes: string[] = ['varchar', 'character varying', 'character', 'char', 'text', 'citext'];
   Countoperators: string[] = ['sum', 'count', 'average', 'max', 'min'];
   numberTypes: string[] = ['integer', 'smallint', 'bigint', 'decimal', 'numeric', 'real', 'double precision', 'serial', 'bigserial'];
   dateTypes: string[] = ['date', 'timestamp', 'timestamp with time zone', 'timestamp without time zone'];
   booleanTypes: string[] = ['boolean'];
   tablesAndViews: any[] = [];
   availableFields: any[] = [];
+  selectedcolumns: any[] = [];
   showColumnsAndGroupBy: boolean = true;
   showXYConfig: boolean = true;
   reportId: string | null = null;
   mode: string | null = null;
 
   reportForm = new FormGroup({
-    //  tableandview: new FormControl(),
     fieldtype: new FormControl('summary', Validators.required),
-    tableandview: new FormControl<string[]>([]),
+    tableandview: new FormControl([], [Validators.required, minSelectedCheckboxes(1)]),
     reportname: new FormControl(),
     selectedcolumns: new FormControl([]),//.minSelectedCheckboxes(1)
     filters: new FormArray([]),
@@ -49,8 +61,10 @@ export class ReportConfigComponent implements OnInit {
   constructor(private http: HttpClient, private router: Router, private route: ActivatedRoute, private notificationService: NotificationService, private metadataService: MetadataService, private fb: FormBuilder, private reprotconfig: ReportConfigService) { }
 
   ngOnInit() {
+    this.availableFields = [];
+    this.selectedcolumns = [];
     this.metadataService.getTablesAndViews().subscribe(data => {
-     // console.log(data)
+      // console.log(data)
       this.tablesAndViews = data;
       this.tablesAndViews = this.tablesAndViews.map(field => ({
         ...field,
@@ -69,7 +83,6 @@ export class ReportConfigComponent implements OnInit {
       }
     });
 
-    this.onFieldTypeChange();
   }
 
 
@@ -80,57 +93,46 @@ export class ReportConfigComponent implements OnInit {
     // Show/Hide sections based on selection
     if (fieldType === 'count') {
       this.showColumnsAndGroupBy = false;
-      this.showXYConfig = true;  // Show XY config in case of Count
+      this.showXYConfig = true;
+      console.log(this.availableFields);
+      this.selectedcolumns = [...this.availableFields];
+      this.reportForm.get('selectedcolumns')?.clearValidators();
+      this.reportForm.get('selectedcolumns')?.updateValueAndValidity();
     } else if (fieldType === 'summary') {
       this.showColumnsAndGroupBy = true;
-      this.showXYConfig = false;  // Hide XY config in case of Summary
+      this.showXYConfig = false;
+      this.reportForm.get('selectedcolumns')?.setValidators([Validators.required]);
+      this.reportForm.get('selectedcolumns')?.updateValueAndValidity();
     }
   }
-  // loadReportData(id: string): void {
-  //   this.metadataService.getReportById(id).subscribe((response: any) => {
-  //     const data = response.report;
-  //     console.log(data);
-  //     //this.getColumns(data.table_name);
-
-  //     this.reportForm.patchValue({
-  //       tableandview: data.table_name,
-  //       reportName: data.report_name,
-  //       selectedColumns: data.selected_columns,
-  //     });
-
-  //     this.setFormArray('filters', data.filter_criteria);
-  //     this.setFormArray('groupBy', data.group_by);
-  //     this.setFormArray('sortBy', data.sort_order);
-  //     // this.setFormArray('xyaxis', data.axis_config);
-
-  //     console.log(this.reportForm.value);
-  //   });
-  // }
 
   loadReportData(id: string): void {
     this.metadataService.getReportById(id).subscribe((response: any) => {
       const data = response.report;
 
-      console.log(data); 
-      //const parsedTableNames = this.parsePostgresArray(data.table_name);
-      this.getColumns(data.table_name)
-      // Patch form with parsed values
       this.reportForm.patchValue({
-        tableandview: data.table_name,   
+        fieldtype: data.fieldtype,
+        tableandview: data.table_name,
         reportname: data.report_name,
         selectedcolumns: data.selected_columns,
       });
 
+      this.onFieldTypeChange();
+
       this.setFormArray('filters', data.filter_criteria);
       this.setFormArray('groupby', data.group_by);
       this.setFormArray('sortby', data.sort_order);
+      this.setFormArray('xyaxis', data.axis_config);
 
-     // console.log(this.reportForm.value);
+      this.metadataService.getAvailableFieldsForTables(data.table_name).subscribe((fields: any[]) => {
+        this.availableFields = fields;
+        console.log(this.reportForm.get('selectedcolumns'));
+        console.log(this.availableFields)
+        this.onColumnSelect("");
+      });
     });
   }
-
-
-
+  
   parsePostgresArray(input: string): string[] {
     // Remove the surrounding curly braces and quotes
     return input
@@ -138,8 +140,7 @@ export class ReportConfigComponent implements OnInit {
       .split(',')                 // Split by commas
       .map(item => item.replace(/^"(.*)"$/, '$1')); // Remove double quotes around each item
   }
-
-
+ 
   closeFilterDrawer() {
     // Optional: Close offcanvas programmatically if needed
     const offcanvasElement = document.getElementById('filterDrawer');
@@ -211,11 +212,7 @@ export class ReportConfigComponent implements OnInit {
       this.tablesAndViews = [...this.originalTablesAndViews];
       return;
     }
-
-    this.metadataService.getAvailableFieldsForTables(selectedTables)
-      .subscribe((fields: any[]) => {
-        this.availableFields = fields;
-      });
+    this.getColumns(selectedTables);
 
     // this.availableFields = this.metadataService.getAvailableFieldsForTables(selectedTables)
     // this.http.post('http://localhost:3000/api/check-table-relations', { selectedTables }).subscribe((result: any) => {
@@ -266,7 +263,7 @@ export class ReportConfigComponent implements OnInit {
         const relatedTables = result.relatedTables;
         const columnsByTable = result.columnsByTable;
 
-        if (relatedTables && relatedTables.length > 1) {
+        if (relatedTables && relatedTables.length >= 1) {
           const updatedTables = Array.from(new Set([...selectedTables, ...relatedTables]));
 
           this.tablesAndViews = updatedTables.map(name => ({
@@ -315,49 +312,55 @@ export class ReportConfigComponent implements OnInit {
   }
 
   getColumns(table: any) {
-    // this.metadataService.getColumns(table).subscribe(cols => {
-    //   this.availableFields = cols;
-
-    //   this.availableFields = this.availableFields.map(field => ({
-    //     ...field, label: this.capitalize(field.column_name)
-    //   }));
-
-    //   console.log(this.availableFields);
-    // });
-
-    this.metadataService.getAvailableFieldsForTables(table)
-      .subscribe((fields: any[]) => {
-        this.availableFields = fields;
-      });
+    this.metadataService.getAvailableFieldsForTables(table).subscribe((fields: any[]) => {
+      this.availableFields = fields;
+    });
   }
 
 
+  onColumnSelect(event: any) {
+    //this.selectedcolumns = [...event]
+    if (this.reportForm.get("fieldtype")?.value !== 'count') {
+      const selectedValues: string[] = this.reportForm.get('selectedcolumns')?.value || [];
+      this.selectedcolumns = this.availableFields.filter(field =>
+        selectedValues.includes(field.column_name)
+      );
+    } else {
+      this.selectedcolumns = this.availableFields;
+    }
+  }
+
+
+  
 
   onFieldChange(field: any, index: number): void {
 
     console.log(field.data_type);
     const filterGroup = this.filters.at(index) as FormGroup;
 
-    const stringTypes = ['varchar', 'character varying', 'character', 'char', 'text', 'citext'];
-    const numericTypes = ['integer', 'smallint', 'bigint', 'decimal', 'numeric', 'real', 'double precision', 'serial', 'bigserial'];
-    const dateTypes = ['date', 'timestamp', 'timestamp without time zone', 'timestamp with time zone', 'time', 'time without time zone', 'time with time zone'];
-    const booleanTypes = ['boolean'];
+    // const stringTypes = ['varchar', 'character varying', 'character', 'char', 'text', 'citext'];
+    // const numericTypes = ['integer', 'smallint', 'bigint', 'decimal', 'numeric', 'real', 'double precision', 'serial', 'bigserial'];
+    // const dateTypes = ['date', 'timestamp', 'timestamp without time zone', 'timestamp with time zone', 'time', 'time without time zone', 'time with time zone'];
+    // const booleanTypes = ['boolean'];
 
     let newOperators: string[] = [];
 
-    if (numericTypes.includes(field.data_type)) {
+    if (this.numberTypes.includes(field.data_type)) {
       newOperators = ['between', 'equals', 'not equals', 'greater than', 'less than'];
-    } else if (stringTypes.includes(field.data_type)) {
+    } else if (this.stringTypes.includes(field.data_type)) {
       newOperators = ['equals', 'not equals', 'contains'];
-    } else if (dateTypes.includes(field.data_type)) {
+    } else if (this.dateTypes.includes(field.data_type)) {
       newOperators = ['between', 'equals', 'not equals', 'greater than', 'less than'];
-    } else if (booleanTypes.includes(field.data_type)) {
+    } else if (this.booleanTypes.includes(field.data_type)) {
       newOperators = ['equals', 'not equals'];
     } else {
       newOperators = []; // default: unsupported type
     }
 
-
+// this.operators = newOperators.map(op => ({
+//     label: op,
+//     symbol: operatorMap[op] || op
+//   }));
     this.operators = newOperators;
     filterGroup.patchValue({
       operator: '',
@@ -501,7 +504,7 @@ export class ReportConfigComponent implements OnInit {
 
       this.xyaxis.at(index).get('xAxisTransformation')?.setValidators([Validators.required]);
     } else {
-this.xyaxis.at(index).get('xAxisTransformation')?.setValue(null);  
+      this.xyaxis.at(index).get('xAxisTransformation')?.setValue(null);
       this.xyaxis.at(index).get('xAxisTransformation')?.clearValidators();
     }
     this.xyaxis.at(index).get('xAxisTransformation')?.updateValueAndValidity();
@@ -509,7 +512,7 @@ this.xyaxis.at(index).get('xAxisTransformation')?.setValue(null);
 
 
 
- //// Add this method to your component
+  //// Add this method to your component
   getYaxisAggregationOptions(index: number): string[] {
     const yAxisField = this.xyaxis.at(index).get('yAxisField')?.value;
     const field = this.availableFields.find(f => f.column_name === yAxisField);
@@ -521,30 +524,6 @@ this.xyaxis.at(index).get('xAxisTransformation')?.setValue(null);
       return ['count', 'max', 'min']; // Limited list for non-numeric fields
     }
   }
-
-// getYaxisAggregationOptions(index: number) {
-//   const yAxisField = this.xyaxis.at(index).get('yAxisField')?.value;
-//   const field = this.availableFields.find(f => f.column_name === yAxisField);
-
-//   if (field && this.numberTypes.includes(field.data_type)) {
-//     // Return an array of objects with value and label for each option
-//     return [
-//       { value: 'sum', label: 'Sum' },
-//       { value: 'count', label: 'Count' },
-//       { value: 'average', label: 'Average' },
-//       { value: 'max', label: 'Maximum' },
-//       { value: 'min', label: 'Minimum' }
-//     ];
-//   } else {
-//     return [
-//       { value: 'count', label: 'Count' },
-       
-//       { value: 'max', label: 'Maximum' },
-//       { value: 'min', label: 'Minimum' }
-//     ];
-//   }
-// }
-
 
 
   // Check if the X-Axis has date field selected to show transformation options
@@ -588,7 +567,7 @@ this.xyaxis.at(index).get('xAxisTransformation')?.setValue(null);
       this.metadataService.updateReportFormat(config, this.reportId).subscribe({
         next: (response: any) => {
           this.notificationService.showNotification(response.message, 'success');
-          this.addNewReport();
+          //this.addNewReport();
           this.router.navigateByUrl('List-Report');
         },
         error: (err) => {
@@ -601,7 +580,7 @@ this.xyaxis.at(index).get('xAxisTransformation')?.setValue(null);
       this.metadataService.SaveReportForamt(config).subscribe({
         next: (response: any) => {
           this.notificationService.showNotification(response.message, 'success');
-          this.addNewReport();
+          //this.addNewReport();
           this.router.navigateByUrl('List-Report');
         },
         error: (err) => {
@@ -614,15 +593,10 @@ this.xyaxis.at(index).get('xAxisTransformation')?.setValue(null);
     console.log('Report configuration:', config);
   }
 
-
-  previewChart(): void {
-
-  }
-
   previewReport(): void {
 
     this.showPreview = false;
-  
+
     //console.log(this.reportForm.value);
     if (this.reportForm.invalid) {
       this.reportForm.markAllAsTouched();
@@ -631,22 +605,19 @@ this.xyaxis.at(index).get('xAxisTransformation')?.setValue(null);
     }
 
     const config = { ...this.reportForm.value };
- 
+
     this.metadataService.getDataforPreview(config).subscribe({
       next: (response: any) => {
         const responseData = response?.data;
-       
-         
-        const { data, groupBy, chartData, displayedColumns, showPreview } = this.metadataService.processPreviewData(responseData);
 
-        this.previewData = { groupBy, data, chartData };
+
+        const { data, groupBy, chartData, displayedColumns, showPreview, ischart } = this.metadataService.processPreviewData(responseData);
+
+        this.previewData = { groupBy, data, chartData, ischart };
         this.displayedColumns = displayedColumns;
         this.showPreview = showPreview;
 
         console.log('API Response:', responseData);
-
-        // Show appropriate data messages
-        console.log(this.previewData.data.length);
 
         if (this.previewData.data.length > 0) {
           console.log(this.previewData);
@@ -703,10 +674,13 @@ this.xyaxis.at(index).get('xAxisTransformation')?.setValue(null);
     (this.reportForm.get('xyaxis') as FormArray).clear();
     this.reprotconfig.clearConfiguration();
     console.log('New report initiated');
-
-    this.router.navigate(['/Create-Custom-Report']);
+    this.ngOnInit();
+    this.router.navigate(['Create-Custom-Report']);
   }
+
+
 }
+
 
 
 
@@ -719,3 +693,12 @@ function minSelectedCheckboxes(min: number = 1) {
     return { minSelected: true };
   };
 }
+
+const operatorMap: { [key: string]: string } = {
+    'between': '⇿',
+    'equals': '=',
+    'not equals': '≠',
+    'greater than': '>',
+    'less than': '<',
+    'contains': '∋', // Or '∈', or even '🔍' for UI
+  };

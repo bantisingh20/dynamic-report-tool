@@ -1,5 +1,5 @@
 const pool = require("../config/db.js");
-const { getOperatorSymbol } = require("../utils/Operator.utils.js");
+const { getOperatorSymbol, extractLabel } = require("../utils/Operator.utils.js");
 
 const Executionfunction = async (config) => {
   try {
@@ -131,9 +131,8 @@ const Executionfunction = async (config) => {
           // console.log(sqlOperator)
           if (sqlOperator === "BETWEEN") {
             params.push(filter.valueFrom, filter.valueTo);
-            return `${
-              filter.field
-            } BETWEEN $${paramIndex++} AND $${paramIndex++}`;
+            return `${filter.field
+              } BETWEEN $${paramIndex++} AND $${paramIndex++}`;
           } else if (sqlOperator === "ILIKE" || filter.operator === "contain") {
             params.push(`%${filter.value}%`);
             return `${filter.field} ILIKE $${paramIndex++}`;
@@ -157,10 +156,7 @@ const Executionfunction = async (config) => {
     }
 
     // --- Count clause ---
-    if (
-      config.fieldtype.toLowerCase() === "count" &&
-      config.xyaxis?.length > 0
-    ) {
+    if (config.fieldtype.toLowerCase() === "count" && config.xyaxis?.length > 0) {
       //console.log('count Query')
 
       const xyaxis = config.xyaxis[0]; // Assuming only one xyaxis object is passed for simplicity
@@ -198,13 +194,14 @@ const Executionfunction = async (config) => {
         aggregation = `MIN(${yAxisField})`;
       }
 
+      console.log({ xAxisGroupBy });
       // Build the SELECT statement with aggregation
       const selectFields = `
             ${xAxisGroupBy} AS "xAxis",
             ${aggregation} AS "yAxis"
           `;
 
-      // Construct the final SQL query with group by and order by
+      // Construct the final SQL query with count by and order by
       const groupedSQL = `
             SELECT ${selectFields}
             ${fromClause}
@@ -212,21 +209,44 @@ const Executionfunction = async (config) => {
             GROUP BY ${xAxisGroupBy}
             ${orderByClause}
             `;
-      //FROM ${config.tableandview.join(', ')}
-      //ORDER BY ${xAxisGroupBy} ${xAxisDirection}, "yAxis" ${yAxisDirection}
+
 
       console.log("Executing XY Axis SQL:", groupedSQL);
 
-      // Execute the query
       const result = await pool.query(groupedSQL, params);
 
-      console.log(result.rows);
+      const xAxisLabel = extractLabel(xAxisField);
+      const yAxisLabel = extractLabel(yAxisField);
+
+      // Format for Google Charts
+      const chartFormattedData = [
+        [xAxisLabel, yAxisLabel], // Header row
+        ...result.rows.map(row => [row.xAxis, Number(row.yAxis)]) // Data rows
+      ];
+
+
+      // Determine transformation label
+      let xAxisTransformLabel = '';
+      if (xAxisTransformation === 'daywise') xAxisTransformLabel = 'DAY';
+      else if (xAxisTransformation === 'monthwise') xAxisTransformLabel = 'MONTH';
+      else if (xAxisTransformation === 'yearwise') xAxisTransformLabel = 'YEAR';
+      else xAxisTransformLabel = xAxisLabel;
+
+      // Build chart title like: "SUM of AMOUNT by MONTH"
+      const chartTitle = `${yAxisAggregation.toUpperCase()} of ${yAxisLabel} by ${xAxisTransformLabel}`;
+
       return {
         count: true,
         group: false,
         groupBy: null,
         raw: false,
-        data: result.rows,
+        chart: {
+          title: chartTitle,
+          xAxisLabel,
+          yAxisLabel,
+          data: chartFormattedData
+        },
+        data: result.rows
       };
       // return { count: true,groupBy:false, raw :false ,data: result.rows  };
       //return { data: result.rows };

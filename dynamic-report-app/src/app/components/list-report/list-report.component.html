@@ -81,14 +81,17 @@
         </h5>
         <button type="button" class="btn-close" (click)="closeModal()" aria-label="Close"></button>
       </div>
- 
+
       <div class="modal-body flex-grow-1 overflow-auto">
-        <ng-container >
-          <app-custom-table [data]="previewData">
-          </app-custom-table>
+        <ng-container>
+          <app-common-table [tabledata]="previewData" *ngIf="!previewData.ischart"></app-common-table>
+          <app-chart-component *ngIf="previewData.ischart" 
+          [chartDatas]="previewData.chartData"
+           
+          ></app-chart-component>
         </ng-container>
 
-        
+
       </div>
 
     </div>

@@ -36,10 +36,19 @@ function getJsTypeFromDbType(dbType) {
   return mapDbTypeToJsType(dbType);
 }
 
+function extractLabel(field) {
+  const parts = field.split('.');
+  const rawField = parts.length > 1 ? parts[1] : field;
+  
+  return rawField
+    .replace(/_/g, ' ')         // Replace underscores with spaces
+    .toUpperCase();             // Convert to uppercase
+}
 module.exports = {
   mapDbTypeToJsType,
   operatorMap,
   getOperatorSymbol,
   isValidOperator,
-  getJsTypeFromDbType
+  getJsTypeFromDbType,
+  extractLabel
 };

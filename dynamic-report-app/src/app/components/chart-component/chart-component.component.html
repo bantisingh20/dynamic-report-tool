@@ -1,42 +1,24 @@
-<div class="container py-5">
-    <!-- Chart Type Selection -->
-    <div class="row mb-4">
-        <div class="col-12 col-sm-4 mb-4 mb-sm-0">
-            <label for="chartType" class="text-lg font-semibold text-gray-700">Select Chart Type:</label>
-            <select id="chartType" (change)="changeChartType($event)" class="form-select w-100 p-3 mt-2 border rounded-md shadow-sm">
-                <option value="ColumnChart">Column Chart</option>
-                <option value="PieChart">Pie Chart</option>
-                <option value="LineChart">Line Chart</option>
-                <option value="AreaChart">Area Chart</option>
-                <option value="ComboChart">Combo Chart</option>
-                <option value="ScatterChart">Scatter Chart</option>
-                <option value="BubbleChart">Bubble Chart</option>
-                <option value="GeoChart">Geo Chart</option>
-                <option value="Timeline">Timeline Chart</option>
-                <option value="Gauge">Gauge Chart</option>
-            </select>
-        </div>
-    </div>
-
-    <!-- Google Charts -->
-    <div class="row">
-        <div class="col-12">
-            <google-chart
-                #chart
-                [type]="chartType"
-                [data]="chartData"
-                [columns]="chartColumns"
-                [options]="chartOptions"
-                [width]="chartWidth"
-                [height]="chartHeight"
-                class="rounded-lg shadow-lg">
-            </google-chart>
+ <div class="container py-5">
+ 
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-10 col-lg-8">
+            <div class="chart-wrapper p-3 bg-white rounded-lg shadow-lg text-center">
+                <google-chart
+                    #chart
+                    [type]="chartType"
+                    [data]="chartData"
+                    [columns]="chartColumns"
+                    [options]="chartOptions"                     
+                    [height]="chartHeight"                
+                    class="w-100 h-auto">
+                </google-chart>
+            </div>
         </div>
     </div>
 
     <!-- Download Button (Icon) -->
     <div class="mt-4 text-center">
-        <!-- Uncomment to activate the download button -->
+        <!-- Uncomment to activate the download button[width]="chartWidth" -->
         <!-- <button (click)="downloadChart(chart)" class="btn btn-primary">
             <i class="fa fa-download me-2"></i> Download Chart
         </button> -->
